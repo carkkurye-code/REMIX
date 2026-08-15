@@ -838,44 +838,33 @@ const CustomerOfferCard = React.memo(function CustomerOfferCard({
   );
 });
 
-const PickupAddressCard = React.memo(function PickupAddressCard({
-  storeName,
-  pickupAddress,
-  pickupAddressDetail,
-  pickupLat,
-  pickupLng,
+const CustomerLocationCard = React.memo(function CustomerLocationCard({
+  address,
+  addressDetail,
+  lat,
+  lng,
 }: {
-  storeName?: string;
-  pickupAddress?: string;
-  pickupAddressDetail?: string;
-  pickupLat?: number;
-  pickupLng?: number;
+  address?: string;
+  addressDetail?: string;
+  lat?: number | null;
+  lng?: number | null;
 }) {
-  const hasStore = !!(storeName && storeName.trim() !== '' && storeName.trim() !== 'Mağaza');
-  const hasAddress = !!(pickupAddress && pickupAddress.trim() !== '' && pickupAddress.trim() !== 'Mağaza' && pickupAddress.trim() !== storeName?.trim());
+  const displayAddress = (address && address.trim() !== '' && address.trim() !== 'Adres')
+    ? address.trim()
+    : 'Adapazarı, Sakarya';
 
-  if (!hasStore && !hasAddress && !pickupAddress) {
-    return null;
-  }
-
-  const hasCoords = pickupLat != null && pickupLng != null && Number(pickupLat) !== 0 && Number(pickupLng) !== 0;
+  const hasCoords = lat != null && lng != null && Number(lat) !== 0 && Number(lng) !== 0;
 
   const mapHref = hasCoords
-    ? `https://www.google.com/maps/search/?api=1&query=${pickupLat},${pickupLng}`
-    : (hasAddress && pickupAddress
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickupAddress)}`
-        : (hasStore && storeName
-            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(storeName)}`
-            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickupAddress || storeName || 'Sakarya')}`
-          )
-      );
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`;
 
   return (
     <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] text-xs space-y-1.5 w-full min-w-0">
       <div className="flex items-center justify-between gap-2 min-w-0">
         <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider flex items-center gap-1 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shrink-0" />
-          ALINACAK ADRES
+          MÜŞTERİ KONUMU
         </span>
         <a
           href={mapHref}
@@ -887,26 +876,12 @@ const PickupAddressCard = React.memo(function PickupAddressCard({
           <span>Haritada Aç</span>
         </a>
       </div>
-      <div className="space-y-0.5 text-left min-w-0 w-full">
-        {hasStore && (
-          <p className="text-[#1F2937] text-xs font-bold leading-snug break-words">
-            {storeName}
-          </p>
-        )}
-        {hasAddress && (
-          <p className="text-[#4B5563] text-xs font-normal leading-relaxed break-words whitespace-pre-wrap">
-            {pickupAddress}
-          </p>
-        )}
-        {!hasStore && !hasAddress && (
-          <p className="text-[#1F2937] text-xs font-medium leading-relaxed">
-            {storeName || pickupAddress || ''}
-          </p>
-        )}
-      </div>
-      {pickupAddressDetail && (
+      <p className="text-[#1F2937] text-xs font-medium leading-relaxed break-words whitespace-pre-wrap min-w-0 w-full text-left">
+        {displayAddress}
+      </p>
+      {addressDetail && addressDetail.trim() !== '' && (
         <p className="text-[#6B7280] text-[11px] pt-1 border-t border-[#E5E7EB]/60 leading-normal break-words whitespace-pre-wrap min-w-0 w-full text-left">
-          Adres Detayı: {pickupAddressDetail}
+          Adres Detayı: {addressDetail.trim()}
         </p>
       )}
     </div>
@@ -2889,41 +2864,13 @@ export function AsistanPage() {
                           {/* 4. Müşteri Bilgileri */}
                           <CustomerInfoCard name={r.customer_name} phone={r.customer_phone} />
 
-                          {/* 5. Alınacak Adres */}
-                          <PickupAddressCard
-                            storeName={r.store_name}
-                            pickupAddress={r.pickup_address}
-                            pickupAddressDetail={r.pickup_address_detail}
-                            pickupLat={r.pickup_lat}
-                            pickupLng={r.pickup_lng}
+                          {/* 5. Müşteri Konumu */}
+                          <CustomerLocationCard
+                            address={r.customer_address || r.delivery_address || r.pickup_address || r.store_name}
+                            addressDetail={r.delivery_address_detail || r.pickup_address_detail}
+                            lat={r.delivery_lat ?? r.latitude ?? r.pickup_lat}
+                            lng={r.delivery_lng ?? r.longitude ?? r.pickup_lng}
                           />
-
-                          {/* 6. Teslim Adresi */}
-                          {r.delivery_address && (
-                            <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] text-xs space-y-1.5 w-full min-w-0">
-                              <div className="flex items-center justify-between gap-2 min-w-0">
-                                <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider flex items-center gap-1 shrink-0">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
-                                  TESLİM ADRESİ
-                                </span>
-                                <a
-                                  href={r.delivery_lat != null && r.delivery_lng != null ? `https://www.google.com/maps/search/?api=1&query=${r.delivery_lat},${r.delivery_lng}` : (r.latitude != null && r.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.delivery_address)}`)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-2.5 py-1 bg-white hover:bg-gray-50 text-[#1F2937] border border-[#E5E7EB] font-bold text-[10px] rounded-lg shadow-sm cursor-pointer transition-all shrink-0 ml-auto flex items-center gap-1"
-                                >
-                                  <ExternalLink className="w-3 h-3 text-[#6B7280]" />
-                                  <span>Haritada Aç</span>
-                                </a>
-                              </div>
-                              <p className="text-[#1F2937] text-xs font-medium leading-relaxed break-words whitespace-pre-wrap min-w-0 w-full text-left">{r.delivery_address}</p>
-                              {r.delivery_address_detail && (
-                                <p className="text-[#6B7280] text-[11px] pt-1 border-t border-[#E5E7EB]/60 leading-normal break-words whitespace-pre-wrap min-w-0 w-full text-left">
-                                  Adres Detayı: {r.delivery_address_detail}
-                                </p>
-                              )}
-                            </div>
-                          )}
 
                           {/* Tahmini Mesafe & Süre */}
                           <DistanceDurationCard distance={r.distance} duration={r.duration} />
@@ -3034,41 +2981,13 @@ export function AsistanPage() {
                           {/* 4. Müşteri Bilgileri */}
                           <CustomerInfoCard name={r.customer_name} phone={r.customer_phone} />
 
-                          {/* 5. Alınacak Adres */}
-                          <PickupAddressCard
-                            storeName={r.store_name}
-                            pickupAddress={r.pickup_address}
-                            pickupAddressDetail={r.pickup_address_detail}
-                            pickupLat={r.pickup_lat}
-                            pickupLng={r.pickup_lng}
+                          {/* 5. Müşteri Konumu */}
+                          <CustomerLocationCard
+                            address={r.customer_address || r.delivery_address || r.pickup_address || r.store_name}
+                            addressDetail={r.delivery_address_detail || r.pickup_address_detail}
+                            lat={r.delivery_lat ?? r.latitude ?? r.pickup_lat}
+                            lng={r.delivery_lng ?? r.longitude ?? r.pickup_lng}
                           />
-
-                          {/* 6. Teslim Adresi */}
-                          {r.delivery_address && (
-                            <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] text-xs space-y-1.5 w-full min-w-0">
-                              <div className="flex items-center justify-between gap-2 min-w-0">
-                                <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider flex items-center gap-1 shrink-0">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
-                                  TESLİM ADRESİ
-                                </span>
-                                <a
-                                  href={r.delivery_lat != null && r.delivery_lng != null ? `https://www.google.com/maps/search/?api=1&query=${r.delivery_lat},${r.delivery_lng}` : (r.latitude != null && r.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.delivery_address)}`)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-2.5 py-1 bg-white hover:bg-gray-50 text-[#1F2937] border border-[#E5E7EB] font-bold text-[10px] rounded-lg shadow-sm cursor-pointer transition-all shrink-0 ml-auto flex items-center gap-1"
-                                >
-                                  <ExternalLink className="w-3 h-3 text-[#6B7280]" />
-                                  <span>Haritada Aç</span>
-                                </a>
-                              </div>
-                              <p className="text-[#1F2937] text-xs font-medium leading-relaxed break-words whitespace-pre-wrap min-w-0 w-full text-left">{r.delivery_address}</p>
-                              {r.delivery_address_detail && (
-                                <p className="text-[#6B7280] text-[11px] pt-1 border-t border-[#E5E7EB]/60 leading-normal break-words whitespace-pre-wrap min-w-0 w-full text-left">
-                                  Adres Detayı: {r.delivery_address_detail}
-                                </p>
-                              )}
-                            </div>
-                          )}
 
                           {/* Tahmini Mesafe & Süre */}
                           <DistanceDurationCard distance={r.distance} duration={r.duration} />
@@ -3275,8 +3194,8 @@ export function AsistanPage() {
                             </div>
 
                             <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-                              <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Teslim Adresi</span>
-                              <p className="text-[#1F2937] text-xs font-medium line-clamp-2">{r.delivery_address || 'Teslimat Adresi'}</p>
+                              <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Müşteri Konumu</span>
+                              <p className="text-[#1F2937] text-xs font-medium line-clamp-2">{r.customer_address || r.delivery_address || r.pickup_address || 'Müşteri Konumu'}</p>
                             </div>
                           </div>
 

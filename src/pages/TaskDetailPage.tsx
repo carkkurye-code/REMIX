@@ -330,58 +330,37 @@ export function TaskDetailPage() {
           </a>
         )}
 
-        {/* 5. ALINACAK ADRES */}
+        {/* 5. MÜŞTERİ KONUMU */}
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-1.5">
-          <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-            5. ALINACAK ADRES
-          </span>
-          <p className="text-xs font-medium text-[#1F2937] leading-relaxed">
-            {pickupAddr || 'Adres bilgisi yok'}
-          </p>
-
-          {/* 6. HARİTADA AÇ (Alınacak Adres) */}
-          {pickupAddr && (
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+              5. MÜŞTERİ KONUMU
+            </span>
             <a
-              href={r.pickup_lat != null && r.pickup_lng != null ? `https://www.google.com/maps/search/?api=1&query=${r.pickup_lat},${r.pickup_lng}` : (r.latitude != null && r.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(pickupAddr)}`)}
+              href={(r.delivery_lat != null && r.delivery_lng != null) ? `https://www.google.com/maps/search/?api=1&query=${r.delivery_lat},${r.delivery_lng}` : (r.latitude != null && r.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}` : (r.pickup_lat != null && r.pickup_lng != null ? `https://www.google.com/maps/search/?api=1&query=${r.pickup_lat},${r.pickup_lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.customer_address || deliveryAddr || pickupAddr || 'Adapazarı, Sakarya')}`))}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-[#E5E7EB] text-[#2563EB] font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 hover:bg-gray-100 border border-[#E5E7EB] text-[#2563EB] font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5 text-[#2563EB]" />
-              <span>6. HARİTADA AÇ (ALINACAK)</span>
+              <span>Haritada Aç</span>
             </a>
+          </div>
+          <p className="text-xs font-medium text-[#1F2937] leading-relaxed">
+            {r.customer_address || deliveryAddr || pickupAddr || 'Adapazarı, Sakarya'}
+          </p>
+          {(r.delivery_address_detail || r.pickup_address_detail) && (
+            <p className="text-[#6B7280] text-[11px] pt-1 border-t border-[#E5E7EB]/60">
+              Adres Detayı: {r.delivery_address_detail || r.pickup_address_detail}
+            </p>
           )}
         </div>
 
-        {/* 7. TESLİM ADRESİ */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-1.5">
-          <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
-            7. TESLİM ADRESİ
-          </span>
-          <p className="text-xs font-medium text-[#1F2937] leading-relaxed">
-            {deliveryAddr || 'Adres bilgisi yok'}
-          </p>
-
-          {/* 8. HARİTADA AÇ (Teslim Adresi) */}
-          {deliveryAddr && (
-            <a
-              href={r.delivery_lat != null && r.delivery_lng != null ? `https://www.google.com/maps/search/?api=1&query=${r.delivery_lat},${r.delivery_lng}` : (r.latitude != null && r.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(deliveryAddr)}`)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-[#E5E7EB] text-[#2563EB] font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
-            >
-              <ExternalLink className="w-3.5 h-3.5 text-[#2563EB]" />
-              <span>8. HARİTADA AÇ (TESLİM)</span>
-            </a>
-          )}
-        </div>
-
-        {/* 9. TESLİM DOĞRULAMA */}
+        {/* 6. TESLİM DOĞRULAMA */}
         <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-2.5">
           <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
-            9. TESLİM DOĞRULAMA
+            6. TESLİM DOĞRULAMA
           </span>
 
           {requiresCode ? (
