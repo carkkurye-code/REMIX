@@ -19,10 +19,12 @@ import {
   Store,
   ChevronRight,
   Send,
-  Loader2
+  Loader2,
+  MapPin
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, db, getStored, LOCAL_STORAGE_KEYS, Order, isUUID, getExactTableColumns } from '@/lib/supabase';
+import { eventBus } from '@/lib/eventBus';
 import { toast } from '@/hooks/use-toast';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useModalBackButton } from '@/hooks/useModalBackButton';
@@ -150,6 +152,33 @@ export function CustomerAccountModal({
         }
       });
 
+      // Query assistant names for any assigned orders where assistant_name is missing
+      const assignedOrders = Array.from(map.values()).filter(o => o.assistant_id);
+      if (assignedOrders.length > 0 && supabase) {
+        const assistantIds = Array.from(new Set(assignedOrders.map(o => o.assistant_id).filter(Boolean)));
+        try {
+          const { data: profs } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .in('id', assistantIds);
+          if (profs && profs.length > 0) {
+            const pMap = new Map<string, string>();
+            profs.forEach((p: any) => {
+              if (p?.id && p?.full_name) {
+                pMap.set(p.id, String(p.full_name));
+              }
+            });
+            map.forEach((o) => {
+              if (o.assistant_id && pMap.has(o.assistant_id)) {
+                o.assistant_name = pMap.get(o.assistant_id) || o.assistant_name;
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('Notice fetching assistant profiles:', e);
+        }
+      }
+
       const sorted = Array.from(map.values()).sort(
         (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       );
@@ -219,11 +248,70 @@ export function CustomerAccountModal({
     if (isOpen && user) {
       fetchCustomerOrders();
       fetchCustomerNotifications();
+
+      // Realtime EventBus subscriptions
+      const unsub1 = eventBus.subscribe('TASK_ACCEPTED', (evt: any) => {
+        if (evt?.payload?.assistantName && evt?.payload?.orderId) {
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === evt.payload.orderId
+                ? {
+                    ...o,
+                    assistant_id: evt.payload.assistantId || o.assistant_id,
+                    assistant_name: evt.payload.assistantName,
+                    status: 'accepted'
+                  }
+                : o
+            )
+          );
+        }
+        fetchCustomerOrders();
+        fetchCustomerNotifications();
+      });
+
+      const unsub2 = eventBus.subscribe('TASK_ASSIGNED', () => {
+        fetchCustomerOrders();
+      });
+
+      const unsub3 = eventBus.subscribe('TASK_COMPLETED', () => {
+        fetchCustomerOrders();
+      });
+
+      const unsub4 = eventBus.subscribe('TASK_CREATED', () => {
+        fetchCustomerOrders();
+      });
+
+      // Realtime Supabase Channel
+      let channel: any = null;
+      if (supabase) {
+        try {
+          channel = supabase
+            .channel(`customer-orders-realtime-${user.id}-${Date.now()}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+              fetchCustomerOrders();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+              fetchCustomerOrders();
+            })
+            .subscribe();
+        } catch (e) {}
+      }
+
       const interval = setInterval(() => {
         fetchCustomerOrders();
         fetchCustomerNotifications();
-      }, 10000);
-      return () => clearInterval(interval);
+      }, 3000);
+
+      return () => {
+        clearInterval(interval);
+        unsub1();
+        unsub2();
+        unsub3();
+        unsub4();
+        if (channel && supabase) {
+          supabase.removeChannel(channel);
+        }
+      };
     }
   }, [isOpen, user]);
 
@@ -286,7 +374,65 @@ export function CustomerAccountModal({
     }
   };
 
-  // Handle Saving Profile
+  // GPS Location Helper for Hesap Bilgilerim > Konumum
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: 'Konum Desteklenmiyor',
+        description: 'Tarayıcınız konum servisini desteklemiyor.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+          if (res.ok) {
+            const data = await res.json();
+            const formatted = data.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            setAddress(formatted);
+            toast({
+              title: 'Konum Alındı',
+              description: 'Mevcut konumunuz alanına eklendi.',
+              variant: 'plain'
+            });
+          } else {
+            setAddress(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+            toast({
+              title: 'Konum Alındı',
+              description: 'Koordinatlarınız konum alanına eklendi.',
+              variant: 'plain'
+            });
+          }
+        } catch (e) {
+          setAddress(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          toast({
+            title: 'Konum Alındı',
+            description: 'Koordinatlarınız konum alanına eklendi.',
+            variant: 'plain'
+          });
+        } finally {
+          setGettingLocation(false);
+        }
+      },
+      (err) => {
+        setGettingLocation(false);
+        toast({
+          title: 'Konum Alınamadı',
+          description: 'Lütfen cihazınızda veya tarayıcınızda konum iznini kontrol ediniz.',
+          variant: 'destructive'
+        });
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
+  // Handle Saving Profile & Location
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -303,12 +449,30 @@ export function CustomerAccountModal({
             updated_at: new Date().toISOString()
           });
       }
+
+      // Save to localStorage for instant synchronization across components
+      try {
+        localStorage.setItem(`ugra_customer_location_${user.id}`, address.trim());
+        localStorage.setItem('ugra_customer_location', address.trim());
+        const savedKey = `ugra_saved_customer_info_${user.id}`;
+        const existing = localStorage.getItem(savedKey);
+        const parsed = existing ? JSON.parse(existing) : {};
+        localStorage.setItem(savedKey, JSON.stringify({
+          ...parsed,
+          custName: fullName.trim(),
+          custPhone: phone.trim(),
+          custAddress: address.trim(),
+          location: address.trim(),
+          customer_address: address.trim()
+        }));
+      } catch (e) {}
+
       if (refreshProfile) {
         await refreshProfile();
       }
       toast({
-        title: 'Profil Güncellendi',
-        description: 'Hesap bilgileriniz başarıyla kaydedildi.',
+        title: 'Konum ve Bilgiler Kaydedildi',
+        description: 'Konumunuz ve hesap bilgileriniz başarıyla güncellendi.',
         variant: 'plain'
       });
     } catch (err: any) {
@@ -639,10 +803,10 @@ export function CustomerAccountModal({
                                 {/* Assistant Info */}
                                 <div className="flex items-center justify-between text-xs pt-1">
                                   <div className="flex items-center gap-2 text-zinc-400">
-                                    <UserIcon className="w-4 h-4 text-zinc-500" />
+                                    <UserIcon className={`w-4 h-4 ${order.assistant_name ? 'text-emerald-400' : 'text-zinc-500'}`} />
                                     <span>
                                       Atanan Asistan:{' '}
-                                      <strong className="text-white font-semibold">
+                                      <strong className={order.assistant_name ? 'text-emerald-400 font-bold' : 'text-zinc-300 font-medium'}>
                                         {order.assistant_name || 'En yakın asistan aranıyor...'}
                                       </strong>
                                     </span>
@@ -1072,15 +1236,41 @@ export function CustomerAccountModal({
                         />
                       </div>
 
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-zinc-300 block">Varsayılan Teslimat Adresi</label>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-[#FF7A00]" />
+                            <span>Konumum</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleGetCurrentLocation}
+                            disabled={gettingLocation}
+                            className="text-[11px] font-semibold text-[#FF7A00] hover:text-[#ff9433] flex items-center gap-1 cursor-pointer transition-colors bg-[#FF7A00]/10 hover:bg-[#FF7A00]/20 px-2 py-1 rounded-lg border border-[#FF7A00]/20"
+                          >
+                            {gettingLocation ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <span>Konum Alınıyor...</span>
+                              </>
+                            ) : (
+                              <>
+                                <MapPin className="w-3 h-3" />
+                                <span>Mevcut Konumumu Al</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                         <textarea
                           rows={3}
-                          placeholder="Siparişlerinizin teslim edileceği açık adres..."
+                          placeholder="Konumunuz / Açık adresiniz..."
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
                           className="w-full bg-zinc-900 border border-white/10 focus:border-[#FF7A00] outline-none rounded-xl p-3 text-xs text-white placeholder:text-zinc-600 transition-all resize-none"
                         />
+                        <p className="text-[10px] text-zinc-500">
+                          Taleplerinizde asistanın size ulaşacağı varsayılan konumunuz olarak kullanılır.
+                        </p>
                       </div>
 
                       <div className="pt-2">

@@ -28,6 +28,7 @@ export interface CreateOrderDispatchInput {
   task_description: string;
   pickup_address: string;
   delivery_address: string;
+  customer_address?: string;
   pickup_lat?: number;
   pickup_lng?: number;
   delivery_lat?: number;
@@ -128,9 +129,9 @@ export class LiveDispatchService {
             customer_name: input.customer_name?.trim() || 'Müşteri',
             customer_phone: input.customer_phone?.trim() || '',
             customer_id: input.customer_id,
-            customer_address: input.delivery_address || input.pickup_address || 'Adres',
-            delivery_address: input.delivery_address || 'Adres',
-            pickup_address: input.pickup_address || 'Adres',
+            customer_address: input.customer_address || input.delivery_address || input.pickup_address || 'Adres',
+            delivery_address: input.delivery_address || input.customer_address || 'Adres',
+            pickup_address: input.pickup_address || input.customer_address || 'Adres',
             pickup_lat: input.pickup_lat ?? input.latitude,
             pickup_lng: input.pickup_lng ?? input.longitude,
             delivery_lat: input.delivery_lat ?? input.latitude,
@@ -581,7 +582,7 @@ export class LiveDispatchService {
   /**
    * 3. Handle Assistant Accept ("Kabul Et") Action
    */
-  public static async acceptOffer(orderId: string, offerId: string, assistantId: string): Promise<{ success: boolean; message?: string; error?: string }> {
+  public static async acceptOffer(orderId: string, offerId: string, assistantId: string, assistantName?: string): Promise<{ success: boolean; message?: string; error?: string }> {
     try {
       // Rule 7: Single assistant atomic lock check
       if (isSupabaseConfigured && supabase) {
@@ -657,6 +658,7 @@ export class LiveDispatchService {
             if (tMatch) {
               const taskPayload = filterTaskPayload({
                 assistant_id: validAssistantId,
+                assistant_name: assistantName || undefined,
                 status: 'accepted',
                 accepted_at: nowIso,
                 updated_at: nowIso
@@ -665,6 +667,7 @@ export class LiveDispatchService {
               if (tMatch.order_id && isUUID(tMatch.order_id)) {
                 const orderPayload = filterOrderPayload({
                   assistant_id: validAssistantId,
+                  assistant_name: assistantName || undefined,
                   status: 'accepted'
                 });
                 await client.from('orders').update(orderPayload).eq('id', tMatch.order_id);
@@ -672,6 +675,7 @@ export class LiveDispatchService {
             } else {
               const orderPayload = filterOrderPayload({
                 assistant_id: validAssistantId,
+                assistant_name: assistantName || undefined,
                 status: 'accepted'
               });
               if (Object.keys(orderPayload).length > 0) {
@@ -712,6 +716,7 @@ export class LiveDispatchService {
         localOrders[oIdx] = {
           ...localOrders[oIdx],
           assistant_id: assistantId,
+          assistant_name: assistantName || localOrders[oIdx].assistant_name,
           status: 'accepted',
           updated_at: new Date().toISOString()
         };
@@ -756,6 +761,7 @@ export class LiveDispatchService {
           orderId,
           offerId,
           assistantId,
+          assistantName,
           customerId: resolvedCustomerId,
           status: 'accepted'
         })

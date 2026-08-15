@@ -2104,13 +2104,14 @@ export function AsistanPage() {
 
     setActionLoading(orderId);
     const assistantId = currentAssistant.id || currentAssistant.user_id || '';
+    const assistantName = currentAssistant.full_name || (currentAssistant as any).name || 'Saha Asistanı';
     const nowIso = new Date().toISOString();
 
     // Optimistic state update so UI moves order to active immediately
     setAllOrders((prev) =>
       prev.map((o) =>
         o.id === orderId
-          ? { ...o, assistant_id: assistantId, status: 'accepted' }
+          ? { ...o, assistant_id: assistantId, assistant_name: assistantName, status: 'accepted' }
           : o
       )
     );
@@ -2126,6 +2127,7 @@ export function AsistanPage() {
             .from('tasks')
             .update({
               assistant_id: assistantId,
+              assistant_name: assistantName,
               status: 'accepted',
               accepted_at: nowIso
             })
@@ -2134,6 +2136,7 @@ export function AsistanPage() {
           const orderCols = await getExactTableColumns('orders');
           const rawOrderPayload: Record<string, any> = {
             assistant_id: assistantId,
+            assistant_name: assistantName,
             status: 'accepted',
             accepted_at: nowIso,
             updated_at: nowIso
@@ -2153,7 +2156,7 @@ export function AsistanPage() {
       }
 
       const targetOfferId = offerId || `off_${Date.now()}`;
-      await LiveDispatchService.acceptOffer(orderId, targetOfferId, assistantId);
+      await LiveDispatchService.acceptOffer(orderId, targetOfferId, assistantId, assistantName);
 
       await fetchAssistantOrders();
       setPanelTab('active');

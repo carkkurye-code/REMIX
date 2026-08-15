@@ -208,6 +208,32 @@ export function SelectionModal({
         } catch (e) {}
       }
 
+      const customerSavedLocation =
+        profile?.address?.trim() ||
+        (() => {
+          try {
+            if (user?.id) {
+              const directLoc = localStorage.getItem(`ugra_customer_location_${user.id}`);
+              if (directLoc && directLoc.trim()) return directLoc.trim();
+              const saved = localStorage.getItem(`ugra_saved_customer_info_${user.id}`);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                const loc = parsed.custAddress || parsed.location || parsed.address || parsed.customer_address;
+                if (loc && loc.trim()) return loc.trim();
+              }
+            }
+            const genericLoc = localStorage.getItem('ugra_customer_location');
+            if (genericLoc && genericLoc.trim()) return genericLoc.trim();
+            const genericSaved = localStorage.getItem('ugra_saved_customer_info');
+            if (genericSaved) {
+              const parsed = JSON.parse(genericSaved);
+              const loc = parsed.custAddress || parsed.location || parsed.address || parsed.customer_address;
+              if (loc && loc.trim()) return loc.trim();
+            }
+          } catch (e) {}
+          return '';
+        })() || 'Adapazarı, Sakarya';
+
       const result =
         await LiveDispatchService.createOrderAndDispatch({
           delivery_type: activeDeliveryType,
@@ -220,10 +246,11 @@ export function SelectionModal({
           customer_phone: customerPhoneNumber,
           customer_name: customerFullName,
           customer_id: user?.id,
-          pickup_address: 'Adapazarı',
-          delivery_address: 'Serdivan',
-          pickup_zone: 'Adapazarı',
-          delivery_zone: 'Serdivan',
+          customer_address: customerSavedLocation,
+          pickup_address: customerSavedLocation,
+          delivery_address: customerSavedLocation,
+          pickup_zone: customerSavedLocation,
+          delivery_zone: customerSavedLocation,
           total_price: offerNum,
           customer_price: offerNum,
           courier_net: offerNum,

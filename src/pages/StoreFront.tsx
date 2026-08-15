@@ -349,17 +349,26 @@ export function StoreFront() {
         }
       }
 
-      // 3. Adres: only from active user's scoped localStorage, otherwise empty
-      try {
-        const userSaved = localStorage.getItem(`${SAVED_CUSTOMER_INFO_KEY}_${user.id}`);
-        if (userSaved) {
-          const parsed = JSON.parse(userSaved);
-          setCustAddress(parsed.custAddress || '');
-        } else {
+      // 3. Adres: from profile, scoped localStorage, or location key
+      if (profile?.address && profile.address.trim() !== '') {
+        setCustAddress(profile.address.trim());
+      } else {
+        try {
+          const directLoc = localStorage.getItem(`ugra_customer_location_${user.id}`);
+          if (directLoc && directLoc.trim()) {
+            setCustAddress(directLoc.trim());
+          } else {
+            const userSaved = localStorage.getItem(`${SAVED_CUSTOMER_INFO_KEY}_${user.id}`);
+            if (userSaved) {
+              const parsed = JSON.parse(userSaved);
+              setCustAddress(parsed.custAddress || parsed.location || '');
+            } else {
+              setCustAddress('');
+            }
+          }
+        } catch (e) {
           setCustAddress('');
         }
-      } catch (e) {
-        setCustAddress('');
       }
     } else {
       // Logged out / unauthenticated: reset fields to avoid lingering data
@@ -367,7 +376,7 @@ export function StoreFront() {
       setCustPhone('');
       setCustAddress('');
     }
-  }, [user, profile?.full_name, profile?.phone]);
+  }, [user, profile?.full_name, profile?.phone, profile?.address]);
 
   useEffect(() => {
     if (isCheckoutOpen) {
@@ -378,18 +387,27 @@ export function StoreFront() {
         if (profile?.phone && profile.phone.trim() !== '') {
           setCustPhone(profile.phone.trim());
         }
-        try {
-          const userSavedKey = `${SAVED_CUSTOMER_INFO_KEY}_${user.id}`;
-          const saved = localStorage.getItem(userSavedKey);
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed.custPhone && !profile?.phone) setCustPhone(parsed.custPhone);
-            if (parsed.custAddress) setCustAddress(parsed.custAddress);
-          }
-        } catch (e) {}
+        if (profile?.address && profile.address.trim() !== '') {
+          setCustAddress(profile.address.trim());
+        } else {
+          try {
+            const directLoc = localStorage.getItem(`ugra_customer_location_${user.id}`);
+            if (directLoc && directLoc.trim()) {
+              setCustAddress(directLoc.trim());
+            } else {
+              const userSavedKey = `${SAVED_CUSTOMER_INFO_KEY}_${user.id}`;
+              const saved = localStorage.getItem(userSavedKey);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.custPhone && !profile?.phone) setCustPhone(parsed.custPhone);
+                if (parsed.custAddress) setCustAddress(parsed.custAddress);
+              }
+            }
+          } catch (e) {}
+        }
       }
     }
-  }, [isCheckoutOpen, user, profile?.full_name, profile?.phone]);
+  }, [isCheckoutOpen, user, profile?.full_name, profile?.phone, profile?.address]);
 
   const [gpsLocation, setGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
