@@ -219,6 +219,7 @@ export class LiveDispatchService {
           vat_cost: 0,
           commission: 0,
           notes: notesContent,
+          preferred_time: input.preferred_time ?? undefined,
           requires_delivery_code: input.requires_delivery_code ?? true,
           delivery_code: input.delivery_code ?? null,
           delivery_code_verified: input.delivery_code_verified ?? false,

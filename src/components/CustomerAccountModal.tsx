@@ -20,7 +20,8 @@ import {
   ChevronRight,
   Send,
   Loader2,
-  MapPin
+  MapPin,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, db, getStored, LOCAL_STORAGE_KEYS, Order, isUUID, getExactTableColumns } from '@/lib/supabase';
@@ -132,6 +133,47 @@ export function CustomerAccountModal({
             fetched = data as Order[];
           }
         }
+
+        // Also fetch from tasks table if customer has tasks
+        try {
+          let taskQuery = supabase.from('tasks').select('*');
+          if (userId && isUUID(userId)) {
+            taskQuery = taskQuery.or(`customer_id.eq.${userId},customer_phone.eq.${sanitizedPhone}`);
+          } else if (sanitizedPhone) {
+            taskQuery = taskQuery.eq('customer_phone', sanitizedPhone);
+          }
+          const { data: taskData } = await taskQuery.order('created_at', { ascending: false });
+          if (taskData && taskData.length > 0) {
+            taskData.forEach((t: any) => {
+              const matchedOrder = fetched.find(o => o.id === t.id || o.id === t.order_id);
+              if (matchedOrder) {
+                if (t.assistant_id) matchedOrder.assistant_id = t.assistant_id;
+                if (t.assistant_name && t.assistant_name !== 'Saha Asistanı') matchedOrder.assistant_name = t.assistant_name;
+                if (t.status && t.status !== 'bekliyor') matchedOrder.status = t.status;
+                if (t.task_description && !matchedOrder.task_description) matchedOrder.task_description = t.task_description;
+              } else {
+                fetched.push({
+                  id: t.id,
+                  customer_id: t.customer_id,
+                  customer_phone: t.customer_phone,
+                  assistant_id: t.assistant_id,
+                  assistant_name: t.assistant_name,
+                  status: t.status || 'bekliyor',
+                  task_description: t.task_description,
+                  preferred_time: t.preferred_time,
+                  total_price: t.total_price || t.customer_price || 0,
+                  customer_price: t.customer_price || t.total_price || 0,
+                  courier_net: t.courier_net || 0,
+                  created_at: t.created_at,
+                  delivery_address: t.delivery_address || t.pickup_address,
+                  customer_address: t.delivery_address || t.pickup_address,
+                  notes: t.notes || t.task_description,
+                  service_type: t.service_type || 'gecerken'
+                } as Order);
+              }
+            });
+          }
+        } catch (_) {}
       }
 
       // Merge with local storage fallback
@@ -152,28 +194,46 @@ export function CustomerAccountModal({
         }
       });
 
-      // Query assistant names for any assigned orders where assistant_name is missing
+      // Query assistant names for any assigned orders where assistant_name is missing or placeholder
       const assignedOrders = Array.from(map.values()).filter(o => o.assistant_id);
       if (assignedOrders.length > 0 && supabase) {
         const assistantIds = Array.from(new Set(assignedOrders.map(o => o.assistant_id).filter(Boolean)));
         try {
+          const pMap = new Map<string, string>();
+
+          // 1. Check profiles table
           const { data: profs } = await supabase
             .from('profiles')
             .select('id, full_name')
             .in('id', assistantIds);
           if (profs && profs.length > 0) {
-            const pMap = new Map<string, string>();
             profs.forEach((p: any) => {
               if (p?.id && p?.full_name) {
-                pMap.set(p.id, String(p.full_name));
-              }
-            });
-            map.forEach((o) => {
-              if (o.assistant_id && pMap.has(o.assistant_id)) {
-                o.assistant_name = pMap.get(o.assistant_id) || o.assistant_name;
+                pMap.set(p.id, String(p.full_name).trim());
               }
             });
           }
+
+          // 2. Check assistants table
+          const { data: assts } = await supabase
+            .from('assistants')
+            .select('id, user_id, full_name, name')
+            .or(`id.in.(${assistantIds.join(',')}),user_id.in.(${assistantIds.join(',')})`);
+          if (assts && assts.length > 0) {
+            assts.forEach((a: any) => {
+              const name = (a?.full_name || a?.name || '').trim();
+              if (name) {
+                if (a.id) pMap.set(a.id, name);
+                if (a.user_id) pMap.set(a.user_id, name);
+              }
+            });
+          }
+
+          map.forEach((o) => {
+            if (o.assistant_id && pMap.has(o.assistant_id)) {
+              o.assistant_name = pMap.get(o.assistant_id) || o.assistant_name;
+            }
+          });
         } catch (e) {
           console.warn('Notice fetching assistant profiles:', e);
         }
@@ -487,48 +547,13 @@ export function CustomerAccountModal({
   };
 
   // Status Helpers
-  const getStatusInfo = (statusRaw?: string) => {
+  const getStatusInfo = (statusRaw?: string, isAccepted?: boolean) => {
     const s = (statusRaw || '').toLowerCase();
-    if (['pending', 'created', 'bekliyor', 'asistan_araniyor', 'created'].includes(s)) {
+    if (['cancelled', 'iptal', 'iptal_edildi'].includes(s)) {
       return {
-        label: 'Asistan aranıyor',
-        color: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        step: 1
-      };
-    }
-    if (['accepted', 'assigned', 'asistan_kabul_etti'].includes(s)) {
-      return {
-        label: 'Asistan kabul etti',
-        color: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-        step: 2
-      };
-    }
-    if (['payment_pending', 'odeme_bekleniyor'].includes(s)) {
-      return {
-        label: 'Ödeme bekleniyor',
-        color: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-        step: 3
-      };
-    }
-    if (['payment_reported', 'odeme_bildirildi'].includes(s)) {
-      return {
-        label: 'Ödeme bildirildi',
-        color: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-        step: 4
-      };
-    }
-    if (['purchasing', 'hazirlaniyor', 'urunler_aliniyor', 'dogrulandi'].includes(s)) {
-      return {
-        label: 'Ürünler alınıyor',
-        color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-        step: 5
-      };
-    }
-    if (['delivering', 'on_the_way', 'yolda', 'teslimata_cikti'].includes(s)) {
-      return {
-        label: 'Teslimata çıktı',
-        color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-        step: 6
+        label: 'İptal edildi',
+        color: 'bg-red-500/10 text-red-400 border-red-500/20',
+        step: 8
       };
     }
     if (['completed', 'teslim_edildi', 'tamamlandi'].includes(s)) {
@@ -538,18 +563,164 @@ export function CustomerAccountModal({
         step: 7
       };
     }
-    if (['cancelled', 'iptal', 'iptal_edildi'].includes(s)) {
+    if (['delivering', 'on_the_way', 'yolda', 'teslimata_cikti'].includes(s)) {
       return {
-        label: 'İptal edildi',
-        color: 'bg-red-500/10 text-red-400 border-red-500/20',
-        step: 8
+        label: 'Teslimata çıktı',
+        color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+        step: 6
+      };
+    }
+    if (['purchasing', 'hazirlaniyor', 'urunler_aliniyor', 'dogrulandi'].includes(s)) {
+      return {
+        label: 'Ürünler alınıyor',
+        color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+        step: 5
+      };
+    }
+    if (['payment_reported', 'odeme_bildirildi'].includes(s)) {
+      return {
+        label: 'Ödeme bildirildi',
+        color: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+        step: 4
+      };
+    }
+    if (['payment_pending', 'odeme_bekleniyor'].includes(s)) {
+      return {
+        label: 'Asistan kabul etti',
+        color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        step: 3
+      };
+    }
+    if (['accepted', 'assigned', 'asistan_kabul_etti'].includes(s) || isAccepted) {
+      return {
+        label: 'Asistan kabul etti',
+        color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+        step: 2
       };
     }
     return {
-      label: 'İşleniyor',
-      color: 'bg-zinc-500/10 text-zinc-300 border-zinc-500/20',
+      label: 'Asistan aranıyor',
+      color: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
       step: 1
     };
+  };
+
+  // Helper to extract clean customer task description
+  const getCleanTaskDescription = (order: Order): string => {
+    // 1. Check order.task_description
+    if (order.task_description && typeof order.task_description === 'string' && order.task_description.trim()) {
+      let td = order.task_description.trim();
+      td = td
+        .replace(/^\[.*?\]\s*/g, '')
+        .replace(/•?\s*(?:Ne Zaman|Saat|Tercih Edilen Saat):[^\n\r]*/gi, '')
+        .replace(/•?\s*Adres Detayı:[^\n\r]*/gi, '')
+        .replace(/•?\s*Müşteri:[^\n\r]*/gi, '')
+        .replace(/•?\s*Telefon:[^\n\r]*/gi, '')
+        .trim();
+
+      if (
+        td &&
+        td !== 'Yapılacak iş belirtilmemiş.' &&
+        td !== 'Hizmet Talebi' &&
+        td !== 'Geçerken UĞRA Talebi' &&
+        td !== 'Hemen UĞRA Talebi' &&
+        !td.toLowerCase().includes('hazır olanı al') &&
+        !td.toLowerCase().includes('hazır olanı bırak')
+      ) {
+        return td;
+      }
+    }
+
+    // 2. Check order.notes
+    if (order.notes && typeof order.notes === 'string') {
+      let clean = order.notes
+        .replace(/\[(?:Geçerken|Hemen)\s*UĞRA\s*-\s*Hazır\s*Olanı\s*(?:Al|Bırak)\]\s*/gi, '')
+        .replace(/\[(?:Mağaza Siparişi|Mağaza|Partner)[^\]]*\]\s*/gi, '')
+        .replace(/^\[.*?\]\s*/g, '')
+        .replace(/•?\s*(?:Ne Zaman|Saat|Tercih Edilen Saat):[^\n\r]*/gi, '')
+        .replace(/•?\s*Adres Detayı:[^\n\r]*/gi, '')
+        .replace(/•?\s*Müşteri:[^\n\r]*/gi, '')
+        .replace(/•?\s*Telefon:[^\n\r]*/gi, '')
+        .replace(/•?\s*Ürün(?:lerin)?\s*Toplamı:[^\n\r]*/gi, '')
+        .replace(/•?\s*Asistan\s*Hizmet\s*Bedeli:[^\n\r]*/gi, '')
+        .replace(/•?\s*Genel\s*Toplam:[^\n\r]*/gi, '')
+        .replace(/\n\s*\n+/g, '\n')
+        .trim();
+
+      if (
+        clean &&
+        clean !== 'Yapılacak iş belirtilmemiş.' &&
+        !clean.toLowerCase().includes('hazır olanı al') &&
+        !clean.toLowerCase().includes('hazır olanı bırak')
+      ) {
+        return clean;
+      }
+    }
+
+    // 3. If real items exist in order.items
+    const realItems = getRealStoreProducts(order);
+    if (realItems.length > 0) {
+      return realItems.map((it: any) => `${it.quantity || 1}x ${it.title || it.name || 'Ürün'}`).join(', ');
+    }
+
+    return order.task_description || 'Asistan Hizmet Talebi';
+  };
+
+  // Helper to extract preferred time slot
+  const getPreferredTimeSlot = (order: Order): string | null => {
+    if (order.preferred_time && typeof order.preferred_time === 'string' && order.preferred_time.trim()) {
+      return order.preferred_time.trim();
+    }
+    if ((order as any).time_slot && typeof (order as any).time_slot === 'string' && (order as any).time_slot.trim()) {
+      return (order as any).time_slot.trim();
+    }
+    if ((order as any).delivery_time && typeof (order as any).delivery_time === 'string' && (order as any).delivery_time.trim()) {
+      return (order as any).delivery_time.trim();
+    }
+    if (order.notes && typeof order.notes === 'string') {
+      const match = order.notes.match(/•?\s*(?:Ne Zaman|Saat|Tercih Edilen Saat):\s*([^\n\r]+)/i);
+      if (match && match[1]?.trim()) {
+        return match[1].trim();
+      }
+    }
+    return null;
+  };
+
+  // Helper to extract real store products
+  const getRealStoreProducts = (order: Order): any[] => {
+    const itemsList = order.items || [];
+    if (!Array.isArray(itemsList)) return [];
+    return itemsList.filter((item: any) => {
+      const title = (item?.title || item?.name || '').toLowerCase();
+      return (
+        title &&
+        !title.includes('uğra') &&
+        !title.includes('hazır olanı') &&
+        !title.includes('asistan talebi')
+      );
+    });
+  };
+
+  // Helper to extract customer address
+  const getCustomerAddress = (order: Order): string => {
+    return (
+      order.customer_address ||
+      order.delivery_address ||
+      order.pickup_address ||
+      (profile?.address ? profile.address : '') ||
+      'Belirtilmedi'
+    );
+  };
+
+  // Helper to get service or store badge label
+  const getServiceBadgeLabel = (order: Order): string => {
+    if (order.partner_name && order.partner_name.trim()) {
+      return order.partner_name.trim();
+    }
+    const st = (order.service_type || '').toLowerCase();
+    if (st === 'gecerken' || st.includes('gecerken')) return 'Geçerken UĞRA';
+    if (st === 'hemen' || st.includes('hemen')) return 'Hemen UĞRA';
+    return 'UĞRA Asistanı';
   };
 
   if (!isOpen) return null;
@@ -711,16 +882,46 @@ export function CustomerAccountModal({
                       ) : (
                         <div className="space-y-4">
                           {orders.map((order) => {
-                            const statusInfo = getStatusInfo(order.status);
-                            const itemsList = order.items || [];
+                            const isAccepted = [
+                              'accepted',
+                              'asistan_kabul_etti',
+                              'assigned',
+                              'purchasing',
+                              'hazirlaniyor',
+                              'delivering',
+                              'on_the_way',
+                              'yolda',
+                              'teslimata_cikti',
+                              'completed',
+                              'teslim_edildi',
+                              'tamamlandi',
+                              'payment_pending',
+                              'odeme_bekleniyor',
+                              'payment_reported',
+                              'odeme_bildirildi'
+                            ].includes((order.status || '').toLowerCase()) || Boolean(order.assistant_id && (order.status || '').toLowerCase() !== 'cancelled' && (order.status || '').toLowerCase() !== 'iptal');
+
+                            const statusInfo = getStatusInfo(order.status, isAccepted);
+                            const taskDesc = getCleanTaskDescription(order);
+                            const preferredTime = getPreferredTimeSlot(order);
+                            const customerAddress = getCustomerAddress(order);
+                            const realStoreItems = getRealStoreProducts(order);
+                            const serviceBadge = getServiceBadgeLabel(order);
+
                             const productsTotal = Number(order.total_price || 0);
                             const assistantFee = Number(order.courier_net || 100);
-                            const grandTotal = productsTotal + assistantFee;
+                            const grandTotal = realStoreItems.length > 0 ? (productsTotal + assistantFee) : assistantFee;
+
+                            // Assistant Name Resolution
+                            const rawAsstName = (order.assistant_name || '').trim();
+                            const displayAssistantName = isAccepted
+                              ? (rawAsstName && rawAsstName !== 'Saha Asistanı' ? rawAsstName : (rawAsstName || 'Asistan Atandı'))
+                              : null;
 
                             return (
                               <div
                                 key={order.id}
-                                className="bg-zinc-900/80 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4 transition-all hover:border-white/20"
+                                className="bg-zinc-900/80 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all hover:border-white/20"
                               >
                                 {/* Header Info */}
                                 <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
@@ -748,47 +949,81 @@ export function CustomerAccountModal({
                                     </p>
                                   </div>
 
-                                  {/* Store Name Badge */}
+                                  {/* Service / Store Badge */}
                                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs text-zinc-200 font-semibold">
                                     <Store className="w-3.5 h-3.5 text-[#FF7A00]" />
-                                    <span>{order.partner_name || 'Mağaza Talebi'}</span>
+                                    <span>{serviceBadge}</span>
                                   </div>
                                 </div>
 
-                                {/* Items List */}
-                                <div className="space-y-2">
-                                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                                    Seçilen Ürünler
-                                  </span>
-                                  <div className="bg-black/40 border border-white/5 rounded-xl p-3 space-y-1.5">
-                                    {itemsList.length > 0 ? (
-                                      itemsList.map((item, idx) => (
+                                {/* Yapılacak İş (Actual Customer Task Description) */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-1.5 text-zinc-400">
+                                    <FileText className="w-3.5 h-3.5 text-[#FF7A00]" />
+                                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                                      Yapılacak İş
+                                    </span>
+                                  </div>
+                                  <div className="bg-black/40 border border-white/5 rounded-xl p-3">
+                                    <p className="text-sm font-semibold text-white leading-relaxed">
+                                      {taskDesc}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Tercih Edilen Saat (if exists) */}
+                                {preferredTime && (
+                                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 font-medium">
+                                    <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                    <span>
+                                      Tercih Edilen Saat: <strong className="text-amber-200 font-bold">{preferredTime}</strong>
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Müşteri Konumu */}
+                                {customerAddress && customerAddress !== 'Belirtilmedi' && (
+                                  <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-xs text-zinc-300">
+                                    <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                                    <div className="min-w-0 flex-1">
+                                      <span className="text-[10px] uppercase font-bold text-zinc-500 block">Müşteri Konumu</span>
+                                      <p className="text-xs text-zinc-200 line-clamp-2">{customerAddress}</p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Sipariş Edilen Ürünler (Only if actual store order with real items) */}
+                                {realStoreItems.length > 0 && (
+                                  <div className="space-y-1.5">
+                                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
+                                      Sipariş Edilen Ürünler
+                                    </span>
+                                    <div className="bg-black/40 border border-white/5 rounded-xl p-3 space-y-1.5">
+                                      {realStoreItems.map((item: any, idx: number) => (
                                         <div
                                           key={idx}
                                           className="flex items-center justify-between text-xs text-zinc-300"
                                         >
                                           <div className="flex items-center gap-2">
-                                            <span className="font-bold text-[#FF7A00]">{item.quantity}x</span>
+                                            <span className="font-bold text-[#FF7A00]">{item.quantity || 1}x</span>
                                             <span>{item.title || item.name || 'Ürün'}</span>
                                           </div>
                                           <span className="font-semibold text-white">
                                             {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('tr-TR')} ₺
                                           </span>
                                         </div>
-                                      ))
-                                    ) : (
-                                      <p className="text-xs text-zinc-400 italic">
-                                        {order.notes || order.task_description || 'Ürün detayları belirtilmedi.'}
-                                      </p>
-                                    )}
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
+                                )}
 
                                 {/* Financial Breakdown */}
                                 <div className="grid grid-cols-3 gap-2 p-3 bg-white/5 border border-white/5 rounded-xl text-xs">
                                   <div>
-                                    <span className="text-[10px] text-zinc-400 block font-medium">Ürün Toplamı</span>
-                                    <span className="font-bold text-white">{productsTotal.toLocaleString('tr-TR')} ₺</span>
+                                    <span className="text-[10px] text-zinc-400 block font-medium">Ürün Tutarı</span>
+                                    <span className="font-bold text-white">
+                                      {realStoreItems.length > 0 ? productsTotal.toLocaleString('tr-TR') : '0'} ₺
+                                    </span>
                                   </div>
                                   <div>
                                     <span className="text-[10px] text-zinc-400 block font-medium">Asistan Hizmeti</span>
@@ -801,33 +1036,16 @@ export function CustomerAccountModal({
                                 </div>
 
                                 {/* Assistant Info */}
-                                <div className="flex items-center justify-between text-xs pt-1">
+                                <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
                                   <div className="flex items-center gap-2 text-zinc-400">
-                                    <UserIcon className={`w-4 h-4 ${order.assistant_name ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                                    <UserIcon className={`w-4 h-4 ${isAccepted ? 'text-emerald-400' : 'text-zinc-500'}`} />
                                     <span>
                                       Atanan Asistan:{' '}
-                                      <strong className={order.assistant_name ? 'text-emerald-400 font-bold' : 'text-zinc-300 font-medium'}>
-                                        {order.assistant_name || 'En yakın asistan aranıyor...'}
+                                      <strong className={isAccepted ? 'text-emerald-400 font-bold' : 'text-zinc-400 font-medium'}>
+                                        {isAccepted ? (displayAssistantName || 'Asistan Atandı') : 'En yakın asistan aranıyor...'}
                                       </strong>
                                     </span>
                                   </div>
-
-                                  {/* Direct Payment Action */}
-                                  {['accepted', 'asistan_kabul_etti', 'payment_pending', 'odeme_bekleniyor'].includes(
-                                    (order.status || '').toLowerCase()
-                                  ) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setSelectedOrderForPayment(order);
-                                        setActiveTab('odemelerim');
-                                      }}
-                                      className="px-3.5 py-1.5 rounded-xl bg-[#FF7A00] hover:bg-[#e66e00] text-black font-extrabold text-xs transition-all cursor-pointer shadow-md flex items-center gap-1.5"
-                                    >
-                                      <CreditCard className="w-3.5 h-3.5" />
-                                      <span>Ödeme Yap</span>
-                                    </button>
-                                  )}
                                 </div>
                               </div>
                             );

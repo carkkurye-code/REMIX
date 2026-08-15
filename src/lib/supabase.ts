@@ -1198,7 +1198,7 @@ export const VALID_TASK_COLUMNS = new Set([
   'task_description', 'pickup_address', 'delivery_address', 'pickup_lat', 'pickup_lng',
   'delivery_lat', 'delivery_lng', 'total_price', 'customer_price', 'courier_net',
   'base_price', 'fuel_cost', 'wear_cost', 'operation_cost', 'tax_cost', 'vat_cost',
-  'commission', 'service_type', 'distance_km', 'estimated_minutes',
+  'commission', 'service_type', 'distance_km', 'estimated_minutes', 'notes', 'preferred_time',
   'created_at', 'updated_at', 'accepted_at', 'completed_at', 'cancelled_at', 'verification_code'
 ]);
 
@@ -1211,7 +1211,7 @@ export const VALID_ORDER_COLUMNS = new Set([
   'postal_code', 'place_id', 'items', 'notes', 'delivery_code', 'delivery_code_verified',
   'delivery_code_verified_at', 'picked_up_at', 'cancel_reason', 'verified_at',
   'delivered_at', 'created_at', 'customer_name', 'customer_phone', 'customer_address',
-  'city_id', 'franchise_id'
+  'city_id', 'franchise_id', 'task_description', 'preferred_time'
 ]);
 
 export function filterTaskPayload(payload: Record<string, any>): Record<string, any> {
