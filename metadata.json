@@ -1,0 +1,10 @@
+{
+  "name": "Remix HERO",
+  "description": "Imported from GitHub: carkkurye-code/HERO",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
