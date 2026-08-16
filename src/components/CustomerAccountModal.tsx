@@ -197,48 +197,57 @@ export function CustomerAccountModal({
         }
       });
 
-      // Query assistant names for any assigned orders where assistant_name is missing or placeholder
+      // Query assistant names for any assigned orders where assistant_name is missing, placeholder, or needs resolution
       const assignedOrders = Array.from(map.values()).filter(o => o.assistant_id);
       if (assignedOrders.length > 0 && supabase) {
-        const assistantIds = Array.from(new Set(assignedOrders.map(o => o.assistant_id).filter(Boolean)));
-        try {
-          const pMap = new Map<string, string>();
+        const rawIds = Array.from(new Set(assignedOrders.map(o => String(o.assistant_id || '').trim()).filter(Boolean)));
+        const validAssistantUuids = rawIds.filter(id => isUUID(id));
 
-          // 1. Check profiles table
-          const { data: profs } = await supabase
-            .from('profiles')
-            .select('id, full_name')
-            .in('id', assistantIds);
-          if (profs && profs.length > 0) {
-            profs.forEach((p: any) => {
-              if (p?.id && p?.full_name) {
-                pMap.set(p.id, String(p.full_name).trim());
-              }
-            });
-          }
+        if (validAssistantUuids.length > 0) {
+          try {
+            const pMap = new Map<string, string>();
 
-          // 2. Check assistants table
-          const { data: assts } = await supabase
-            .from('assistants')
-            .select('id, user_id, full_name, name')
-            .or(`id.in.(${assistantIds.join(',')}),user_id.in.(${assistantIds.join(',')})`);
-          if (assts && assts.length > 0) {
-            assts.forEach((a: any) => {
-              const name = (a?.full_name || a?.name || '').trim();
-              if (name) {
-                if (a.id) pMap.set(a.id, name);
-                if (a.user_id) pMap.set(a.user_id, name);
-              }
-            });
-          }
+            // 1. Check profiles table (id = assistant_id)
+            const { data: profs, error: profsErr } = await supabase
+              .from('profiles')
+              .select('id, full_name')
+              .in('id', validAssistantUuids);
 
-          map.forEach((o) => {
-            if (o.assistant_id && pMap.has(o.assistant_id)) {
-              o.assistant_name = pMap.get(o.assistant_id) || o.assistant_name;
+            if (!profsErr && profs && profs.length > 0) {
+              profs.forEach((p: any) => {
+                const fn = (p?.full_name || '').trim();
+                if (p?.id && fn && fn !== 'Saha Asistanı') {
+                  pMap.set(p.id, fn);
+                }
+              });
             }
-          });
-        } catch (e) {
-          console.warn('Notice fetching assistant profiles:', e);
+
+            // 2. Check assistants table (id in UUIDs or user_id in UUIDs) using ONLY existing column full_name
+            const { data: assts, error: asstsErr } = await supabase
+              .from('assistants')
+              .select('id, user_id, full_name')
+              .or(`id.in.(${validAssistantUuids.join(',')}),user_id.in.(${validAssistantUuids.join(',')})`);
+
+            if (!asstsErr && assts && assts.length > 0) {
+              assts.forEach((a: any) => {
+                const fn = (a?.full_name || '').trim();
+                if (fn && fn !== 'Saha Asistanı') {
+                  if (a.id) pMap.set(a.id, fn);
+                  if (a.user_id) pMap.set(a.user_id, fn);
+                }
+              });
+            }
+
+            // Update matched orders with real assistant full_name
+            map.forEach((o) => {
+              const aid = String(o.assistant_id || '').trim();
+              if (aid && pMap.has(aid)) {
+                o.assistant_name = pMap.get(aid) || o.assistant_name;
+              }
+            });
+          } catch (e) {
+            console.warn('Notice resolving assistant names:', e);
+          }
         }
       }
 

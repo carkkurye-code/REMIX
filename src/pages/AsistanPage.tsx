@@ -784,55 +784,24 @@ const CustomerOfferCard = React.memo(function CustomerOfferCard({
 }) {
   const pTotal = Number(totalPrice) || 0;
   const cNet = Number(courierNet) || 0;
-  let cTotal = Number(customerPrice) || 0;
+  const cTotal = Number(customerPrice) || 0;
 
-  if (cTotal === 0 && (pTotal > 0 || cNet > 0)) {
-    cTotal = pTotal + cNet;
-  }
-
-  const effectiveProductTotal = pTotal > 0
-    ? pTotal
-    : (cTotal > cNet && cNet > 0 ? (cTotal - cNet) : 0);
-
-  const effectiveGrandTotal = cTotal > 0
-    ? (cTotal >= effectiveProductTotal ? cTotal : (effectiveProductTotal + cNet))
-    : (effectiveProductTotal + cNet);
+  // Asistanın bu talebi kabul ettiğinde kazanacağı / net alacağı ücret
+  const earning = cNet > 0 ? cNet : (cTotal > 0 ? cTotal : (pTotal > 0 ? pTotal : 0));
 
   return (
-    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] space-y-2.5 text-xs">
+    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] space-y-2 text-xs">
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-[#6B7280] font-bold uppercase tracking-wider">
           MÜŞTERİ TEKLİFİ
         </span>
       </div>
 
-      <div className="space-y-1.5 pt-0.5">
-        {effectiveProductTotal > 0 && (
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-[#6B7280] font-medium">Ürünlerin Toplamı</span>
-            <span className="font-semibold text-[#1F2937] font-mono text-sm">
-              {effectiveProductTotal} TL
-            </span>
-          </div>
-        )}
-
-        {cNet > 0 && (
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-[#6B7280] font-medium">Asistan Hizmet Bedeli</span>
-            <span className="font-bold text-[#2563EB] font-mono text-sm">
-              {cNet} TL
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div className="pt-2 border-t border-[#E5E7EB] flex items-center justify-between">
-        <div className="text-left">
-          <div className="text-xs font-bold text-[#1F2937]">Müşterinin Toplam Ödeyeceği</div>
-        </div>
-        <div className="font-bold text-[#10B981] text-lg font-mono">
-          {effectiveGrandTotal || effectiveProductTotal || cNet || 0} TL
-        </div>
+      <div className="flex items-center justify-between pt-0.5">
+        <span className="text-[#4B5563] font-medium text-xs">Asistan Kazancı</span>
+        <span className="font-bold text-[#10B981] font-mono text-base">
+          {earning} TL
+        </span>
       </div>
     </div>
   );
@@ -2857,7 +2826,7 @@ export function AsistanPage() {
                           {/* 2. Yapılacak İş */}
                           <TaskDescriptionCard description={r.task_description} />
 
-                          {/* 3. Müşteri Teklifi & Asistan Hizmet Bedeli */}
+                          {/* 3. Müşteri Teklifi & Asistan Kazancı */}
                           <CustomerOfferCard
                             totalPrice={r.total_price}
                             courierNet={r.courier_net}
@@ -2974,7 +2943,7 @@ export function AsistanPage() {
                           {/* 2. Yapılacak İş */}
                           <TaskDescriptionCard description={r.task_description} />
 
-                          {/* 3. Müşteri Teklifi & Asistan Hizmet Bedeli */}
+                          {/* 3. Müşteri Teklifi & Asistan Kazancı */}
                           <CustomerOfferCard
                             totalPrice={r.total_price}
                             courierNet={r.courier_net}
