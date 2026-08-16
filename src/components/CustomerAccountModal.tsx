@@ -533,14 +533,33 @@ export function CustomerAccountModal({
               address: cleanAddress
             }
           });
-          await supabase
+          const { data: upData, error: upErr } = await supabase
             .from('profiles')
-            .upsert({
-              id: user.id,
+            .update({
               full_name: cleanName,
               phone: cleanPhone,
               updated_at: new Date().toISOString()
-            }, { onConflict: 'id' });
+            })
+            .eq('id', user.id)
+            .select('id');
+
+          if (upErr) {
+            throw upErr;
+          }
+
+          if (!upData || upData.length === 0) {
+            await supabase
+              .from('profiles')
+              .upsert({
+                id: user.id,
+                email: user.email || '',
+                full_name: cleanName,
+                phone: cleanPhone,
+                role: 'customer',
+                is_admin: false,
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'id' });
+          }
         }
         if (refreshProfile) {
           await refreshProfile();

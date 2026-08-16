@@ -203,11 +203,14 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           console.error('Customer profiles tablosu sorgu hatası:', profileErr);
         }
 
+        const allowedRoles: UserRole[] = ['customer', 'partner', 'assistant', 'admin', 'super_admin'];
         const meta = authUser.user_metadata || {};
         const metaFullName = meta.full_name || meta.name;
         const metaAvatar = meta.avatar_url || meta.picture;
         const metaPhone = meta.phone || '';
         const metaAddress = meta.address || meta.customer_address || '';
+        const rawMetaRole = meta.role as UserRole;
+        const metaRole: UserRole = (rawMetaRole && allowedRoles.includes(rawMetaRole)) ? rawMetaRole : 'customer';
 
         if (!profileErr && data) {
           let updatedName = data.full_name;
@@ -224,7 +227,7 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             try {
               const { error: updateErr } = await supabaseCustomer
                 .from('profiles')
-                .update({ full_name: updatedName, avatar_url: updatedAvatar })
+                .update({ full_name: updatedName, avatar_url: updatedAvatar, updated_at: new Date().toISOString() })
                 .eq('id', authUser.id);
 
               if (updateErr) {
@@ -233,14 +236,17 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             } catch (e) {}
           }
 
+          const existingRole = data.role as UserRole;
+          const safeRole: UserRole = (existingRole && allowedRoles.includes(existingRole)) ? existingRole : metaRole;
+
           loadedProfile = {
             id: data.id,
             email: data.email || authUser.email || '',
             full_name: data.full_name || updatedName || metaFullName || (authUser.email ? authUser.email.split('@')[0] : 'Kullanıcı'),
             phone: data.phone || metaPhone || '',
             address: data.address || metaAddress || '',
-            role: (data.role as UserRole) || 'customer',
-            is_admin: data.is_admin || data.role === 'admin' || data.role === 'super_admin',
+            role: safeRole,
+            is_admin: data.is_admin || safeRole === 'admin' || safeRole === 'super_admin',
             avatar_url: updatedAvatar || metaAvatar,
             partner_id: data.partner_id,
             assistant_id: data.assistant_id,
@@ -250,16 +256,17 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           // Profile does not exist in public.profiles table yet (e.g. first Google sign in)
           const fullName = metaFullName || (authUser.email ? authUser.email.split('@')[0] : 'Kullanıcı');
           const avatarUrl = metaAvatar || '';
-          const metaRole = (meta.role as UserRole) || 'customer';
 
           const newProfile = {
             id: authUser.id,
             email: authUser.email || '',
             full_name: fullName,
+            phone: metaPhone,
             avatar_url: avatarUrl,
             role: metaRole,
-            is_admin: false,
+            is_admin: metaRole === 'admin' || metaRole === 'super_admin',
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           };
 
           const { data: upserted, error: upsertErr } = await supabaseCustomer
@@ -273,14 +280,17 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
 
           if (!upsertErr && upserted) {
+            const returnedRole = (upserted.role as UserRole);
+            const safeRole: UserRole = (returnedRole && allowedRoles.includes(returnedRole)) ? returnedRole : metaRole;
+
             loadedProfile = {
               id: upserted.id,
               email: upserted.email || authUser.email || '',
               full_name: upserted.full_name || fullName,
               phone: upserted.phone || metaPhone || '',
               address: upserted.address || metaAddress || '',
-              role: (upserted.role as UserRole) || metaRole,
-              is_admin: upserted.is_admin || false,
+              role: safeRole,
+              is_admin: upserted.is_admin || safeRole === 'admin' || safeRole === 'super_admin',
               avatar_url: upserted.avatar_url || avatarUrl,
               partner_id: upserted.partner_id,
               assistant_id: upserted.assistant_id,
@@ -581,43 +591,63 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       // 1. Update Supabase Auth user metadata (saved in auth.users, persists across all devices/sessions)
       if (isSupabaseConfigured && supabaseCustomer) {
-        try {
-          const { data: authUserData, error: authUserErr } = await supabaseCustomer.auth.updateUser({
-            data: {
-              full_name: cleanFullName,
-              phone: cleanPhone,
-              address: cleanAddress,
-            }
-          });
-          if (authUserErr) {
-            console.warn('[CustomerAuthContext] updateUser metadata notice:', authUserErr);
-          } else if (authUserData?.user) {
-            setUser(authUserData.user);
+        const { data: authUserData, error: authUserErr } = await supabaseCustomer.auth.updateUser({
+          data: {
+            full_name: cleanFullName,
+            phone: cleanPhone,
+            address: cleanAddress,
           }
-        } catch (authErr) {
-          console.warn('[CustomerAuthContext] auth.updateUser exception:', authErr);
+        });
+        if (authUserErr) {
+          console.error('[CustomerAuthContext] auth.updateUser error:', authUserErr);
+          return { success: false, error: authUserErr.message || 'Kullanıcı oturum bilgisi güncellenemedi.' };
+        }
+        if (authUserData?.user) {
+          setUser(authUserData.user);
         }
       }
 
       // 2. Update public.profiles table safely
       if (isSupabaseConfigured && supabaseCustomer && isUUID(user.id)) {
-        try {
-          const profilePayload: Record<string, any> = {
-            id: user.id,
+        // Step 2A: Use UPDATE first. UPDATE never touches role and preserves whatever role the user currently has without triggering check constraints.
+        const { data: updateData, error: updateErr } = await supabaseCustomer
+          .from('profiles')
+          .update({
             full_name: cleanFullName,
             phone: cleanPhone,
             updated_at: new Date().toISOString()
-          };
+          })
+          .eq('id', user.id)
+          .select('id, role, full_name, phone');
 
-          const { error: upsertErr } = await supabaseCustomer
+        if (updateErr) {
+          console.error('[CustomerAuthContext] profiles update error:', updateErr);
+          return { success: false, error: updateErr.message || 'Profil veritabanında güncellenemedi.' };
+        }
+
+        // Step 2B: If row does not exist in profiles table yet (0 rows updated), perform an insert with verified valid role
+        if (!updateData || updateData.length === 0) {
+          const allowedRoles: UserRole[] = ['customer', 'partner', 'assistant', 'admin', 'super_admin'];
+          const candidateRole = (profile?.role as UserRole) || (user.user_metadata?.role as UserRole) || 'customer';
+          const safeRole: UserRole = allowedRoles.includes(candidateRole) ? candidateRole : 'customer';
+
+          const { error: insertErr } = await supabaseCustomer
             .from('profiles')
-            .upsert(profilePayload, { onConflict: 'id' });
+            .upsert({
+              id: user.id,
+              email: user.email || '',
+              full_name: cleanFullName,
+              phone: cleanPhone,
+              role: safeRole,
+              is_admin: safeRole === 'admin' || safeRole === 'super_admin',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
 
-          if (upsertErr) {
-            console.warn('[CustomerAuthContext] profiles upsert notice:', upsertErr);
+          if (insertErr) {
+            console.error('[CustomerAuthContext] profiles upsert error:', insertErr);
+            return { success: false, error: insertErr.message || 'Profil kaydı oluşturulamadı.' };
           }
-        } catch (dbErr) {
-          console.warn('[CustomerAuthContext] profiles update exception:', dbErr);
         }
       }
 
@@ -639,18 +669,23 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       } catch (e) {}
 
       // 4. Update local state
+      const allowedRoles: UserRole[] = ['customer', 'partner', 'assistant', 'admin', 'super_admin'];
+      const currentRole = (profile?.role as UserRole) || (user.user_metadata?.role as UserRole) || 'customer';
+      const safeRole: UserRole = allowedRoles.includes(currentRole) ? currentRole : 'customer';
+
       const updatedProfile: UserProfile = {
         ...(profile || {
           id: user.id,
           email: user.email || '',
-          role: 'customer',
-          is_admin: false,
+          role: safeRole,
+          is_admin: safeRole === 'admin' || safeRole === 'super_admin',
           avatar_url: '',
           created_at: new Date().toISOString(),
         }),
         full_name: cleanFullName,
         phone: cleanPhone,
         address: cleanAddress,
+        role: safeRole,
       };
 
       setProfile(updatedProfile);
@@ -658,7 +693,7 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return { success: true, profile: updatedProfile };
     } catch (err: any) {
       console.error('[CustomerAuthContext] updateProfile error:', err);
-      return { success: false, error: err?.message || 'Profil güncellenirken hata oluştu.' };
+      return { success: false, error: err?.message || 'Profil güncellenirken beklenmedik bir hata oluştu.' };
     }
   };
 
