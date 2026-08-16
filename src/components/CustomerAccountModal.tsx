@@ -996,114 +996,155 @@ export function CustomerAccountModal({
                         </span>
                       </div>
 
-                      {pendingPaymentOrders.length === 0 && orders.length === 0 && notifications.filter(n => n.type === 'iban_details' || (n.message && n.message.includes('IBAN:'))).length === 0 ? (
-                        <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
-                          <Inbox className="w-10 h-10 text-zinc-500 mx-auto" />
-                          <h3 className="text-sm font-bold text-white">Gelen Kutunuz Boş</h3>
-                          <p className="text-xs text-zinc-400">
-                            Asistanınız talebinizi kabul ettiğinde ödeme ve durum bildirimleri buraya gelecektir.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {/* IBAN Notifications */}
-                          {notifications.map((notif) => {
-                            const isIbanDetails = notif.type === 'iban_details' || (notif.message && notif.message.includes('IBAN:'));
-                            if (!isIbanDetails) return null;
+                      {(() => {
+                        // Filter IBAN notifications: must belong to an existing active order or match user's relevant order
+                        const validIbanNotifications = notifications.filter((notif) => {
+                          const isIbanDetails = notif.type === 'iban_details' || (notif.message && notif.message.includes('IBAN:'));
+                          if (!isIbanDetails) return false;
 
-                            const msg = notif.message || notif.body || '';
-                            const accountHolderMatch = msg.match(/Hesap Sahibi:\s*([^\n\r]+)/i);
-                            const bankNameMatch = msg.match(/Banka:\s*([^\n\r]+)/i);
-                            const ibanMatch = msg.match(/IBAN:\s*([^\n\r]+)/i);
+                          // Check if this notification has a specific order_id or task_id attached
+                          const notifOrderId = notif.order_id || notif.task_id || notif.payload?.order_id || notif.payload?.task_id;
+                          
+                          if (notifOrderId) {
+                            // Only show if the linked order exists and is not cancelled/completed in the distant past
+                            const matchingOrder = orders.find(o => o.id === notifOrderId);
+                            if (matchingOrder) {
+                              const s = (matchingOrder.status || '').toLowerCase();
+                              // Order should be in an active state expecting payment or fulfillment
+                              return !['cancelled', 'iptal'].includes(s);
+                            }
+                            return false;
+                          }
 
-                            const accountHolder = accountHolderMatch ? accountHolderMatch[1].trim() : null;
-                            const bankName = bankNameMatch ? bankNameMatch[1].trim() : null;
-                            const iban = ibanMatch ? ibanMatch[1].trim() : null;
+                          // If notification doesn't have order_id metadata (legacy record),
+                          // only show if there is an order whose created_at was BEFORE or AT the notification time
+                          // and where that order is currently active/accepted.
+                          // If there are newer orders created AFTER this notification, this legacy IBAN notification belongs to an older order and MUST NOT be shown for the new order!
+                          const notifTime = notif.created_at ? new Date(notif.created_at).getTime() : 0;
+                          const matchingActiveOrder = orders.find(o => {
+                            const s = (o.status || '').toLowerCase();
+                            const isOrderActive = ['accepted', 'asistan_kabul_etti', 'payment_pending', 'odeme_bekleniyor', 'payment_reported', 'odeme_bildirildi', 'purchasing', 'hazirlaniyor', 'urunler_aliniyor', 'delivering', 'on_the_way', 'yolda', 'teslimata_cikti'].includes(s);
+                            if (!isOrderActive) return false;
 
-                            return (
-                              <div
-                                key={notif.id}
-                                className="p-4 bg-zinc-900 border border-white/10 rounded-2xl space-y-3"
-                              >
-                                <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                                    <CreditCard className="w-4 h-4" />
-                                    <span>{notif.title || 'Asistan Ödeme Bilgilerini Gönderdi'}</span>
+                            const orderTime = o.created_at ? new Date(o.created_at).getTime() : 0;
+                            // Order MUST have been created before the IBAN notification was sent
+                            return orderTime > 0 && notifTime >= orderTime;
+                          });
+
+                          return Boolean(matchingActiveOrder);
+                        });
+
+                        const hasAnyContent = pendingPaymentOrders.length > 0 || orders.length > 0 || validIbanNotifications.length > 0;
+
+                        if (!hasAnyContent) {
+                          return (
+                            <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
+                              <Inbox className="w-10 h-10 text-zinc-500 mx-auto" />
+                              <h3 className="text-sm font-bold text-white">Gelen Kutunuz Boş</h3>
+                              <p className="text-xs text-zinc-400">
+                                Asistanınız talebinizi kabul ettiğinde durum bildirimleri ve ödeme bilgileri buraya gelecektir.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-3">
+                            {/* IBAN Notifications */}
+                            {validIbanNotifications.map((notif) => {
+                              const msg = notif.message || notif.body || '';
+                              const accountHolderMatch = msg.match(/Hesap Sahibi:\s*([^\n\r]+)/i);
+                              const bankNameMatch = msg.match(/Banka:\s*([^\n\r]+)/i);
+                              const ibanMatch = msg.match(/IBAN:\s*([^\n\r]+)/i);
+
+                              const accountHolder = accountHolderMatch ? accountHolderMatch[1].trim() : (notif.payload?.account_holder || null);
+                              const bankName = bankNameMatch ? bankNameMatch[1].trim() : (notif.payload?.bank_name || null);
+                              const iban = ibanMatch ? ibanMatch[1].trim() : (notif.payload?.iban || null);
+
+                              return (
+                                <div
+                                  key={notif.id}
+                                  className="p-4 bg-zinc-900 border border-white/10 rounded-2xl space-y-3"
+                                >
+                                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                                      <CreditCard className="w-4 h-4" />
+                                      <span>{notif.title || 'Asistan Ödeme Bilgilerini Gönderdi'}</span>
+                                    </div>
+                                    {notif.created_at && (
+                                      <span className="text-[10px] text-zinc-400">
+                                        {new Date(notif.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    )}
                                   </div>
-                                  {notif.created_at && (
-                                    <span className="text-[10px] text-zinc-400">
-                                      {new Date(notif.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                  )}
+
+                                  <div className="space-y-2 text-xs">
+                                    {accountHolder && (
+                                      <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                          <span className="text-[10px] text-zinc-400 font-bold uppercase block">Hesap Sahibi</span>
+                                          <span className="text-white font-semibold text-xs truncate block">{accountHolder}</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyText(accountHolder, 'Hesap Sahibi', notif.id)}
+                                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                                        >
+                                          {copiedField === `${notif.id}_Hesap Sahibi` ? (
+                                            <Check className="w-3 h-3 text-emerald-400" />
+                                          ) : (
+                                            <Copy className="w-3 h-3" />
+                                          )}
+                                          <span>Kopyala</span>
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {bankName && (
+                                      <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                          <span className="text-[10px] text-zinc-400 font-bold uppercase block">Banka</span>
+                                          <span className="text-white font-semibold text-xs truncate block">{bankName}</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyText(bankName, 'Banka', notif.id)}
+                                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                                        >
+                                          {copiedField === `${notif.id}_Banka` ? (
+                                            <Check className="w-3 h-3 text-emerald-400" />
+                                          ) : (
+                                            <Copy className="w-3 h-3" />
+                                          )}
+                                          <span>Kopyala</span>
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {iban && (
+                                      <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
+                                        <div className="min-w-0 flex-1">
+                                          <span className="text-[10px] text-zinc-400 font-bold uppercase block">IBAN</span>
+                                          <span className="text-white font-mono font-semibold text-xs tracking-wider break-all block">{iban}</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyText(iban, 'IBAN', notif.id)}
+                                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                                        >
+                                          {copiedField === `${notif.id}_IBAN` ? (
+                                            <Check className="w-3 h-3 text-emerald-400" />
+                                          ) : (
+                                            <Copy className="w-3 h-3" />
+                                          )}
+                                          <span>Kopyala</span>
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-
-                                <div className="space-y-2 text-xs">
-                                  {accountHolder && (
-                                    <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
-                                      <div className="min-w-0 flex-1">
-                                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Hesap Sahibi</span>
-                                        <span className="text-white font-semibold text-xs truncate block">{accountHolder}</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyText(accountHolder, 'Hesap Sahibi', notif.id)}
-                                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
-                                      >
-                                        {copiedField === `${notif.id}_Hesap Sahibi` ? (
-                                          <Check className="w-3 h-3 text-emerald-400" />
-                                        ) : (
-                                          <Copy className="w-3 h-3" />
-                                        )}
-                                        <span>Kopyala</span>
-                                      </button>
-                                    </div>
-                                  )}
-
-                                  {bankName && (
-                                    <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
-                                      <div className="min-w-0 flex-1">
-                                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Banka</span>
-                                        <span className="text-white font-semibold text-xs truncate block">{bankName}</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyText(bankName, 'Banka', notif.id)}
-                                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
-                                      >
-                                        {copiedField === `${notif.id}_Banka` ? (
-                                          <Check className="w-3 h-3 text-emerald-400" />
-                                        ) : (
-                                          <Copy className="w-3 h-3" />
-                                        )}
-                                        <span>Kopyala</span>
-                                      </button>
-                                    </div>
-                                  )}
-
-                                  {iban && (
-                                    <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
-                                      <div className="min-w-0 flex-1">
-                                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">IBAN</span>
-                                        <span className="text-white font-mono font-semibold text-xs tracking-wider break-all block">{iban}</span>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyText(iban, 'IBAN', notif.id)}
-                                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
-                                      >
-                                        {copiedField === `${notif.id}_IBAN` ? (
-                                          <Check className="w-3 h-3 text-emerald-400" />
-                                        ) : (
-                                          <Copy className="w-3 h-3" />
-                                        )}
-                                        <span>Kopyala</span>
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
 
                           {orders.map((order) => {
                             const statusStr = (order.status || '').toLowerCase();
@@ -1181,9 +1222,10 @@ export function CustomerAccountModal({
                             );
                           })}
                         </div>
-                      )}
-                    </div>
-                  )}
+                      );
+                    })()}
+                  </div>
+                )}
 
                   {/* TAB 3: HESAP BİLGİLERİM */}
                   {activeTab === 'hesap_bilgilerim' && (

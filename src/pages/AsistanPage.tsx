@@ -2285,6 +2285,21 @@ export function AsistanPage() {
         if (colsSet.has('body')) {
           payload.body = messageContent;
         }
+        if (colsSet.has('order_id')) {
+          payload.order_id = order.id;
+        }
+        if (colsSet.has('task_id')) {
+          payload.task_id = order.id;
+        }
+        if (colsSet.has('payload')) {
+          payload.payload = {
+            order_id: order.id,
+            task_id: order.id,
+            account_holder: accountHolder,
+            bank_name: bankName,
+            iban: iban,
+          };
+        }
         if (colsSet.has('is_read')) {
           payload.is_read = false;
         }
