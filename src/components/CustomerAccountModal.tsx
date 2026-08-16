@@ -134,44 +134,47 @@ export function CustomerAccountModal({
           }
         }
 
-        // Also fetch from tasks table if customer has tasks
+        // Also fetch from tasks table if customer has tasks (strictly using customer_id with valid UUID)
         try {
-          let taskQuery = supabase.from('tasks').select('*');
           if (userId && isUUID(userId)) {
-            taskQuery = taskQuery.or(`customer_id.eq.${userId},customer_phone.eq.${sanitizedPhone}`);
-          } else if (sanitizedPhone) {
-            taskQuery = taskQuery.eq('customer_phone', sanitizedPhone);
-          }
-          const { data: taskData } = await taskQuery.order('created_at', { ascending: false });
-          if (taskData && taskData.length > 0) {
-            taskData.forEach((t: any) => {
-              const matchedOrder = fetched.find(o => o.id === t.id || o.id === t.order_id);
-              if (matchedOrder) {
-                if (t.assistant_id) matchedOrder.assistant_id = t.assistant_id;
-                if (t.assistant_name && t.assistant_name !== 'Saha Asistanı') matchedOrder.assistant_name = t.assistant_name;
-                if (t.status && t.status !== 'bekliyor') matchedOrder.status = t.status;
-                if (t.task_description && !matchedOrder.task_description) matchedOrder.task_description = t.task_description;
-              } else {
-                fetched.push({
-                  id: t.id,
-                  customer_id: t.customer_id,
-                  customer_phone: t.customer_phone,
-                  assistant_id: t.assistant_id,
-                  assistant_name: t.assistant_name,
-                  status: t.status || 'bekliyor',
-                  task_description: t.task_description,
-                  preferred_time: t.preferred_time,
-                  total_price: t.total_price || t.customer_price || 0,
-                  customer_price: t.customer_price || t.total_price || 0,
-                  courier_net: t.courier_net || 0,
-                  created_at: t.created_at,
-                  delivery_address: t.delivery_address || t.pickup_address,
-                  customer_address: t.delivery_address || t.pickup_address,
-                  notes: t.notes || t.task_description,
-                  service_type: t.service_type || 'gecerken'
-                } as Order);
-              }
-            });
+            const { data: taskData, error: taskErr } = await supabase
+              .from('tasks')
+              .select('*')
+              .eq('customer_id', userId)
+              .order('created_at', { ascending: false });
+
+            if (taskErr) {
+              console.warn('[CustomerAccountModal] tasks fetch notice:', taskErr.message || taskErr);
+            } else if (taskData && taskData.length > 0) {
+              taskData.forEach((t: any) => {
+                const matchedOrder = fetched.find(o => o.id === t.id || o.id === t.order_id);
+                if (matchedOrder) {
+                  if (t.assistant_id) matchedOrder.assistant_id = t.assistant_id;
+                  if (t.assistant_name && t.assistant_name !== 'Saha Asistanı') matchedOrder.assistant_name = t.assistant_name;
+                  if (t.status && t.status !== 'bekliyor') matchedOrder.status = t.status;
+                  if (t.task_description && !matchedOrder.task_description) matchedOrder.task_description = t.task_description;
+                } else {
+                  fetched.push({
+                    id: t.id,
+                    customer_id: t.customer_id,
+                    customer_phone: t.customer_phone || '',
+                    assistant_id: t.assistant_id,
+                    assistant_name: t.assistant_name,
+                    status: t.status || 'bekliyor',
+                    task_description: t.task_description,
+                    preferred_time: t.preferred_time,
+                    total_price: t.total_price || t.customer_price || 0,
+                    customer_price: t.customer_price || t.total_price || 0,
+                    courier_net: t.courier_net || 0,
+                    created_at: t.created_at,
+                    delivery_address: t.delivery_address || t.pickup_address,
+                    customer_address: t.delivery_address || t.pickup_address,
+                    notes: t.notes || t.task_description,
+                    service_type: t.service_type || 'gecerken'
+                  } as Order);
+                }
+              });
+            }
           }
         } catch (_) {}
       }
