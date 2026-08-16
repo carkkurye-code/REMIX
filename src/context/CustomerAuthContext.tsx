@@ -152,6 +152,7 @@ export interface CustomerAuthContextType extends CustomerAuthState {
   signInWithGoogle: () => Promise<{ success: boolean; user?: any; profile?: UserProfile; error?: string; cancelled?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<UserProfile | null>;
+  updateProfile: (updates: { full_name?: string; phone?: string; address?: string }) => Promise<{ success: boolean; profile?: UserProfile; error?: string }>;
   hasRole: (allowedRoles: UserRole | UserRole[]) => boolean;
   getRedirectPath: (targetRole?: UserRole) => string;
 }
@@ -167,6 +168,7 @@ const defaultContext: CustomerAuthContextType = {
   signInWithGoogle: async () => ({ success: false, error: 'Not initialized' }),
   signOut: async () => {},
   refreshProfile: async () => null,
+  updateProfile: async () => ({ success: false, error: 'Not initialized' }),
   hasRole: () => false,
   getRedirectPath: () => '/',
 };
@@ -201,11 +203,13 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           console.error('Customer profiles tablosu sorgu hatası:', profileErr);
         }
 
-        if (!profileErr && data) {
-          const meta = authUser.user_metadata || {};
-          const metaFullName = meta.full_name || meta.name;
-          const metaAvatar = meta.avatar_url || meta.picture;
+        const meta = authUser.user_metadata || {};
+        const metaFullName = meta.full_name || meta.name;
+        const metaAvatar = meta.avatar_url || meta.picture;
+        const metaPhone = meta.phone || '';
+        const metaAddress = meta.address || meta.customer_address || '';
 
+        if (!profileErr && data) {
           let updatedName = data.full_name;
           let updatedAvatar = data.avatar_url;
 
@@ -217,22 +221,24 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
 
           if (updatedName !== data.full_name || updatedAvatar !== data.avatar_url) {
-            const { error: updateErr } = await supabaseCustomer
-              .from('profiles')
-              .update({ full_name: updatedName, avatar_url: updatedAvatar })
-              .eq('id', authUser.id);
+            try {
+              const { error: updateErr } = await supabaseCustomer
+                .from('profiles')
+                .update({ full_name: updatedName, avatar_url: updatedAvatar })
+                .eq('id', authUser.id);
 
-            if (updateErr) {
-              console.error('Customer profiles güncelleme hatası:', updateErr);
-            }
+              if (updateErr) {
+                console.warn('Customer profiles güncelleme uyarısı:', updateErr);
+              }
+            } catch (e) {}
           }
 
           loadedProfile = {
             id: data.id,
             email: data.email || authUser.email || '',
-            full_name: updatedName || metaFullName || (authUser.email ? authUser.email.split('@')[0] : 'Kullanıcı'),
-            phone: data.phone || meta.phone || '',
-            address: data.address || '',
+            full_name: data.full_name || updatedName || metaFullName || (authUser.email ? authUser.email.split('@')[0] : 'Kullanıcı'),
+            phone: data.phone || metaPhone || '',
+            address: data.address || metaAddress || '',
             role: (data.role as UserRole) || 'customer',
             is_admin: data.is_admin || data.role === 'admin' || data.role === 'super_admin',
             avatar_url: updatedAvatar || metaAvatar,
@@ -242,9 +248,8 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           };
         } else {
           // Profile does not exist in public.profiles table yet (e.g. first Google sign in)
-          const meta = authUser.user_metadata || {};
-          const fullName = meta.full_name || meta.name || (authUser.email ? authUser.email.split('@')[0] : 'Kullanıcı');
-          const avatarUrl = meta.avatar_url || meta.picture || '';
+          const fullName = metaFullName || (authUser.email ? authUser.email.split('@')[0] : 'Kullanıcı');
+          const avatarUrl = metaAvatar || '';
           const metaRole = (meta.role as UserRole) || 'customer';
 
           const newProfile = {
@@ -264,7 +269,7 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             .maybeSingle();
 
           if (upsertErr) {
-            console.error('Customer profile upsert hatası:', upsertErr);
+            console.warn('Customer profile upsert uyarısı:', upsertErr);
           }
 
           if (!upsertErr && upserted) {
@@ -272,8 +277,8 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
               id: upserted.id,
               email: upserted.email || authUser.email || '',
               full_name: upserted.full_name || fullName,
-              phone: upserted.phone || '',
-              address: upserted.address || '',
+              phone: upserted.phone || metaPhone || '',
+              address: upserted.address || metaAddress || '',
               role: (upserted.role as UserRole) || metaRole,
               is_admin: upserted.is_admin || false,
               avatar_url: upserted.avatar_url || avatarUrl,
@@ -300,7 +305,7 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         full_name: meta.full_name || meta.name || (authUser.email ? authUser.email.split('@')[0] : 'Kullanıcı'),
         avatar_url: meta.avatar_url || meta.picture || '',
         phone: meta.phone || '',
-        address: meta.address || '',
+        address: meta.address || meta.customer_address || '',
         role: computedRole,
         is_admin: isAdmin,
         created_at: authUser.created_at || new Date().toISOString(),
@@ -566,6 +571,97 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return null;
   };
 
+  const updateProfile = async (updates: { full_name?: string; phone?: string; address?: string }): Promise<{ success: boolean; profile?: UserProfile; error?: string }> => {
+    if (!user) return { success: false, error: 'Oturum açılmamış.' };
+
+    try {
+      const cleanFullName = updates.full_name !== undefined ? updates.full_name.trim() : (profile?.full_name || '');
+      const cleanPhone = updates.phone !== undefined ? updates.phone.trim() : (profile?.phone || '');
+      const cleanAddress = updates.address !== undefined ? updates.address.trim() : (profile?.address || '');
+
+      // 1. Update Supabase Auth user metadata (saved in auth.users, persists across all devices/sessions)
+      if (isSupabaseConfigured && supabaseCustomer) {
+        try {
+          const { data: authUserData, error: authUserErr } = await supabaseCustomer.auth.updateUser({
+            data: {
+              full_name: cleanFullName,
+              phone: cleanPhone,
+              address: cleanAddress,
+            }
+          });
+          if (authUserErr) {
+            console.warn('[CustomerAuthContext] updateUser metadata notice:', authUserErr);
+          } else if (authUserData?.user) {
+            setUser(authUserData.user);
+          }
+        } catch (authErr) {
+          console.warn('[CustomerAuthContext] auth.updateUser exception:', authErr);
+        }
+      }
+
+      // 2. Update public.profiles table safely
+      if (isSupabaseConfigured && supabaseCustomer && isUUID(user.id)) {
+        try {
+          const profilePayload: Record<string, any> = {
+            id: user.id,
+            full_name: cleanFullName,
+            phone: cleanPhone,
+            updated_at: new Date().toISOString()
+          };
+
+          const { error: upsertErr } = await supabaseCustomer
+            .from('profiles')
+            .upsert(profilePayload, { onConflict: 'id' });
+
+          if (upsertErr) {
+            console.warn('[CustomerAuthContext] profiles upsert notice:', upsertErr);
+          }
+        } catch (dbErr) {
+          console.warn('[CustomerAuthContext] profiles update exception:', dbErr);
+        }
+      }
+
+      // 3. Update localStorage for instant synchronization across components
+      try {
+        localStorage.setItem(`ugra_customer_location_${user.id}`, cleanAddress);
+        localStorage.setItem('ugra_customer_location', cleanAddress);
+        const savedKey = `ugra_saved_customer_info_${user.id}`;
+        const existing = localStorage.getItem(savedKey);
+        const parsed = existing ? JSON.parse(existing) : {};
+        localStorage.setItem(savedKey, JSON.stringify({
+          ...parsed,
+          custName: cleanFullName,
+          custPhone: cleanPhone,
+          custAddress: cleanAddress,
+          location: cleanAddress,
+          customer_address: cleanAddress
+        }));
+      } catch (e) {}
+
+      // 4. Update local state
+      const updatedProfile: UserProfile = {
+        ...(profile || {
+          id: user.id,
+          email: user.email || '',
+          role: 'customer',
+          is_admin: false,
+          avatar_url: '',
+          created_at: new Date().toISOString(),
+        }),
+        full_name: cleanFullName,
+        phone: cleanPhone,
+        address: cleanAddress,
+      };
+
+      setProfile(updatedProfile);
+
+      return { success: true, profile: updatedProfile };
+    } catch (err: any) {
+      console.error('[CustomerAuthContext] updateProfile error:', err);
+      return { success: false, error: err?.message || 'Profil güncellenirken hata oluştu.' };
+    }
+  };
+
   const hasRole = (allowedRoles: UserRole | UserRole[]): boolean => {
     const rolesArr = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
     return rolesArr.includes(role);
@@ -600,6 +696,7 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         signInWithGoogle,
         signOut,
         refreshProfile,
+        updateProfile,
         hasRole,
         getRedirectPath,
       }}

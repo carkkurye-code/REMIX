@@ -43,7 +43,7 @@ export function CustomerAccountModal({
   onClose,
   initialTab = 'taleplerim'
 }: CustomerAccountModalProps) {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, updateProfile } = useAuth();
   const [activeTab, setActiveTab] = useState<CustomerTab>(initialTab);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -510,38 +510,47 @@ export function CustomerAccountModal({
     if (!user) return;
     setSavingProfile(true);
     try {
-      if (supabase) {
-        await supabase
-          .from('profiles')
-          .upsert({
-            id: user.id,
-            full_name: fullName.trim(),
-            phone: phone.trim(),
-            address: address.trim(),
-            updated_at: new Date().toISOString()
+      const cleanName = fullName.trim();
+      const cleanPhone = phone.trim();
+      const cleanAddress = address.trim();
+
+      if (updateProfile) {
+        const res = await updateProfile({
+          full_name: cleanName,
+          phone: cleanPhone,
+          address: cleanAddress
+        });
+
+        if (!res.success) {
+          throw new Error(res.error || 'Profil güncellenemedi');
+        }
+      } else {
+        if (supabase) {
+          await supabase.auth.updateUser({
+            data: {
+              full_name: cleanName,
+              phone: cleanPhone,
+              address: cleanAddress
+            }
           });
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: user.id,
+              full_name: cleanName,
+              phone: cleanPhone,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+        }
+        if (refreshProfile) {
+          await refreshProfile();
+        }
       }
 
-      // Save to localStorage for instant synchronization across components
-      try {
-        localStorage.setItem(`ugra_customer_location_${user.id}`, address.trim());
-        localStorage.setItem('ugra_customer_location', address.trim());
-        const savedKey = `ugra_saved_customer_info_${user.id}`;
-        const existing = localStorage.getItem(savedKey);
-        const parsed = existing ? JSON.parse(existing) : {};
-        localStorage.setItem(savedKey, JSON.stringify({
-          ...parsed,
-          custName: fullName.trim(),
-          custPhone: phone.trim(),
-          custAddress: address.trim(),
-          location: address.trim(),
-          customer_address: address.trim()
-        }));
-      } catch (e) {}
+      setFullName(cleanName);
+      setPhone(cleanPhone);
+      setAddress(cleanAddress);
 
-      if (refreshProfile) {
-        await refreshProfile();
-      }
       toast({
         title: 'Konum ve Bilgiler Kaydedildi',
         description: 'Konumunuz ve hesap bilgileriniz başarıyla güncellendi.',
