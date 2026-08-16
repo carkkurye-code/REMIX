@@ -893,7 +893,7 @@ export function CustomerAccountModal({
                         </div>
                       ) : (
                         <div className="space-y-4">
-                          {orders.map((order) => {
+                          {orders.map((order, index) => {
                             const isAccepted = [
                               'accepted',
                               'asistan_kabul_etti',
@@ -915,14 +915,7 @@ export function CustomerAccountModal({
 
                             const statusInfo = getStatusInfo(order.status, isAccepted);
                             const taskDesc = getCleanTaskDescription(order);
-                            const preferredTime = getPreferredTimeSlot(order);
-                            const customerAddress = getCustomerAddress(order);
-                            const realStoreItems = getRealStoreProducts(order);
                             const serviceBadge = getServiceBadgeLabel(order);
-
-                            const productsTotal = Number(order.total_price || 0);
-                            const assistantFee = Number(order.courier_net || 100);
-                            const grandTotal = realStoreItems.length > 0 ? (productsTotal + assistantFee) : assistantFee;
 
                             // Assistant Name Resolution
                             const rawAsstName = (order.assistant_name || '').trim();
@@ -933,132 +926,49 @@ export function CustomerAccountModal({
                             return (
                               <div
                                 key={order.id}
-                                className="bg-zinc-900/80 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-3.5 transition-all hover:border-white/20"
+                                className="bg-zinc-900/90 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4 transition-all hover:border-white/20 shadow-lg"
                               >
-                                {/* Header Info */}
-                                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
-                                  <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs font-mono font-bold text-white">
-                                        #UG-{order.id.slice(0, 8).toUpperCase()}
-                                      </span>
-                                      <span
-                                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusInfo.color}`}
-                                      >
-                                        {statusInfo.label}
-                                      </span>
-                                    </div>
-                                    <p className="text-[11px] text-zinc-400">
-                                      {order.created_at
-                                        ? new Date(order.created_at).toLocaleString('tr-TR', {
-                                            day: '2-digit',
-                                            month: '2-digit',
-                                            year: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                          })
-                                        : 'Yeni Talep'}
-                                    </p>
-                                  </div>
+                                {/* Talep Numarası */}
+                                <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                                  Talep {index + 1}
+                                </div>
 
-                                  {/* Service / Store Badge */}
-                                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs text-zinc-200 font-semibold">
-                                    <Store className="w-3.5 h-3.5 text-[#FF7A00]" />
-                                    <span>{serviceBadge}</span>
+                                {/* Talep Kodu ve Türü / Durumu */}
+                                <div className="space-y-1">
+                                  <div className="text-base font-mono font-bold text-white">
+                                    #UG-{order.id.slice(0, 8).toUpperCase()}
+                                  </div>
+                                  <div className="text-xs text-zinc-300 font-medium">
+                                    {serviceBadge} <span className="text-zinc-500">·</span>{' '}
+                                    <span className={isAccepted ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
+                                      {statusInfo.label}
+                                    </span>
                                   </div>
                                 </div>
 
-                                {/* Yapılacak İş (Actual Customer Task Description) */}
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-1.5 text-zinc-400">
-                                    <FileText className="w-3.5 h-3.5 text-[#FF7A00]" />
-                                    <span className="text-[11px] font-bold uppercase tracking-wider">
-                                      Yapılacak İş
-                                    </span>
+                                {/* Yapılacak İş */}
+                                <div className="space-y-1.5 pt-1">
+                                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                                    Yapılacak İş
                                   </div>
-                                  <div className="bg-black/40 border border-white/5 rounded-xl p-3">
+                                  <div className="bg-black/40 border border-white/5 rounded-xl p-3.5">
                                     <p className="text-sm font-semibold text-white leading-relaxed">
                                       {taskDesc}
                                     </p>
                                   </div>
                                 </div>
 
-                                {/* Tercih Edilen Saat (if exists) */}
-                                {preferredTime && (
-                                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 font-medium">
-                                    <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                    <span>
-                                      Tercih Edilen Saat: <strong className="text-amber-200 font-bold">{preferredTime}</strong>
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Müşteri Konumu */}
-                                {customerAddress && customerAddress !== 'Belirtilmedi' && (
-                                  <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-xs text-zinc-300">
-                                    <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                                    <div className="min-w-0 flex-1">
-                                      <span className="text-[10px] uppercase font-bold text-zinc-500 block">Müşteri Konumu</span>
-                                      <p className="text-xs text-zinc-200 line-clamp-2">{customerAddress}</p>
+                                {/* Atanan Asistan (Sadece atanmışsa gösterilir) */}
+                                {isAccepted && displayAssistantName && (
+                                  <div className="space-y-1 pt-1 border-t border-white/10">
+                                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                                      Atanan Asistan
+                                    </div>
+                                    <div className="text-sm font-bold text-emerald-400">
+                                      {displayAssistantName}
                                     </div>
                                   </div>
                                 )}
-
-                                {/* Sipariş Edilen Ürünler (Only if actual store order with real items) */}
-                                {realStoreItems.length > 0 && (
-                                  <div className="space-y-1.5">
-                                    <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                                      Sipariş Edilen Ürünler
-                                    </span>
-                                    <div className="bg-black/40 border border-white/5 rounded-xl p-3 space-y-1.5">
-                                      {realStoreItems.map((item: any, idx: number) => (
-                                        <div
-                                          key={idx}
-                                          className="flex items-center justify-between text-xs text-zinc-300"
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-bold text-[#FF7A00]">{item.quantity || 1}x</span>
-                                            <span>{item.title || item.name || 'Ürün'}</span>
-                                          </div>
-                                          <span className="font-semibold text-white">
-                                            {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('tr-TR')} ₺
-                                          </span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Financial Breakdown */}
-                                <div className="grid grid-cols-3 gap-2 p-3 bg-white/5 border border-white/5 rounded-xl text-xs">
-                                  <div>
-                                    <span className="text-[10px] text-zinc-400 block font-medium">Ürün Tutarı</span>
-                                    <span className="font-bold text-white">
-                                      {realStoreItems.length > 0 ? productsTotal.toLocaleString('tr-TR') : '0'} ₺
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[10px] text-zinc-400 block font-medium">Asistan Hizmeti</span>
-                                    <span className="font-bold text-amber-400">{assistantFee.toLocaleString('tr-TR')} ₺</span>
-                                  </div>
-                                  <div className="text-right">
-                                    <span className="text-[10px] text-zinc-400 block font-medium">Genel Toplam</span>
-                                    <span className="font-extrabold text-white text-sm">{grandTotal.toLocaleString('tr-TR')} ₺</span>
-                                  </div>
-                                </div>
-
-                                {/* Assistant Info */}
-                                <div className="flex items-center justify-between text-xs pt-1 border-t border-white/5">
-                                  <div className="flex items-center gap-2 text-zinc-400">
-                                    <UserIcon className={`w-4 h-4 ${isAccepted ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                                    <span>
-                                      Atanan Asistan:{' '}
-                                      <strong className={isAccepted ? 'text-emerald-400 font-bold' : 'text-zinc-400 font-medium'}>
-                                        {isAccepted ? (displayAssistantName || 'Asistan Atandı') : 'En yakın asistan aranıyor...'}
-                                      </strong>
-                                    </span>
-                                  </div>
-                                </div>
                               </div>
                             );
                           })}
