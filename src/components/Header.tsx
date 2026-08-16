@@ -189,15 +189,6 @@ export function Header() {
                           Gelen Kutusu
                         </button>
 
-                        {/* Ödemelerim */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenCustomerTab('odemelerim')}
-                          className="text-sm font-medium text-zinc-200 hover:text-white transition-colors cursor-pointer py-1"
-                        >
-                          Ödemelerim
-                        </button>
-
                         {/* Hesap Bilgilerim */}
                         <button
                           type="button"

@@ -30,7 +30,7 @@ import { toast } from '@/hooks/use-toast';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { useModalBackButton } from '@/hooks/useModalBackButton';
 
-export type CustomerTab = 'taleplerim' | 'gelen_kutusu' | 'odemelerim' | 'hesap_bilgilerim';
+export type CustomerTab = 'taleplerim' | 'gelen_kutusu' | 'hesap_bilgilerim';
 
 export interface CustomerAccountModalProps {
   isOpen: boolean;
@@ -611,7 +611,7 @@ export function CustomerAccountModal({
       };
     }
     return {
-      label: 'Asistan aranıyor',
+      label: 'Bekleniyor',
       color: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
       step: 1
     };
@@ -824,24 +824,6 @@ export function CustomerAccountModal({
                     <span>Gelen Kutusu</span>
                     {pendingPaymentOrders.length > 0 && (
                       <span className="w-2 h-2 rounded-full bg-[#FF7A00] animate-pulse" />
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('odemelerim')}
-                    className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
-                      activeTab === 'odemelerim'
-                        ? 'bg-white text-black shadow-md'
-                        : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>Ödemelerim</span>
-                    {pendingPaymentOrders.length > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-[#FF7A00] text-black font-extrabold">
-                        {pendingPaymentOrders.length}
-                      </span>
                     )}
                   </button>
 
@@ -1109,31 +1091,14 @@ export function CustomerAccountModal({
                                 className="p-4 bg-zinc-900 border border-white/10 rounded-2xl space-y-3"
                               >
                                 {isAccepted && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
-                                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                                       <span>🎉 Asistan Talebinizi Kabul Etti!</span>
                                     </div>
                                     <p className="text-xs text-zinc-300 leading-relaxed">
-                                      <strong className="text-white">{order.assistant_name || 'Uğra Asistanı'}</strong> talebinizi kabul etti. Siparişinizin hazırlanmaya başlaması için toplam{' '}
-                                      <strong className="text-white font-bold">
-                                        {(Number(order.total_price || 0) + Number(order.courier_net || 100)).toLocaleString('tr-TR')} ₺
-                                      </strong>{' '}
-                                      tutarını doğrudan asistanın IBAN hesabına aktarıp 'Ödemeyi Gönderdim' butonuna basınız.
+                                      <strong className="text-white">{order.assistant_name || 'Uğra Asistanı'}</strong> talebinizi kabul etti. Talebiniz en kısa sürede hazırlanıp adresinize ulaştırılacaktır.
                                     </p>
-                                    <div className="pt-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setSelectedOrderForPayment(order);
-                                          setActiveTab('odemelerim');
-                                        }}
-                                        className="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-xs transition-all cursor-pointer flex items-center gap-2"
-                                      >
-                                        <CreditCard className="w-4 h-4" />
-                                        <span>Ödeme Ekranını Aç</span>
-                                      </button>
-                                    </div>
                                   </div>
                                 )}
 
@@ -1192,148 +1157,7 @@ export function CustomerAccountModal({
                     </div>
                   )}
 
-                  {/* TAB 3: ÖDEMELERİM */}
-                  {activeTab === 'odemelerim' && (
-                    <div className="space-y-4">
-                      <div className="pb-2 border-b border-white/10">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                          Doğrudan Asistan IBAN Transfer Ekranı
-                        </span>
-                      </div>
-
-                      {pendingPaymentOrders.length === 0 ? (
-                        <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
-                          <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-                          <h3 className="text-sm font-bold text-white">Bekleyen Ödemeniz Bulunmuyor</h3>
-                          <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-                            Tüm asistan ödemeleriniz günceldir. Bir asistan talebinizi kabul ettiğinde IBAN detayları burada görünecektir.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-5">
-                          {pendingPaymentOrders.map((order) => {
-                            const productsTotal = Number(order.total_price || 0);
-                            const assistantFee = Number(order.courier_net || 100);
-                            const grandTotal = productsTotal + assistantFee;
-                            const assistantName = order.assistant_name || 'UĞRA Asistanı';
-                            const ibanStr = order.notes?.match(/IBAN:\s*(TR[0-9\s]+)/i)?.[1] || 'TR56 0006 2000 0000 0000 1234 56';
-                            const isReported = ['payment_reported', 'odeme_bildirildi'].includes((order.status || '').toLowerCase());
-
-                            return (
-                              <div
-                                key={order.id}
-                                className="bg-gradient-to-br from-zinc-900 to-black border border-white/15 rounded-2xl p-5 sm:p-6 space-y-5 shadow-xl"
-                              >
-                                {/* Header */}
-                                <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                                  <div>
-                                    <span className="text-xs font-mono font-bold text-[#FF7A00]">
-                                      #UG-{order.id.slice(0, 8).toUpperCase()}
-                                    </span>
-                                    <h3 className="text-sm font-bold text-white mt-0.5">
-                                      {order.partner_name || 'Asistan Siparişi'}
-                                    </h3>
-                                  </div>
-                                  <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[#FF7A00]/10 text-[#FF7A00] border border-[#FF7A00]/20">
-                                    Ödeme Bekleniyor
-                                  </span>
-                                </div>
-
-                                {/* Financial Details Table */}
-                                <div className="space-y-2 bg-white/5 border border-white/10 rounded-xl p-4">
-                                  <div className="flex items-center justify-between text-xs text-zinc-300">
-                                    <span>Ürün Toplamı</span>
-                                    <span className="font-bold text-white">{productsTotal.toLocaleString('tr-TR')} ₺</span>
-                                  </div>
-                                  <div className="flex items-center justify-between text-xs text-zinc-300">
-                                    <span>Asistan Hizmet Bedeli</span>
-                                    <span className="font-bold text-white">{assistantFee.toLocaleString('tr-TR')} ₺</span>
-                                  </div>
-                                  <div className="pt-2 border-t border-white/10 flex items-center justify-between text-sm font-extrabold text-white">
-                                    <span>Ödenecek Toplam Tutar</span>
-                                    <span className="text-base text-[#FF7A00]">{grandTotal.toLocaleString('tr-TR')} ₺</span>
-                                  </div>
-                                </div>
-
-                                {/* IBAN & Assistant Details */}
-                                <div className="space-y-3 bg-zinc-900/90 border border-white/10 rounded-xl p-4">
-                                  <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                                    Alıcı Asistan Hesabı
-                                  </span>
-
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                    <div>
-                                      <span className="text-zinc-500 block text-[10px]">Alıcı İsim Soyisim</span>
-                                      <span className="font-bold text-white">{assistantName}</span>
-                                    </div>
-                                    <div>
-                                      <span className="text-zinc-500 block text-[10px]">Transfer Tipi</span>
-                                      <span className="font-bold text-emerald-400">Doğrudan IBAN Transferi</span>
-                                    </div>
-                                  </div>
-
-                                  {/* IBAN Copy Box */}
-                                  <div className="pt-1">
-                                    <span className="text-zinc-500 block text-[10px] mb-1">Asistan IBAN Numarası</span>
-                                    <div className="flex items-center gap-2 bg-black border border-white/20 rounded-xl p-3">
-                                      <span className="font-mono text-xs sm:text-sm font-bold text-white tracking-wider flex-1 select-all break-all">
-                                        {ibanStr}
-                                      </span>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyIban(ibanStr)}
-                                        className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
-                                      >
-                                        {copiedIban ? (
-                                          <>
-                                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                            <span className="text-emerald-400">Kopyalandı</span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Copy className="w-3.5 h-3.5" />
-                                            <span>Kopyala</span>
-                                          </>
-                                        )}
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* Action Button */}
-                                <div>
-                                  {isReported ? (
-                                    <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center justify-center gap-2 text-purple-300 font-bold text-xs text-center">
-                                      <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
-                                      <span>Ödemeniz Gönderildi Olarak Bildirildi • Asistan Onayı Bekleniyor</span>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      disabled={submittingOrderId === order.id}
-                                      onClick={() => handleReportPayment(order)}
-                                      className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 border-0"
-                                    >
-                                      {submittingOrderId === order.id ? (
-                                        <Loader2 className="w-4 h-4 animate-spin text-black" />
-                                      ) : (
-                                        <>
-                                          <Send className="w-4 h-4" />
-                                          <span>Ödemeyi Gönderdim</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* TAB 4: HESAP BİLGİLERİM */}
+                  {/* TAB 3: HESAP BİLGİLERİM */}
                   {activeTab === 'hesap_bilgilerim' && (
                     <form onSubmit={handleSaveProfile} className="space-y-4 max-w-lg mx-auto">
                       <div className="pb-2 border-b border-white/10">
