@@ -21,10 +21,11 @@ import {
   Send,
   Loader2,
   MapPin,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { supabase, db, getStored, LOCAL_STORAGE_KEYS, Order, isUUID, getExactTableColumns } from '@/lib/supabase';
+import { supabase, db, getStored, setStored, LOCAL_STORAGE_KEYS, Order, isUUID, getExactTableColumns } from '@/lib/supabase';
 import { eventBus } from '@/lib/eventBus';
 import { toast } from '@/hooks/use-toast';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -189,10 +190,10 @@ export function CustomerAccountModal({
           (userPhone && o.customer_phone === userPhone)
       );
 
-      // Combine and deduplicate by id
+      // Combine and deduplicate by id, filtering out soft-deleted items
       const map = new Map<string, Order>();
       [...fetched, ...localFiltered].forEach((o) => {
-        if (o.id && !map.has(o.id)) {
+        if (o.id && !map.has(o.id) && !isOrderDeleted(o)) {
           map.set(o.id, o);
         }
       });
@@ -298,6 +299,169 @@ export function CustomerAccountModal({
       }
     } catch (err) {
       console.warn('Error fetching customer notifications:', err);
+    }
+  };
+
+  // Filter out soft-deleted orders
+  const isOrderDeleted = (o: any) => {
+    return Boolean(o?.deleted === true || o?.archived === true || o?.is_deleted === true);
+  };
+
+  // State for Delete Confirmations
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+  const [deletingNotifId, setDeletingNotifId] = useState<string | null>(null);
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [notifToDelete, setNotifToDelete] = useState<any | null>(null);
+
+  // Handle Delete Order (Soft Delete with Supabase + LocalStorage Cache Sync)
+  const handleDeleteOrder = async (order: Order) => {
+    if (!order || !order.id || !user || !user.id) return;
+    setDeletingOrderId(order.id);
+    try {
+      if (supabase) {
+        const orderCols = await getExactTableColumns('orders');
+        const orderColsSet = new Set(orderCols);
+
+        const updatePayload: Record<string, any> = {};
+        if (orderColsSet.has('deleted') || orderColsSet.size === 0) {
+          updatePayload.deleted = true;
+        }
+        if (orderColsSet.has('archived')) {
+          updatePayload.archived = true;
+        }
+        if (orderColsSet.has('updated_at')) {
+          updatePayload.updated_at = new Date().toISOString();
+        }
+
+        // Update orders table with strict customer ownership filter
+        if (isUUID(order.id)) {
+          let orderUpdate = supabase
+            .from('orders')
+            .update(updatePayload)
+            .eq('id', order.id);
+
+          if (isUUID(user.id)) {
+            if (orderColsSet.has('customer_id') || orderColsSet.size === 0) {
+              orderUpdate = orderUpdate.eq('customer_id', user.id);
+            } else if (orderColsSet.has('user_id')) {
+              orderUpdate = orderUpdate.eq('user_id', user.id);
+            }
+          }
+
+          const { error: orderErr } = await orderUpdate;
+          if (orderErr) {
+            console.warn('[handleDeleteOrder] orders soft-delete notice:', orderErr.message || orderErr);
+          }
+        }
+
+        // Also update tasks table if matching task exists
+        try {
+          const taskCols = await getExactTableColumns('tasks');
+          const taskColsSet = new Set(taskCols);
+          const taskUpdatePayload: Record<string, any> = {};
+          if (taskColsSet.has('deleted') || taskColsSet.size === 0) {
+            taskUpdatePayload.deleted = true;
+          }
+          if (taskColsSet.has('archived')) {
+            taskUpdatePayload.archived = true;
+          }
+
+          if (isUUID(order.id)) {
+            let taskUpdate = supabase
+              .from('tasks')
+              .update(taskUpdatePayload)
+              .or(`id.eq.${order.id},order_id.eq.${order.id}`);
+
+            if (isUUID(user.id)) {
+              taskUpdate = taskUpdate.eq('customer_id', user.id);
+            }
+
+            await taskUpdate;
+          }
+        } catch (tErr) {
+          console.warn('[handleDeleteOrder] tasks soft-delete notice:', tErr);
+        }
+      }
+
+      // Update LocalStorage orders cache
+      const localOrders = getStored<Order>(LOCAL_STORAGE_KEYS.ORDERS);
+      const updatedLocalOrders = localOrders.filter(
+        (o) => o.id !== order.id && (o as any).order_id !== order.id && (o as any).task_id !== order.id
+      );
+      setStored(LOCAL_STORAGE_KEYS.ORDERS, updatedLocalOrders);
+
+      // Update LocalStorage tasks cache
+      const localTasks = getStored<any>('ugra_tasks_cache');
+      const updatedLocalTasks = localTasks.filter(
+        (t) => t.id !== order.id && t.order_id !== order.id
+      );
+      setStored('ugra_tasks_cache', updatedLocalTasks);
+
+      // Remove from component state immediately
+      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+
+      toast({
+        title: 'Talep Silindi',
+        description: 'Talebiniz başarıyla silindi.',
+        variant: 'plain'
+      });
+      setOrderToDelete(null);
+    } catch (err: any) {
+      console.error('Error deleting order:', err);
+      toast({
+        title: 'Hata',
+        description: 'Talep silinirken bir sorun oluştu.',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeletingOrderId(null);
+    }
+  };
+
+  // Handle Delete Notification (Permanent Delete from Supabase + LocalStorage Sync)
+  const handleDeleteNotification = async (notif: any) => {
+    if (!notif || !notif.id || !user || !user.id) return;
+    setDeletingNotifId(notif.id);
+    try {
+      if (supabase && isUUID(notif.id)) {
+        let notifQuery = supabase
+          .from('notifications')
+          .delete()
+          .eq('id', notif.id);
+
+        if (isUUID(user.id)) {
+          notifQuery = notifQuery.or(`user_id.eq.${user.id},recipient_id.eq.${user.id},recipient_profile_id.eq.${user.id}`);
+        }
+
+        const { error: notifErr } = await notifQuery;
+        if (notifErr) {
+          console.warn('[handleDeleteNotification] delete notice:', notifErr.message || notifErr);
+        }
+      }
+
+      // Update LocalStorage virtual notifications cache
+      const localNotifs = getStored<any>('ugra_virtual_notifications');
+      const updatedLocalNotifs = localNotifs.filter((n) => n.id !== notif.id);
+      setStored('ugra_virtual_notifications', updatedLocalNotifs);
+
+      // Remove from component state immediately
+      setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+
+      toast({
+        title: 'Bildirim Silindi',
+        description: 'Bildirim gelen kutunuzdan kaldırıldı.',
+        variant: 'plain'
+      });
+      setNotifToDelete(null);
+    } catch (err: any) {
+      console.error('Error deleting notification:', err);
+      toast({
+        title: 'Hata',
+        description: 'Bildirim silinirken bir sorun oluştu.',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeletingNotifId(null);
     }
   };
 
@@ -938,9 +1102,25 @@ export function CustomerAccountModal({
                                 key={order.id}
                                 className="bg-zinc-900/90 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4 transition-all hover:border-white/20 shadow-lg"
                               >
-                                {/* Talep Numarası */}
-                                <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                                  Talep {index + 1}
+                                {/* Talep Numarası ve Sil Butonu */}
+                                <div className="flex items-center justify-between pb-1">
+                                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                                    Talep {index + 1}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOrderToDelete(order)}
+                                    disabled={deletingOrderId === order.id}
+                                    className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 font-medium text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                    title="Talebi Sil"
+                                  >
+                                    {deletingOrderId === order.id ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    )}
+                                    <span>Sil</span>
+                                  </button>
                                 </div>
 
                                 {/* Talep Kodu ve Türü / Durumu */}
@@ -997,21 +1177,41 @@ export function CustomerAccountModal({
                       </div>
 
                       {(() => {
-                        // Filter IBAN notifications: must belong to an existing active order or match user's relevant order
+                        // Filter IBAN notifications: must belong to the logged-in customer and match the relevant order/task
                         const validIbanNotifications = notifications.filter((notif) => {
                           const isIbanDetails = notif.type === 'iban_details' || (notif.message && notif.message.includes('IBAN:'));
                           if (!isIbanDetails) return false;
 
-                          // Check if this notification has a specific order_id or task_id attached
-                          const notifOrderId = notif.order_id || notif.task_id || notif.payload?.order_id || notif.payload?.task_id;
-                          
-                          if (notifOrderId) {
-                            // Only show if the linked order exists and is not cancelled/completed in the distant past
-                            const matchingOrder = orders.find(o => o.id === notifOrderId);
+                          // Ensure notification belongs strictly to the authenticated user
+                          const notifUser = notif.user_id || notif.recipient_id || (notif as any).recipient_profile_id;
+                          if (notifUser && user?.id && notifUser !== user.id) {
+                            return false;
+                          }
+
+                          // Check candidate order/task IDs attached to this notification
+                          const notifOrderCandidates = [
+                            notif.order_id,
+                            notif.task_id,
+                            notif.payload?.order_id,
+                            notif.payload?.task_id,
+                          ].filter(Boolean).map(id => String(id).trim());
+
+                          if (notifOrderCandidates.length > 0) {
+                            // Find the specific matching order across all identifier variants (id, order_id, task_id)
+                            const matchingOrder = orders.find((o: any) => {
+                              const oIds = [o.id, o.order_id, o.task_id].filter(Boolean).map(id => String(id).trim());
+                              return notifOrderCandidates.some(nid => oIds.includes(nid));
+                            });
+
                             if (matchingOrder) {
                               const s = (matchingOrder.status || '').toLowerCase();
-                              // Order should be in an active state expecting payment or fulfillment
+                              // Do not show IBAN notification if the order was cancelled
                               return !['cancelled', 'iptal'].includes(s);
+                            }
+
+                            // If orders list is still loading or empty, check whether notification has active payload
+                            if (loading) {
+                              return true;
                             }
                             return false;
                           }
@@ -1021,7 +1221,7 @@ export function CustomerAccountModal({
                           // and where that order is currently active/accepted.
                           // If there are newer orders created AFTER this notification, this legacy IBAN notification belongs to an older order and MUST NOT be shown for the new order!
                           const notifTime = notif.created_at ? new Date(notif.created_at).getTime() : 0;
-                          const matchingActiveOrder = orders.find(o => {
+                          const matchingActiveOrder = orders.find((o: any) => {
                             const s = (o.status || '').toLowerCase();
                             const isOrderActive = ['accepted', 'asistan_kabul_etti', 'payment_pending', 'odeme_bekleniyor', 'payment_reported', 'odeme_bildirildi', 'purchasing', 'hazirlaniyor', 'urunler_aliniyor', 'delivering', 'on_the_way', 'yolda', 'teslimata_cikti'].includes(s);
                             if (!isOrderActive) return false;
@@ -1071,11 +1271,26 @@ export function CustomerAccountModal({
                                       <CreditCard className="w-4 h-4" />
                                       <span>{notif.title || 'Asistan Ödeme Bilgilerini Gönderdi'}</span>
                                     </div>
-                                    {notif.created_at && (
-                                      <span className="text-[10px] text-zinc-400">
-                                        {new Date(notif.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                                      </span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                      {notif.created_at && (
+                                        <span className="text-[10px] text-zinc-400">
+                                          {new Date(notif.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => setNotifToDelete(notif)}
+                                        disabled={deletingNotifId === notif.id}
+                                        className="p-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 text-xs transition-colors flex items-center cursor-pointer disabled:opacity-50"
+                                        title="Bildirimi Sil"
+                                      >
+                                        {deletingNotifId === notif.id ? (
+                                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        )}
+                                      </button>
+                                    </div>
                                   </div>
 
                                   <div className="space-y-2 text-xs">
@@ -1326,6 +1541,120 @@ export function CustomerAccountModal({
                     </form>
                   )}
                 </div>
+
+                {/* Confirm Delete Order Modal */}
+                <AnimatePresence>
+                  {orderToDelete && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="bg-zinc-900 border border-white/10 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl"
+                      >
+                        <div className="flex items-center gap-3 text-red-400">
+                          <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                            <Trash2 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white">Talebi Sil</h4>
+                            <p className="text-xs text-zinc-400">Bu işlem geri alınamaz.</p>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          <strong className="text-white">#UG-{orderToDelete.id.slice(0, 8).toUpperCase()}</strong> kodlu talebinizi silmek istediğinizden emin misiniz?
+                        </p>
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setOrderToDelete(null)}
+                            disabled={Boolean(deletingOrderId)}
+                            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                          >
+                            İptal
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrder(orderToDelete)}
+                            disabled={Boolean(deletingOrderId)}
+                            className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-lg shadow-red-500/20"
+                          >
+                            {deletingOrderId ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Siliniyor...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Evet, Sil</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+
+                {/* Confirm Delete Notification Modal */}
+                <AnimatePresence>
+                  {notifToDelete && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="bg-zinc-900 border border-white/10 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl"
+                      >
+                        <div className="flex items-center gap-3 text-red-400">
+                          <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                            <Trash2 className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white">Bildirimi Sil</h4>
+                            <p className="text-xs text-zinc-400">Gelen kutunuzdan kaldırılacaktır.</p>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          Seçilen bildirimi gelen kutunuzdan silmek istediğinizden emin misiniz?
+                        </p>
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setNotifToDelete(null)}
+                            disabled={Boolean(deletingNotifId)}
+                            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                          >
+                            İptal
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteNotification(notifToDelete)}
+                            disabled={Boolean(deletingNotifId)}
+                            className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-lg shadow-red-500/20"
+                          >
+                            {deletingNotifId ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Siliniyor...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Evet, Sil</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </div>
           )}

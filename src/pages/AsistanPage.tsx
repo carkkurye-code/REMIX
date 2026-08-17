@@ -2273,6 +2273,8 @@ export function AsistanPage() {
           type: 'iban_details',
         };
 
+        const assistantIdToAttach = currentAssistant.id || currentAssistant.user_id || null;
+
         if (colsSet.has('user_id') || colsSet.size === 0) {
           payload.user_id = targetCustomerId;
         }
@@ -2281,6 +2283,9 @@ export function AsistanPage() {
         }
         if (colsSet.has('recipient_profile_id')) {
           payload.recipient_profile_id = targetCustomerId;
+        }
+        if (colsSet.has('assistant_id') && assistantIdToAttach) {
+          payload.assistant_id = assistantIdToAttach;
         }
         if (colsSet.has('body')) {
           payload.body = messageContent;
@@ -2295,6 +2300,7 @@ export function AsistanPage() {
           payload.payload = {
             order_id: order.id,
             task_id: order.id,
+            assistant_id: assistantIdToAttach,
             account_holder: accountHolder,
             bank_name: bankName,
             iban: iban,
