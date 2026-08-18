@@ -247,6 +247,11 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 capitalize">
                         {app.vehicle_type || 'Motosiklet'}
                       </span>
+                      {(app as any).subscription_package_name && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                          {(app as any).subscription_package_name} {(app as any).subscription_package_price ? `(${Number((app as any).subscription_package_price).toLocaleString('tr-TR')} TL)` : ''}
+                        </span>
+                      )}
                       {getCityName(app.city_id, (app as any).city) && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-gray-500" />
@@ -331,6 +336,20 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
             </div>
 
             <div className="space-y-2">
+              {(viewingApp as any).subscription_package_name && (
+                <div className="p-3 bg-purple-50/60 border border-purple-200 rounded-xl flex items-center justify-between text-[#1F2937] font-medium">
+                  <span>Asistan Paneli Kullanım Paketi</span>
+                  <span className="text-purple-700 font-bold text-xs">
+                    {(viewingApp as any).subscription_package_name} {(viewingApp as any).subscription_package_price ? `(${Number((viewingApp as any).subscription_package_price).toLocaleString('tr-TR')} TL)` : ''}
+                  </span>
+                </div>
+              )}
+              {viewingApp.notes && (
+                <div className="p-3 bg-gray-50 border border-[#E5E7EB] rounded-xl text-[#1F2937]">
+                  <span className="font-bold text-[11px] text-gray-600 block mb-1">Başvuru Notları / Bilgiler:</span>
+                  <p className="text-xs text-gray-800">{viewingApp.notes}</p>
+                </div>
+              )}
               <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-[#1F2937] font-medium">
                 <span>1. T.C. Kimlik Kartı Ön / Arka</span>
                 <span className="text-emerald-700 font-bold text-[10px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">Onaylı</span>

@@ -219,13 +219,21 @@ export function Header() {
                     className="w-full h-[1px] bg-white/10 my-1"
                   />
 
-                  {/* Section: Ana Ekrana Ekle */}
+                  {/* Section: Asistan Girişi & Ana Ekrana Ekle */}
                   <motion.div
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.21, duration: 0.3 }}
-                    className="w-full flex justify-center"
+                    className="w-full flex flex-col items-center space-y-2"
                   >
+                    <Link
+                      href="/asistan"
+                      onClick={() => setIsOpen(false)}
+                      className="text-base font-medium text-zinc-200 hover:text-white transition-colors py-1 cursor-pointer"
+                    >
+                      Asistan Girişi
+                    </Link>
+
                     <button
                       type="button"
                       onClick={() => {

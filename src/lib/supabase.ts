@@ -258,6 +258,69 @@ export interface Category {
   created_at: string;
 }
 
+export interface AssistantPackageOption {
+  id: '3_aylik' | '6_aylik' | '9_aylik' | '12_aylik' | string;
+  duration_months: number;
+  total_price: number;
+  monthly_price: number;
+  title: string;
+  badge?: string;
+}
+
+export const ASSISTANT_SUBSCRIPTION_PACKAGES: AssistantPackageOption[] = [
+  {
+    id: '3_aylik',
+    duration_months: 3,
+    total_price: 2700,
+    monthly_price: 900,
+    title: '3 Aylık Paket',
+  },
+  {
+    id: '6_aylik',
+    duration_months: 6,
+    total_price: 5100,
+    monthly_price: 850,
+    title: '6 Aylık Paket',
+  },
+  {
+    id: '9_aylik',
+    duration_months: 9,
+    total_price: 7200,
+    monthly_price: 800,
+    title: '9 Aylık Paket',
+  },
+  {
+    id: '12_aylik',
+    duration_months: 12,
+    total_price: 8400,
+    monthly_price: 700,
+    title: '12 Aylık Paket',
+    badge: 'En Avantajlı',
+  },
+];
+
+export const TURKEY_PROVINCES: readonly string[] = [
+  'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya', 'Ardahan', 'Artvin', 'Aydın',
+  'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik', 'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa',
+  'Çanakkale', 'Çankırı', 'Çorum',
+  'Denizli', 'Diyarbakır', 'Düzce',
+  'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir',
+  'Gaziantep', 'Giresun', 'Gümüşhane',
+  'Hakkari', 'Hatay',
+  'Iğdır', 'Isparta', 'İstanbul', 'İzmir',
+  'Kahramanmaraş', 'Karabük', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kilis', 'Kırıkkale', 'Kırklareli', 'Kırşehir', 'Kocaeli', 'Konya', 'Kütahya',
+  'Malatya', 'Manisa', 'Mardin', 'Mersin', 'Muğla', 'Muş',
+  'Nevşehir', 'Niğde',
+  'Ordu', 'Osmaniye',
+  'Rize',
+  'Sakarya', 'Samsun', 'Siirt', 'Sinop', 'Sivas', 'Şanlıurfa', 'Şırnak',
+  'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli',
+  'Uşak',
+  'Van',
+  'Yalova', 'Yozgat',
+  'Zonguldak'
+];
+
 export interface Assistant {
   id: string;
   user_id?: string | null;
@@ -282,6 +345,10 @@ export interface Assistant {
   account_holder?: string | null;
   bank_name?: string | null;
   iban?: string | null;
+  subscription_package?: '3_aylik' | '6_aylik' | '9_aylik' | '12_aylik' | string | null;
+  subscription_package_name?: string | null;
+  subscription_package_price?: number | null;
+  notes?: string | null;
   created_at: string;
   updated_at?: string;
 }
@@ -4056,8 +4123,19 @@ export const db = {
     city_id?: string | null;
     franchise_id?: string | null;
     city?: string;
+    subscription_package?: '3_aylik' | '6_aylik' | '9_aylik' | '12_aylik' | string | null;
+    subscription_package_name?: string | null;
+    subscription_package_price?: number | null;
+    notes?: string | null;
   }): Promise<Assistant> {
+    const packageNote = app.subscription_package_name 
+      ? `[Seçilen Paket: ${app.subscription_package_name}${app.subscription_package_price ? ` (${app.subscription_package_price.toLocaleString('tr-TR')} TL)` : ''}]`
+      : (app.subscription_package ? `[Seçilen Paket: ${app.subscription_package}]` : '');
+
+    const combinedNotes = [packageNote, app.notes].filter(Boolean).join('\n');
+
     if (isSupabaseConfigured && supabase) {
+      const cols = await getExactTableColumns('assistants');
       const payload: any = {
         full_name: app.full_name || '',
         phone: app.phone || '',
@@ -4068,12 +4146,28 @@ export const db = {
       };
       if (app.city_id) payload.city_id = app.city_id;
       if (app.franchise_id) payload.franchise_id = app.franchise_id;
+      if (app.city && cols.includes('city')) payload.city = app.city;
       if (app.password) {
         payload.password = app.password;
       }
+      if (combinedNotes && cols.includes('notes')) {
+        payload.notes = combinedNotes;
+      }
+      if (app.subscription_package && cols.includes('subscription_package')) {
+        payload.subscription_package = app.subscription_package;
+      }
+      if (app.subscription_package_name && cols.includes('subscription_package_name')) {
+        payload.subscription_package_name = app.subscription_package_name;
+      }
+      if (app.subscription_package_price !== undefined && cols.includes('subscription_package_price')) {
+        payload.subscription_package_price = app.subscription_package_price;
+      }
+
+      const filteredPayload = filterPayloadByValidColumns(payload, cols);
+
       const { data, error } = await supabase
         .from('assistants')
-        .insert(payload)
+        .insert(filteredPayload)
         .select()
         .single();
       if (error) {
@@ -4093,6 +4187,11 @@ export const db = {
       status: 'pending',
       city_id: app.city_id || undefined,
       franchise_id: app.franchise_id || undefined,
+      city: app.city,
+      subscription_package: app.subscription_package,
+      subscription_package_name: app.subscription_package_name,
+      subscription_package_price: app.subscription_package_price,
+      notes: combinedNotes || undefined,
       created_at: new Date().toISOString()
     };
     stored.unshift(newAssistant);

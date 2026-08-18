@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowRight, Loader2, Phone, Calendar, ShieldCheck, X, Navigation, 
@@ -10,7 +10,12 @@ import {
 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { User as SupabaseUser } from '@supabase/supabase-js';
-import { supabase, supabaseAssistant, isSupabaseConfigured, db, Assistant, Order, Partner, City, Franchise, resolveFranchiseForCity, isUUID, toUUID, getExactTableColumns, filterPayloadByValidColumns, filterTaskPayload, filterOrderPayload } from '@/lib/supabase';
+import { 
+  supabase, supabaseAssistant, isSupabaseConfigured, db, Assistant, Order, 
+  Partner, City, Franchise, resolveFranchiseForCity, isUUID, toUUID, 
+  getExactTableColumns, filterPayloadByValidColumns, filterTaskPayload, 
+  filterOrderPayload, TURKEY_PROVINCES, ASSISTANT_SUBSCRIPTION_PACKAGES 
+} from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { playNotificationSound, showBrowserNotification } from '@/lib/soundUtils';
 import { LiveDispatchService } from '@/lib/dispatchService';
@@ -29,6 +34,7 @@ interface ApplicationFormData {
   experience: string;
   hasCompany: string;
   notes: string;
+  subscriptionPackage: '3_aylik' | '6_aylik' | '9_aylik' | '12_aylik';
 }
 
 const initialFormData: ApplicationFormData = {
@@ -43,7 +49,8 @@ const initialFormData: ApplicationFormData = {
   licenseInfo: '',
   experience: '',
   hasCompany: 'Evet',
-  notes: ''
+  notes: '',
+  subscriptionPackage: '12_aylik'
 };
 
 export interface ResolvedTaskFields {
@@ -2587,16 +2594,40 @@ export function AsistanPage() {
     }
   };
 
+  // Turkey 81 Cities options
+  const cityOptions = useMemo(() => {
+    return TURKEY_PROVINCES.map((provName) => {
+      const dbCity = activeCities.find(c => c.name?.toLowerCase().trim() === provName.toLowerCase().trim());
+      return {
+        id: dbCity ? dbCity.id : provName,
+        name: provName,
+        dbCity: dbCity || null
+      };
+    });
+  }, [activeCities]);
+
   // Candidate application handlers
   const handleAppInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCityChange = async (cityId: string) => {
-    const selectedCity = activeCities.find(c => c.id === cityId);
-    const cityName = selectedCity ? selectedCity.name : '';
-    
+  const handleCityChange = async (selectedVal: string) => {
+    if (!selectedVal) {
+      setFormData(prev => ({
+        ...prev,
+        cityId: '',
+        city: '',
+        franchiseId: ''
+      }));
+      setCityResolution({ count: 0, franchiseId: null, franchise: null, franchises: [] });
+      return;
+    }
+
+    const matchedOption = cityOptions.find(c => c.id === selectedVal || c.name === selectedVal);
+    const cityName = matchedOption ? matchedOption.name : selectedVal;
+    const cityId = matchedOption?.dbCity?.id || (matchedOption ? matchedOption.id : selectedVal);
+
     setFormData(prev => ({
       ...prev,
       cityId,
@@ -2604,17 +2635,16 @@ export function AsistanPage() {
       franchiseId: ''
     }));
 
-    if (!cityId) {
-      setCityResolution({ count: 0, franchiseId: null, franchise: null, franchises: [] });
-      return;
-    }
-
     setCityResolving(true);
     try {
-      const resolution = await resolveFranchiseForCity(cityId);
-      setCityResolution(resolution);
-      if (resolution.count === 1 && resolution.franchiseId) {
-        setFormData(prev => ({ ...prev, franchiseId: resolution.franchiseId || '' }));
+      if (matchedOption?.dbCity?.id || isUUID(cityId)) {
+        const resolution = await resolveFranchiseForCity(matchedOption?.dbCity?.id || cityId);
+        setCityResolution(resolution);
+        if (resolution.count === 1 && resolution.franchiseId) {
+          setFormData(prev => ({ ...prev, franchiseId: resolution.franchiseId || '' }));
+        }
+      } else {
+        setCityResolution({ count: 0, franchiseId: null, franchise: null, franchises: [] });
       }
     } catch (err) {
       console.error('Error resolving franchise for city:', err);
@@ -2635,19 +2665,10 @@ export function AsistanPage() {
       return;
     }
 
-    if (!formData.cityId) {
+    if (!formData.city && !formData.cityId) {
       toast({
         title: 'Eksik Bilgi',
         description: 'Lütfen çalışmak istediğiniz şehri seçiniz.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (cityResolution.count === 0) {
-      toast({
-        title: 'Hizmet Verilemiyor',
-        description: 'Seçilen şehirde henüz aktif bayi bulunmadığı için başvuru kabul edilememektedir.',
         variant: 'destructive',
       });
       return;
@@ -2662,6 +2683,17 @@ export function AsistanPage() {
       return;
     }
 
+    if (!formData.subscriptionPackage) {
+      toast({
+        title: 'Eksik Bilgi',
+        description: 'Lütfen bir asistan paneli kullanım paketi seçiniz.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const selectedPkg = ASSISTANT_SUBSCRIPTION_PACKAGES.find(p => p.id === formData.subscriptionPackage) || ASSISTANT_SUBSCRIPTION_PACKAGES[3];
+
     setIsSubmittingApp(true);
     try {
       await db.createAssistantApplication({
@@ -2670,9 +2702,19 @@ export function AsistanPage() {
         email: formData.email,
         password: formData.password,
         vehicle_type: vehicleType,
-        city_id: formData.cityId,
+        city_id: formData.cityId && isUUID(formData.cityId) ? formData.cityId : (cityResolution.franchise?.city_id || null),
         franchise_id: formData.franchiseId || cityResolution.franchiseId || null,
-        city: formData.city
+        city: formData.city,
+        subscription_package: selectedPkg.id,
+        subscription_package_name: selectedPkg.title,
+        subscription_package_price: selectedPkg.total_price,
+        notes: [
+          formData.motorInfo ? `Motor/Araç: ${formData.motorInfo}` : '',
+          formData.licenseInfo ? `Ehliyet: ${formData.licenseInfo}` : '',
+          formData.experience ? `Deneyim: ${formData.experience}` : '',
+          formData.hasCompany ? `Şahıs Şirketi: ${formData.hasCompany}` : '',
+          formData.notes ? `Notlar: ${formData.notes}` : ''
+        ].filter(Boolean).join(' | ')
       });
 
       toast({
@@ -3662,31 +3704,25 @@ export function AsistanPage() {
                         <select
                           name="cityId"
                           required
-                          value={formData.cityId}
+                          value={formData.cityId || formData.city}
                           onChange={(e) => handleCityChange(e.target.value)}
-                          disabled={loadingCities}
                           className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] focus:outline-none focus:border-[#2563EB]"
                         >
-                          <option value="">{loadingCities ? 'Şehirler yükleniyor...' : 'Şehir Seçiniz'}</option>
-                          {activeCities.map((c) => (
-                            <option key={c.id} value={c.id}>
+                          <option value="">Şehir Seçiniz</option>
+                          {cityOptions.map((c) => (
+                            <option key={c.id || c.name} value={c.id || c.name}>
                               {c.name}
                             </option>
                           ))}
                         </select>
-                        {formData.cityId && !cityResolving && cityResolution.count === 0 && (
-                          <p className="text-xs text-red-600 font-medium mt-1.5 flex items-center gap-1">
-                            <AlertCircle className="w-3.5 h-3.5" /> Bu şehirde şu anda aktif operasyon bulunmamaktadır.
-                          </p>
-                        )}
-                        {formData.cityId && !cityResolving && cityResolution.count === 1 && (
+                        {formData.city && !cityResolving && cityResolution.count === 1 && (
                           <p className="text-xs text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Bayi: {cityResolution.franchises[0]?.name} (Otomatik Eşleşti)
                           </p>
                         )}
                       </div>
 
-                      {formData.cityId && cityResolution.count > 1 ? (
+                      {formData.city && cityResolution.count > 1 ? (
                         <div>
                           <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
                             Çalışmak İstediğiniz Bayi / Bölge <span className="text-[#EF4444]">*</span>
@@ -3724,7 +3760,7 @@ export function AsistanPage() {
                       )}
                     </div>
 
-                    {formData.cityId && cityResolution.count > 1 && (
+                    {formData.city && cityResolution.count > 1 && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                           <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
@@ -3773,6 +3809,43 @@ export function AsistanPage() {
                           placeholder="Örn: 2 Yıl Kurye Deneyimi"
                           className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
                         />
+                      </div>
+                    </div>
+
+                    {/* Asistan Paneli Kullanım Paketi */}
+                    <div>
+                      <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                        Asistan Paneli Kullanım Paketi <span className="text-[#EF4444]">*</span>
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {ASSISTANT_SUBSCRIPTION_PACKAGES.map((pkg) => {
+                          const isSelected = formData.subscriptionPackage === pkg.id;
+                          return (
+                            <button
+                              key={pkg.id}
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, subscriptionPackage: pkg.id as any }))}
+                              className={`p-4 rounded-xl border text-left transition-all relative cursor-pointer ${
+                                isSelected
+                                  ? 'border-[#2563EB] bg-blue-50/70 ring-1 ring-[#2563EB]'
+                                  : 'border-[#E5E7EB] bg-[#F9FAFB] hover:border-gray-300'
+                              }`}
+                            >
+                              {pkg.badge && (
+                                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded bg-[#2563EB] text-white">
+                                  {pkg.badge}
+                                </span>
+                              )}
+                              <div className="font-bold text-sm text-[#111827]">{pkg.title}</div>
+                              <div className="text-base font-extrabold text-[#111827] mt-1">
+                                {pkg.total_price.toLocaleString('tr-TR')} TL
+                              </div>
+                              <div className="text-xs text-[#6B7280] mt-0.5">
+                                Aylık {pkg.monthly_price.toLocaleString('tr-TR')} TL
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
