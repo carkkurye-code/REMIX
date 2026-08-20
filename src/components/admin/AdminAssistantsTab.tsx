@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Bike, Search, Eye, Edit, Trash2, Key, MapPin, Check, X, ShieldAlert, 
-  Phone, Mail, Star, Plus, Award, Activity, Navigation, FileCheck, AlertCircle, DollarSign, Clock
+  Bike, Search, Eye, MapPin, Check, ShieldAlert, 
+  Plus, Navigation, PowerOff, CheckCircle2, XCircle
 } from 'lucide-react';
 import { Assistant, Order, db } from '@/lib/supabase';
 import { ConfirmModal } from './ConfirmModal';
@@ -22,10 +22,9 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'passive' | 'suspended'>('all');
 
   const [viewingAssistant, setViewingAssistant] = useState<Assistant | null>(null);
-  const [editingAssistant, setEditingAssistant] = useState<Assistant | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // New Assistant State
@@ -34,7 +33,9 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
     phone: '',
     email: '',
     vehicle_type: 'motosiklet',
-    status: 'aktif'
+    status: 'active',
+    active: true,
+    is_online: true
   });
 
   // Confirm Modal
@@ -45,6 +46,21 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
     action: () => Promise<void>;
     isDanger?: boolean;
   }>({ isOpen: false, title: '', description: '', action: async () => {} });
+
+  const activeCount = (assistants || []).filter(a => {
+    const st = (a.status || '').toLowerCase();
+    return (st === 'active' || st === 'aktif' || st === 'görevde') && a.active !== false;
+  }).length;
+
+  const passiveCount = (assistants || []).filter(a => {
+    const st = (a.status || '').toLowerCase();
+    return st === 'passive' || st === 'pasif' || a.active === false;
+  }).length;
+
+  const suspendedCount = (assistants || []).filter(a => {
+    const st = (a.status || '').toLowerCase();
+    return st === 'suspended';
+  }).length;
 
   const filteredAssistants = (assistants || []).filter(a => {
     if (!a) return false;
@@ -57,45 +73,90 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
                           phoneStr.includes(searchTerm) ||
                           emailStr.toLowerCase().includes(termStr);
     const matchesVehicle = !selectedVehicle || a.vehicle_type === selectedVehicle;
-    const matchesStatus = !selectedStatus || a.status === selectedStatus;
+
+    const st = (a.status || '').toLowerCase();
+    const isPassive = st === 'passive' || st === 'pasif' || a.active === false;
+    const isActive = (st === 'active' || st === 'aktif' || st === 'görevde') && a.active !== false;
+    const isSuspended = st === 'suspended';
+
+    let matchesStatus = true;
+    if (selectedStatus === 'active') {
+      matchesStatus = isActive;
+    } else if (selectedStatus === 'passive') {
+      matchesStatus = isPassive;
+    } else if (selectedStatus === 'suspended') {
+      matchesStatus = isSuspended;
+    }
+
     return matchesSearch && matchesVehicle && matchesStatus;
   });
 
   // Actions
-  const handleToggleActive = async (asst: Assistant) => {
-    const isCurrentlyActive = asst.status === 'aktif';
-    const newStatus = isCurrentlyActive ? ('pasif' as const) : ('aktif' as const);
-    setAssistants(prev => prev.map(a => a.id === asst.id ? { ...a, status: newStatus } : a));
-    await AdminOperationsService.toggleAssistantStatus(asst.id, newStatus === 'aktif');
-    await db.updateAssistant(asst.id, { status: newStatus });
-  };
-
-  const handleSuspend = async (asst: Assistant) => {
-    const isSuspended = asst.status === 'suspended';
-    const newStatus = isSuspended ? ('aktif' as const) : ('suspended' as const);
-
+  const handleDeactivate = (asst: Assistant) => {
     setConfirmModal({
       isOpen: true,
-      title: isSuspended ? 'Asistanı Aktif Et' : 'Asistanı Askıya Al',
-      description: `${asst.full_name} isimli kuryeyi ${isSuspended ? 'tekrar aktif yapmak' : 'askıya almak'} istediğinize emin misiniz?`,
-      isDanger: !isSuspended,
+      title: 'Asistanı Pasife Al',
+      description: `${asst.full_name} isimli asistanı pasife almak istediğinize emin misiniz? Pasife alınan asistan yeni görev alamaz ve sisteme giriş yapamaz.`,
+      isDanger: true,
       action: async () => {
-        setAssistants(prev => prev.map(a => a.id === asst.id ? { ...a, status: newStatus } : a));
-        await AdminOperationsService.toggleAssistantStatus(asst.id, newStatus === 'aktif');
-        await db.updateAssistant(asst.id, { status: newStatus });
+        try {
+          await db.setAssistantStatus(asst.id, 'passive');
+          await AdminOperationsService.toggleAssistantStatus(asst.id, false);
+          setAssistants(prev => prev.map(a => a.id === asst.id ? { ...a, status: 'passive', active: false, is_online: false, task_status: 'Pasif' } : a));
+          if (onRefresh) onRefresh();
+        } catch (err: any) {
+          console.error('Pasife alma hatası:', err);
+          alert('Asistan pasife alınırken bir hata oluştu: ' + (err?.message || 'Lütfen tekrar deneyin.'));
+        }
       }
     });
   };
 
-  const handleDelete = async (asst: Assistant) => {
+  const handleActivate = (asst: Assistant) => {
     setConfirmModal({
       isOpen: true,
-      title: 'Kurye Hesabını Sil',
-      description: `${asst.full_name} kurye hesabını tamamen silmek istediğinize emin misiniz?`,
-      isDanger: true,
+      title: 'Asistanı Aktif Et',
+      description: `${asst.full_name} isimli asistanı tekrar aktif etmek istediğinize emin misiniz?`,
+      isDanger: false,
       action: async () => {
-        setAssistants(prev => prev.filter(a => a.id !== asst.id));
-        await db.deleteAssistant(asst.id);
+        try {
+          await db.setAssistantStatus(asst.id, 'active');
+          await AdminOperationsService.toggleAssistantStatus(asst.id, true);
+          setAssistants(prev => prev.map(a => a.id === asst.id ? { ...a, status: 'active', active: true, is_online: true, task_status: 'Müsait' } : a));
+          if (onRefresh) onRefresh();
+        } catch (err: any) {
+          console.error('Aktif etme hatası:', err);
+          alert('Asistan aktif edilirken bir hata oluştu: ' + (err?.message || 'Lütfen tekrar deneyin.'));
+        }
+      }
+    });
+  };
+
+  const handleSuspend = (asst: Assistant) => {
+    const isSuspended = (asst.status || '').toLowerCase() === 'suspended';
+    const newStatus = isSuspended ? ('active' as const) : ('suspended' as const);
+
+    setConfirmModal({
+      isOpen: true,
+      title: isSuspended ? 'Asistanı Askıdan Çıkar & Aktif Et' : 'Asistanı Askıya Al',
+      description: `${asst.full_name} isimli asistanı ${isSuspended ? 'askıdan çıkarıp tekrar aktif etmek' : 'askıya almak'} istediğinize emin misiniz?`,
+      isDanger: !isSuspended,
+      action: async () => {
+        try {
+          await db.setAssistantStatus(asst.id, newStatus);
+          await AdminOperationsService.toggleAssistantStatus(asst.id, isSuspended);
+          setAssistants(prev => prev.map(a => a.id === asst.id ? { 
+            ...a, 
+            status: newStatus, 
+            active: isSuspended, 
+            is_online: isSuspended,
+            task_status: isSuspended ? 'Müsait' : 'Askıda'
+          } : a));
+          if (onRefresh) onRefresh();
+        } catch (err: any) {
+          console.error('Askıya alma hatası:', err);
+          alert('İşlem yapılırken bir hata oluştu: ' + (err?.message || 'Lütfen tekrar deneyin.'));
+        }
       }
     });
   };
@@ -107,6 +168,7 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
       const created = await db.createAssistant(newAssistant);
       setAssistants(prev => [created, ...prev]);
       setIsCreateOpen(false);
+      if (onRefresh) onRefresh();
     } catch (err) {
       console.error(err);
     }
@@ -118,7 +180,7 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm">
         <div>
           <h1 className="text-2xl font-black text-[#1F2937] tracking-tight">Saha Asistanı (Kurye) Yönetimi</h1>
-          <p className="text-xs sm:text-sm text-[#6B7280] font-medium mt-1">Saha kuryelerini, canlı konumlarını, araç tiplerini ve durumlarını takip edin.</p>
+          <p className="text-xs sm:text-sm text-[#6B7280] font-medium mt-1">Saha kuryelerini, canlı konumlarını, araç tiplerini, aktif ve pasif durumlarını yönetin.</p>
         </div>
         <button
           type="button"
@@ -129,13 +191,63 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
         </button>
       </div>
 
-      {/* FILTERS */}
-      <div className="bg-white border border-[#E5E7EB] p-4 rounded-2xl shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* STATUS FILTER TABS */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setSelectedStatus('all')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+            selectedStatus === 'all'
+              ? 'bg-[#1F2937] text-white border-[#1F2937] shadow-sm'
+              : 'bg-white text-[#4B5563] border-[#E5E7EB] hover:bg-gray-50'
+          }`}
+        >
+          Tüm Asistanlar ({assistants.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setSelectedStatus('active')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+            selectedStatus === 'active'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+              : 'bg-white text-emerald-700 border-[#E5E7EB] hover:bg-emerald-50'
+          }`}
+        >
+          <CheckCircle2 className="w-3.5 h-3.5" /> Aktif Asistanlar ({activeCount})
+        </button>
+        <button
+          type="button"
+          onClick={() => setSelectedStatus('passive')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+            selectedStatus === 'passive'
+              ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+              : 'bg-white text-amber-700 border-[#E5E7EB] hover:bg-amber-50'
+          }`}
+        >
+          <XCircle className="w-3.5 h-3.5" /> Pasif Asistanlar ({passiveCount})
+        </button>
+        {suspendedCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setSelectedStatus('suspended')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
+              selectedStatus === 'suspended'
+                ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                : 'bg-white text-purple-700 border-[#E5E7EB] hover:bg-purple-50'
+            }`}
+          >
+            <ShieldAlert className="w-3.5 h-3.5" /> Askıda ({suspendedCount})
+          </button>
+        )}
+      </div>
+
+      {/* SEARCH AND VEHICLE FILTERS */}
+      <div className="bg-white border border-[#E5E7EB] p-4 rounded-2xl shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="relative">
           <Search className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-3" />
           <input
             type="text"
-            placeholder="Kurye adı, telefon veya plaka ara..."
+            placeholder="Asistan adı, telefon veya e-posta ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full h-10 bg-gray-50 border border-[#E5E7EB] rounded-xl pl-9 pr-3 text-xs font-medium text-[#1F2937] focus:outline-none focus:border-[#1F2937] focus:ring-1 focus:ring-[#1F2937] transition-all shadow-sm"
@@ -152,17 +264,6 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
           <option value="bisiklet">Bisiklet</option>
           <option value="arac">Otomobil / Araç</option>
         </select>
-
-        <select
-          value={selectedStatus}
-          onChange={(e) => setSelectedStatus(e.target.value)}
-          className="h-10 bg-gray-50 border border-[#E5E7EB] rounded-xl px-3 text-xs font-medium text-[#1F2937] focus:outline-none focus:border-[#1F2937] focus:ring-1 focus:ring-[#1F2937] transition-all shadow-sm"
-        >
-          <option value="">Tüm Durumlar</option>
-          <option value="aktif">Aktif / Görevde</option>
-          <option value="pasif">Pasif</option>
-          <option value="suspended">Askıya Alınmış</option>
-        </select>
       </div>
 
       {/* ASSISTANTS GRID */}
@@ -172,89 +273,108 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
             Kriterlere uygun asistan bulunamadı.
           </div>
         ) : (
-          filteredAssistants.map(asst => (
-            <div key={asst.id} className="bg-white border border-[#E5E7EB] rounded-2xl p-5 space-y-3.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-              <div className="space-y-3">
-                {/* Header info */}
-                <div className="flex items-start justify-between gap-2 border-b border-[#E5E7EB] pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 font-bold flex items-center justify-center shrink-0 shadow-sm">
-                      <Bike className="w-5 h-5" />
+          filteredAssistants.map(asst => {
+            const st = (asst.status || '').toLowerCase();
+            const isPassive = st === 'passive' || st === 'pasif' || asst.active === false;
+            const isSuspended = st === 'suspended';
+            const isBusy = st === 'görevde';
+            const isActive = !isPassive && !isSuspended;
+
+            return (
+              <div 
+                key={asst.id} 
+                className={`bg-white border rounded-2xl p-5 space-y-3.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
+                  isPassive ? 'border-amber-200 bg-amber-50/20' : isSuspended ? 'border-purple-200 bg-purple-50/20' : 'border-[#E5E7EB]'
+                }`}
+              >
+                <div className="space-y-3">
+                  {/* Header info */}
+                  <div className="flex items-start justify-between gap-2 border-b border-[#E5E7EB] pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-11 h-11 rounded-2xl border font-bold flex items-center justify-center shrink-0 shadow-sm ${
+                        isPassive 
+                          ? 'bg-amber-50 border-amber-200 text-amber-600'
+                          : isSuspended 
+                          ? 'bg-purple-50 border-purple-200 text-purple-600'
+                          : 'bg-blue-50 border-blue-200 text-blue-600'
+                      }`}>
+                        <Bike className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-[#1F2937] text-sm flex items-center gap-1.5">
+                          {asst.full_name}
+                        </h3>
+                        <p className="text-xs text-[#6B7280] font-mono mt-0.5">{asst.phone}</p>
+                        <span className="inline-block text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize font-semibold mt-1">
+                          {asst.vehicle_type || 'Motosiklet'}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold text-[#1F2937] text-sm flex items-center gap-1.5">
-                        {asst.full_name}
-                      </h3>
-                      <p className="text-xs text-[#6B7280] font-mono mt-0.5">{asst.phone}</p>
-                      <span className="inline-block text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize font-semibold mt-1">
-                        {asst.vehicle_type || 'Motosiklet'}
-                      </span>
-                    </div>
+
+                    <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
+                      isBusy ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                      isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      isSuspended ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                      'bg-amber-50 text-amber-700 border border-amber-200'
+                    }`}>
+                      {isBusy ? 'Görevde' : isActive ? 'Aktif' : isSuspended ? 'Askıda' : 'Pasif'}
+                    </span>
                   </div>
 
-                  <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
-                    asst.status === 'görevde' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                    asst.status === 'aktif' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                    asst.status === 'suspended' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
-                    'bg-red-50 text-red-700 border border-red-200'
-                  }`}>
-                    {asst.status}
-                  </span>
+                  {/* Location Box */}
+                  <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs space-y-1">
+                    <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Canlı Konum Bilgisi</span>
+                    <div className="text-[#1F2937] font-medium flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-[#1F2937] shrink-0" />
+                      <span className="truncate">{asst.latitude && asst.longitude ? `${asst.latitude.toFixed(4)}, ${asst.longitude.toFixed(4)}` : 'Konum Belirtilmedi'}</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Location Box */}
-                <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs space-y-1">
-                  <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Canlı Konum Bilgisi</span>
-                  <div className="text-[#1F2937] font-medium flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-[#1F2937] shrink-0" />
-                    <span className="truncate">{asst.latitude && asst.longitude ? `${asst.latitude.toFixed(4)}, ${asst.longitude.toFixed(4)}` : 'Konum Belirtilmedi'}</span>
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#E5E7EB] text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setViewingAssistant(asst)}
+                    className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#1F2937] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-[#1F2937]" /> Profil
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    {isActive ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDeactivate(asst)}
+                        className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                        title="Asistanı Pasife Al"
+                      >
+                        <PowerOff className="w-3.5 h-3.5 text-amber-700" /> Pasife Al
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleActivate(asst)}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                        title="Asistanı Aktif Et"
+                      >
+                        <Check className="w-3.5 h-3.5 text-emerald-700" /> Aktif Et
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleSuspend(asst)}
+                      className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 flex items-center justify-center transition-all shadow-sm active:scale-95 cursor-pointer"
+                      title={isSuspended ? 'Askıdan Çıkar' : 'Askıya Al'}
+                    >
+                      <ShieldAlert className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#E5E7EB] text-xs">
-                <button
-                  type="button"
-                  onClick={() => setViewingAssistant(asst)}
-                  className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#1F2937] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
-                >
-                  <Eye className="w-3.5 h-3.5 text-[#1F2937]" /> Profil
-                </button>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleActive(asst)}
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all shadow-sm active:scale-95 cursor-pointer ${
-                      asst.status === 'aktif' 
-                        ? 'bg-gray-100 border-gray-200 text-[#4B5563] hover:bg-gray-200' 
-                        : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                    }`}
-                    title={asst.status === 'aktif' ? 'Pasif Yap' : 'Aktif Yap'}
-                  >
-                    {asst.status === 'aktif' ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSuspend(asst)}
-                    className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 flex items-center justify-center transition-all shadow-sm active:scale-95 cursor-pointer"
-                    title="Askıya Al"
-                  >
-                    <ShieldAlert className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(asst)}
-                    className="w-8 h-8 rounded-xl bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 flex items-center justify-center transition-all shadow-sm active:scale-95 cursor-pointer"
-                    title="Sil"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -269,7 +389,8 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
               title="Kapat"
               className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#6B7280] hover:text-[#1F2937] flex items-center justify-center transition-colors cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <PowerOff className="w-4 h-4 hidden" />
+              <span className="text-sm font-bold">✕</span>
             </button>
 
             <div className="flex items-center gap-3 border-b border-[#E5E7EB] pb-4">
@@ -286,12 +407,22 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
               <div className="p-3.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-1">
                 <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Asistan Bilgileri</span>
                 <div><span className="text-[#6B7280]">Araç Tipi:</span> <span className="capitalize font-bold text-[#1F2937]">{viewingAssistant.vehicle_type}</span></div>
-                <div><span className="text-[#6B7280]">Durum:</span> <span className="capitalize font-bold text-[#1F2937]">{viewingAssistant.status}</span></div>
+                <div>
+                  <span className="text-[#6B7280]">Durum:</span>{' '}
+                  <span className="capitalize font-bold text-[#1F2937]">
+                    {(viewingAssistant.status === 'passive' || viewingAssistant.status === 'pasif' || viewingAssistant.active === false) 
+                      ? 'Pasif' 
+                      : (viewingAssistant.status === 'suspended')
+                      ? 'Askıda'
+                      : 'Aktif'}
+                  </span>
+                </div>
               </div>
 
               <div className="p-3.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-1">
                 <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Sistem Detayları</span>
                 <div><span className="text-[#6B7280]">Kayıt Tarihi:</span> <span className="font-bold text-[#1F2937]">{new Date(viewingAssistant.created_at).toLocaleDateString('tr-TR')}</span></div>
+                {viewingAssistant.city && <div><span className="text-[#6B7280]">Şehir:</span> <span className="font-bold text-[#1F2937]">{viewingAssistant.city}</span></div>}
               </div>
             </div>
 
@@ -329,7 +460,7 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
               title="Kapat"
               className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#6B7280] hover:text-[#1F2937] flex items-center justify-center transition-colors cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <span className="text-sm font-bold">✕</span>
             </button>
 
             <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
@@ -414,3 +545,4 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
     </div>
   );
 };
+

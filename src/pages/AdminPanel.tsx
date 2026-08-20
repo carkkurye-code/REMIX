@@ -156,7 +156,7 @@ export function AdminPanel() {
       const custs = await db.adminGetAllCustomers();
       setCustomers(custs || []);
 
-      const assts = await db.getAssistants();
+      const assts = await db.getAdminAssistants();
       setAssistants(assts || []);
 
       const asstApps = await db.getAssistantApplications();

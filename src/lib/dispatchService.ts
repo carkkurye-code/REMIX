@@ -311,9 +311,17 @@ export class LiveDispatchService {
             .select('*');
 
           if (!error && data && data.length > 0) {
-            activeAssistants = (data as Assistant[]).filter(a =>
-              Boolean(a.user_id || a.id) && a.is_online !== false && (a.status as any) !== 'pasif' && (a.status as any) !== 'pending'
-            );
+            activeAssistants = (data as Assistant[]).filter(a => {
+              const st = (a.status || '').toLowerCase();
+              return Boolean(a.user_id || a.id) && 
+                     a.is_online !== false && 
+                     a.active !== false && 
+                     st !== 'passive' && 
+                     st !== 'pasif' && 
+                     st !== 'suspended' && 
+                     st !== 'pending' && 
+                     st !== 'deleted';
+            });
           }
         } catch (err) {
           console.warn('[LiveDispatch] Error loading assistants from Supabase:', err);

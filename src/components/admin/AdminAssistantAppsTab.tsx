@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Bike, Check, X, Search, FileText, FileCheck, Phone, Eye, ShieldAlert, Trash2, AlertCircle, CheckCircle2, MapPin, Building
+  Bike, Check, X, Search, Phone, Mail, ShieldAlert, Trash2, AlertCircle, CheckCircle2, MapPin, Building, PackageCheck
 } from 'lucide-react';
 import { AssistantApplication, db, City, Franchise } from '@/lib/supabase';
 import { ConfirmModal } from './ConfirmModal';
@@ -20,7 +20,6 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
-  const [viewingApp, setViewingApp] = useState<AssistantApplication | null>(null);
   const [cities, setCities] = useState<City[]>([]);
   const [franchises, setFranchises] = useState<Franchise[]>([]);
 
@@ -54,6 +53,52 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
       if (match) return match.name;
     }
     return null;
+  };
+
+  const getPackageInfo = (app: AssistantApplication) => {
+    let pkgName = (app as any).subscription_package_name;
+    let pkgPrice = (app as any).subscription_package_price;
+    const pkgId = (app as any).subscription_package;
+
+    if (!pkgName && pkgId) {
+      if (pkgId === '3_aylik') { pkgName = '3 Aylık'; if (pkgPrice == null) pkgPrice = 2700; }
+      else if (pkgId === '6_aylik') { pkgName = '6 Aylık'; if (pkgPrice == null) pkgPrice = 5100; }
+      else if (pkgId === '9_aylik') { pkgName = '9 Aylık'; if (pkgPrice == null) pkgPrice = 7200; }
+      else if (pkgId === '12_aylik') { pkgName = '12 Aylık'; if (pkgPrice == null) pkgPrice = 8400; }
+    }
+
+    if ((!pkgName || pkgPrice == null) && app.notes) {
+      const match = app.notes.match(/\[Seçilen Paket:\s*([^\]]+)\]/);
+      if (match && match[1]) {
+        const fullText = match[1];
+        const priceMatch = fullText.match(/\(([\d.,]+)\s*TL\)/i);
+        if (priceMatch && priceMatch[1] && pkgPrice == null) {
+          pkgPrice = priceMatch[1] + ' TL';
+        }
+        if (!pkgName) {
+          pkgName = fullText.replace(/\([^)]+\)/, '').trim();
+        }
+      }
+    }
+
+    const formattedName = pkgName ? String(pkgName).replace(/ Paket$/i, '').trim() : '12 Aylık';
+    
+    let formattedPrice = '';
+    if (typeof pkgPrice === 'number') {
+      formattedPrice = `${pkgPrice.toLocaleString('tr-TR')} TL`;
+    } else if (typeof pkgPrice === 'string' && pkgPrice.trim()) {
+      formattedPrice = pkgPrice.includes('TL') ? pkgPrice : `${pkgPrice} TL`;
+    } else {
+      if (pkgId === '3_aylik' || formattedName.includes('3')) formattedPrice = '2.700 TL';
+      else if (pkgId === '6_aylik' || formattedName.includes('6')) formattedPrice = '5.100 TL';
+      else if (pkgId === '9_aylik' || formattedName.includes('9')) formattedPrice = '7.200 TL';
+      else formattedPrice = '8.400 TL';
+    }
+
+    return {
+      name: formattedName,
+      price: formattedPrice
+    };
   };
 
   // Reject Reason Modal
@@ -178,7 +223,7 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
           <p className="text-xs sm:text-sm text-[#6B7280] font-medium mt-1">Saha teslimat ekibine katılmak isteyen kuryelerin sürücü ve evrak başvuruları.</p>
         </div>
         <div className="px-3.5 py-2 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 font-bold text-xs flex items-center gap-2 shadow-sm">
-          <Bike className="w-4 h-4 text-blue-600" /> {pendingApps.length} Onay Bekleyen Kurye
+          <Bike className="w-4 h-4 text-blue-600" /> {pendingApps.length} Onay Bekleyen Başvuru
         </div>
       </div>
 
@@ -223,11 +268,14 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
         {filteredApps.length === 0 ? (
           <div className="text-center py-12 bg-white border border-dashed border-[#E5E7EB] rounded-2xl shadow-sm">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2 opacity-60" />
-            <p className="text-sm font-semibold text-[#1F2937]">Onay bekleyen kurye başvurusu bulunmuyor.</p>
+            <p className="text-sm font-semibold text-[#1F2937]">Onay bekleyen başvuru bulunmuyor.</p>
           </div>
         ) : (
           filteredApps.map((app) => {
             const isChecked = selectedAppIds.includes(app.id);
+            const pkgInfo = getPackageInfo(app);
+            const cityName = getCityName(app.city_id, (app as any).city);
+            const franchiseName = getFranchiseName(app.franchise_id);
 
             return (
               <div key={app.id} className={`p-5 bg-white border rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all shadow-sm hover:shadow-md ${isChecked ? 'border-blue-400 bg-blue-50/30' : 'border-[#E5E7EB]'}`}>
@@ -241,47 +289,56 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
                   <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 font-bold flex items-center justify-center shrink-0 shadow-sm">
                     <Bike className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-[#1F2937] text-sm flex items-center gap-2">
-                      {app.full_name}
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-bold text-[#1F2937] text-sm">
+                        {app.full_name}
+                      </h3>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 capitalize">
                         {app.vehicle_type || 'Motosiklet'}
                       </span>
-                      {(app as any).subscription_package_name && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">
-                          {(app as any).subscription_package_name} {(app as any).subscription_package_price ? `(${Number((app as any).subscription_package_price).toLocaleString('tr-TR')} TL)` : ''}
-                        </span>
-                      )}
-                      {getCityName(app.city_id, (app as any).city) && (
+                      {cityName && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1">
                           <MapPin className="w-3 h-3 text-gray-500" />
-                          {getCityName(app.city_id, (app as any).city)}
+                          {cityName}
                         </span>
                       )}
-                      {getFranchiseName(app.franchise_id) && (
+                      {franchiseName && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                           <Building className="w-3 h-3 text-emerald-600" />
-                          {getFranchiseName(app.franchise_id)}
+                          {franchiseName}
                         </span>
                       )}
-                    </h3>
-                    <p className="text-xs text-[#6B7280] mt-0.5 font-medium">Tel: <span className="font-mono text-[#1F2937]">{app.phone}</span> {app.email ? `• ${app.email}` : ''}</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B7280] font-medium">
+                      <span>Tel: <span className="font-mono text-[#1F2937]">{app.phone}</span></span>
+                      {app.email && <span>• E-posta: <span className="text-[#1F2937]">{app.email}</span></span>}
+                    </div>
+
+                    {/* PAKET & ÖDENECEK TUTAR BİLGİSİ */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[#6B7280] font-medium">Paket:</span>
+                        <span className="font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md">
+                          {pkgInfo.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[#6B7280] font-medium">Ödenecek Tutar:</span>
+                        <span className="font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                          {pkgInfo.price}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 shrink-0 border-t md:border-t-0 border-[#E5E7EB] pt-3 md:pt-0">
                   <button
                     type="button"
-                    onClick={() => setViewingApp(app)}
-                    className="px-3.5 py-2 rounded-xl bg-gray-100 border border-gray-200 text-xs font-bold hover:bg-gray-200 text-[#1F2937] cursor-pointer flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-[#1F2937]" /> Evrakları İncele
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => handleApprove(app)}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 border-0 transition-all"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95 border-0 transition-all"
                   >
                     <Check className="w-3.5 h-3.5" /> Onayla
                   </button>
@@ -289,7 +346,7 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
                   <button
                     type="button"
                     onClick={() => handleOpenReject(app)}
-                    className="px-3.5 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 font-bold text-xs hover:bg-red-100 cursor-pointer flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                    className="px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 font-bold text-xs hover:bg-red-100 cursor-pointer flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
                   >
                     <X className="w-3.5 h-3.5" /> Reddet
                   </button>
@@ -299,94 +356,6 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
           })
         )}
       </div>
-
-      {/* VIEW DOCUMENTS MODAL */}
-      {viewingApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative text-xs">
-            <button
-              type="button"
-              onClick={() => setViewingApp(null)}
-              aria-label="Kapat"
-              title="Kapat"
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#6B7280] hover:text-[#1F2937] flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div>
-              <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-blue-600" /> {viewingApp.full_name} Evrak Dosyası
-              </h2>
-              <div className="flex items-center gap-2 text-xs text-[#6B7280] mt-1 font-medium">
-                {getCityName(viewingApp.city_id, (viewingApp as any).city) && (
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-gray-500" />
-                    {getCityName(viewingApp.city_id, (viewingApp as any).city)}
-                  </span>
-                )}
-                {getFranchiseName(viewingApp.franchise_id) && (
-                  <span className="flex items-center gap-1 text-emerald-700">
-                    • <Building className="w-3.5 h-3.5 text-emerald-600" />
-                    {getFranchiseName(viewingApp.franchise_id)}
-                  </span>
-                )}
-                <span>• Tel: {viewingApp.phone}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              {(viewingApp as any).subscription_package_name && (
-                <div className="p-3 bg-purple-50/60 border border-purple-200 rounded-xl flex items-center justify-between text-[#1F2937] font-medium">
-                  <span>Asistan Paneli Kullanım Paketi</span>
-                  <span className="text-purple-700 font-bold text-xs">
-                    {(viewingApp as any).subscription_package_name} {(viewingApp as any).subscription_package_price ? `(${Number((viewingApp as any).subscription_package_price).toLocaleString('tr-TR')} TL)` : ''}
-                  </span>
-                </div>
-              )}
-              {viewingApp.notes && (
-                <div className="p-3 bg-gray-50 border border-[#E5E7EB] rounded-xl text-[#1F2937]">
-                  <span className="font-bold text-[11px] text-gray-600 block mb-1">Başvuru Notları / Bilgiler:</span>
-                  <p className="text-xs text-gray-800">{viewingApp.notes}</p>
-                </div>
-              )}
-              <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-[#1F2937] font-medium">
-                <span>1. T.C. Kimlik Kartı Ön / Arka</span>
-                <span className="text-emerald-700 font-bold text-[10px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">Onaylı</span>
-              </div>
-              <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-[#1F2937] font-medium">
-                <span>2. Sürücü Belgesi (Ehliyet - A2/B)</span>
-                <span className="text-emerald-700 font-bold text-[10px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">Onaylı</span>
-              </div>
-              <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-[#1F2937] font-medium">
-                <span>3. Araç Ruhsatı & Trafik Sigortası</span>
-                <span className="text-emerald-700 font-bold text-[10px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">Onaylı</span>
-              </div>
-              <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-[#1F2937] font-medium">
-                <span>4. Adli Sicil Kaydı Belgesi</span>
-                <span className="text-emerald-700 font-bold text-[10px] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">Temiz</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#E5E7EB]">
-              <button
-                type="button"
-                onClick={() => setViewingApp(null)}
-                className="px-4 py-2 rounded-xl border border-[#E5E7EB] bg-white text-[#4B5563] font-semibold hover:bg-gray-50 cursor-pointer shadow-sm"
-              >
-                Kapat
-              </button>
-              <button
-                type="button"
-                onClick={() => { handleApprove(viewingApp); setViewingApp(null); }}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 cursor-pointer shadow-sm border-0"
-              >
-                Kuryeyi Onayla
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* REJECT MODAL */}
       {rejectingApp && (

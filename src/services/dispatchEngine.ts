@@ -35,29 +35,42 @@ export class DispatchEngine {
       try {
         const { data: assistants, error } = await supabase
           .from('assistants')
-          .select('*');
+          .select('*')
+          .not('status', 'in', '("passive","pasif","suspended","pending","deleted")');
 
         if (!error && assistants && assistants.length > 0) {
           return assistants
-            .filter((a: any) => Boolean(a.user_id))
-            .map((a: any) => ({
-              id: a.id,
-              user_id: a.user_id,
-              full_name: a.full_name || a.name,
-              assistantId: a.id,
-              profileId: a.user_id,
-              isOnline: a.status === 'aktif' || a.status === 'görevde',
-              isBusy: a.status === 'görevde',
-              lastActiveAt: a.updated_at || new Date().toISOString(),
-              latitude: a.latitude || pickupLat || 40.7731,
-              longitude: a.longitude || pickupLng || 30.3948,
-              acceptanceRate: 95,
-              rating: 4.8,
-              cancellationRate: 2,
-              dailyTaskCount: 0,
-              workingHoursActive: true,
-              vehicleType: a.vehicle_type || 'motosiklet',
-            }));
+            .filter((a: any) => {
+              const st = (a.status || '').toLowerCase();
+              return Boolean(a.user_id || a.id) && 
+                     a.active !== false && 
+                     st !== 'passive' && 
+                     st !== 'pasif' && 
+                     st !== 'suspended' && 
+                     st !== 'pending' && 
+                     st !== 'deleted';
+            })
+            .map((a: any) => {
+              const st = (a.status || '').toLowerCase();
+              return {
+                id: a.id,
+                user_id: a.user_id || a.id,
+                full_name: a.full_name || a.name,
+                assistantId: a.id,
+                profileId: a.user_id || a.id,
+                isOnline: (st === 'active' || st === 'aktif' || st === 'görevde') && a.is_online !== false,
+                isBusy: st === 'görevde',
+                lastActiveAt: a.updated_at || new Date().toISOString(),
+                latitude: a.latitude || pickupLat || 40.7731,
+                longitude: a.longitude || pickupLng || 30.3948,
+                acceptanceRate: 95,
+                rating: a.rating || 4.8,
+                cancellationRate: 2,
+                dailyTaskCount: 0,
+                workingHoursActive: true,
+                vehicleType: a.vehicle_type || 'motosiklet',
+              };
+            });
         }
       } catch (err) {
         console.warn('[DispatchEngine] Failed to load real assistants:', err);

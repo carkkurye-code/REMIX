@@ -1261,6 +1261,17 @@ export function AsistanPage() {
         }
       }
 
+      // If assistant record is passive, sign out immediately
+      const asstStatus = asstRecord ? (asstRecord.status || '').toLowerCase() : '';
+      if (asstRecord && (asstStatus === 'passive' || asstStatus === 'pasif' || asstStatus === 'deleted' || asstRecord.active === false)) {
+        await supabaseAssistant.auth.signOut();
+        if (typeof window !== 'undefined') localStorage.removeItem('ugra_assistant_session');
+        setAuthUser(null);
+        setCurrentAssistant(null);
+        setLoginError('Bu asistan hesabı şu anda pasif durumdadır. Admin tarafından tekrar aktif edildiğinde giriş yapabilirsiniz.');
+        return;
+      }
+
       // Only sign out if profile explicitly exists AND has another role (like partner or customer) AND no assistant record exists
       if (profile && profile.role && profile.role !== 'assistant' && profile.role !== 'courier' && !asstRecord) {
         await supabaseAssistant.auth.signOut();
@@ -1926,9 +1937,14 @@ export function AsistanPage() {
             throw new Error('Başvurunuz yönetici onayı bekliyor.');
           }
 
-          if (asstStatus === 'rejected' || asstStatus === 'pasif' || dbAssistant.active === false) {
+          if (asstStatus === 'passive' || asstStatus === 'pasif' || asstStatus === 'deleted' || dbAssistant.active === false) {
             if (authSuccess) await supabaseAssistant.auth.signOut();
-            throw new Error('Asistan hesabınız dondurulmuş veya pasif durumdadır.');
+            throw new Error('Bu asistan hesabı şu anda pasif durumdadır. Admin tarafından tekrar aktif edildiğinde giriş yapabilirsiniz.');
+          }
+
+          if (asstStatus === 'rejected' || asstStatus === 'suspended') {
+            if (authSuccess) await supabaseAssistant.auth.signOut();
+            throw new Error('Asistan hesabınız askıya alınmıştır veya dondurulmuştur.');
           }
 
           // If auth was not successful, verify stored password or sync Auth user

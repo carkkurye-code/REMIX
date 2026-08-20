@@ -77,6 +77,20 @@ export const AssistantAuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (asstRecord) {
+        const asstStatus = (asstRecord.status || '').toLowerCase();
+        if (asstStatus === 'passive' || asstStatus === 'pasif' || asstStatus === 'deleted' || asstRecord.active === false) {
+          if (isSupabaseConfigured && supabaseAssistant) {
+            try { await supabaseAssistant.auth.signOut(); } catch (_) {}
+          }
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('ugra_assistant_session');
+          }
+          setCurrentAssistant(null);
+          setConnectedPartner(null);
+          setError('Bu asistan hesabı şu anda pasif durumdadır. Admin tarafından tekrar aktif edildiğinde giriş yapabilirsiniz.');
+          return null;
+        }
+
         if (authUser.id && isUUID(authUser.id) && asstRecord.user_id !== authUser.id) {
           try {
             await (supabaseAssistant || supabase)
@@ -216,9 +230,16 @@ export const AssistantAuthProvider: React.FC<{ children: React.ReactNode }> = ({
             setLoading(false);
             return { success: false, error: msg };
           }
-          if (asstStatus === 'rejected' || asstStatus === 'pasif' || dbAssistant.active === false) {
+          if (asstStatus === 'passive' || asstStatus === 'pasif' || asstStatus === 'deleted' || dbAssistant.active === false) {
             if (authSuccess) await supabaseAssistant.auth.signOut();
-            const msg = 'Asistan hesabınız dondurulmuş veya pasif durumdadır.';
+            const msg = 'Bu asistan hesabı şu anda pasif durumdadır. Admin tarafından tekrar aktif edildiğinde giriş yapabilirsiniz.';
+            setError(msg);
+            setLoading(false);
+            return { success: false, error: msg };
+          }
+          if (asstStatus === 'rejected' || asstStatus === 'suspended') {
+            if (authSuccess) await supabaseAssistant.auth.signOut();
+            const msg = 'Asistan hesabınız askıya alınmıştır veya dondurulmuştur.';
             setError(msg);
             setLoading(false);
             return { success: false, error: msg };

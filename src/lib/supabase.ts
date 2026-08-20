@@ -333,7 +333,7 @@ export interface Assistant {
   avatar_url?: string | null;
   city?: string;
   vehicle_type: 'motosiklet' | 'bisiklet' | 'arac';
-  status: 'aktif' | 'pasif' | 'görevde' | 'suspended' | 'pending';
+  status: 'active' | 'passive' | 'aktif' | 'pasif' | 'görevde' | 'suspended' | 'pending';
   task_status?: string;
   active?: boolean;
   is_online?: boolean;
@@ -4358,14 +4358,47 @@ export const db = {
     if (isSupabaseConfigured) {
       try {
         const client = await getActiveSupabaseClient();
-        const { data, error } = await client.from('assistants').select('*').order('created_at', { ascending: false });
-        if (!error && data && data.length > 0) return data as Assistant[];
+        const { data, error } = await client
+          .from('assistants')
+          .select('*')
+          .not('status', 'in', '("passive","pasif","suspended","pending")')
+          .order('created_at', { ascending: false });
+        if (!error && data) {
+          return (data as Assistant[]).filter(a => {
+            const st = (a.status || '').toLowerCase();
+            return st !== 'passive' && st !== 'pasif' && st !== 'suspended' && st !== 'pending' && a.active !== false;
+          });
+        }
       } catch (e) {
         console.warn('getAssistants Supabase fetch error:', e);
       }
     }
     const stored = getStored<Assistant>('ugra_virtual_assistants');
-    return stored;
+    return stored.filter(a => {
+      const st = (a.status || '').toLowerCase();
+      return st !== 'passive' && st !== 'pasif' && st !== 'suspended' && st !== 'pending' && a.active !== false;
+    });
+  },
+
+  async getAdminAssistants(): Promise<Assistant[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const { data, error } = await client
+          .from('assistants')
+          .select('*')
+          .neq('status', 'pending')
+          .order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          setStored('ugra_virtual_assistants', data as Assistant[]);
+          return data as Assistant[];
+        }
+      } catch (e) {
+        console.warn('getAdminAssistants Supabase fetch error:', e);
+      }
+    }
+    const stored = getStored<Assistant>('ugra_virtual_assistants');
+    return stored.filter(a => a.status !== 'pending');
   },
 
   async getAssistantById(id: string, userEmail?: string): Promise<Assistant | null> {
@@ -4403,8 +4436,8 @@ export const db = {
       }
     }
 
-    const assistants = await this.getAssistants();
-    const found = assistants.find(a => a.id === id || (userEmail && a.phone === userEmail));
+    const stored = getStored<Assistant>('ugra_virtual_assistants');
+    const found = stored.find(a => a.id === id || (userEmail && a.phone === userEmail) || (userEmail && a.email === userEmail));
     if (found) return found;
 
     return null;
@@ -4429,13 +4462,16 @@ export const db = {
   },
 
   async createAssistant(assistantData: Partial<Assistant>): Promise<Assistant> {
-    const assistants = await this.getAssistants();
+    const assistants = await this.getAdminAssistants();
     const newAssistant: Assistant = {
       full_name: '',
       phone: '',
       city: 'İstanbul',
       vehicle_type: 'motosiklet',
-      status: 'aktif',
+      status: 'active',
+      active: true,
+      is_online: true,
+      task_status: 'Müsait',
       ...assistantData,
       id: assistantData.id || ('ast_' + Math.random().toString(36).substr(2, 9)),
       created_at: new Date().toISOString()
@@ -4443,6 +4479,105 @@ export const db = {
     assistants.unshift(newAssistant);
     await this.saveAssistants(assistants);
     return newAssistant;
+  },
+
+  async setAssistantStatus(id: string, status: 'active' | 'passive' | 'aktif' | 'pasif' | 'suspended'): Promise<Assistant> {
+    if (!id) throw new Error('Asistan ID belirtilmedi');
+
+    const isActive = status === 'active' || status === 'aktif';
+    const targetStatus = isActive ? 'active' : (status === 'suspended' ? 'suspended' : 'passive');
+
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const validId = isUUID(id) ? id : toUUID(id);
+        const cols = await getExactTableColumns('assistants');
+
+        const updates: Record<string, any> = {
+          status: targetStatus
+        };
+
+        if (cols.includes('active')) {
+          updates.active = isActive;
+        }
+        if (cols.includes('is_online')) {
+          updates.is_online = isActive;
+        }
+        if (cols.includes('task_status')) {
+          updates.task_status = isActive ? 'Müsait' : 'Pasif';
+        }
+        if (cols.includes('updated_at')) {
+          updates.updated_at = new Date().toISOString();
+        }
+
+        let { data, error } = await client
+          .from('assistants')
+          .update(updates)
+          .eq('id', validId)
+          .select()
+          .maybeSingle();
+
+        if (error) {
+          console.error('Supabase setAssistantStatus error:', error);
+          throw new Error('Asistan durumu güncellenemedi: ' + error.message);
+        }
+
+        // If UUID match returned no row, retry by direct match
+        if (!data) {
+          const { data: retryData, error: retryError } = await client
+            .from('assistants')
+            .update(updates)
+            .or(`id.eq.${id},user_id.eq.${id}`)
+            .select()
+            .maybeSingle();
+
+          if (retryError) {
+            console.error('Supabase setAssistantStatus fallback error:', retryError);
+            throw new Error('Asistan durumu güncellenemedi: ' + retryError.message);
+          }
+          data = retryData;
+        }
+
+        if (data) {
+          const stored = getStored<Assistant>('ugra_virtual_assistants');
+          const idx = stored.findIndex(a => a.id === id || a.id === validId);
+          if (idx !== -1) {
+            stored[idx] = { ...stored[idx], ...updates };
+          } else {
+            stored.unshift(data as Assistant);
+          }
+          setStored('ugra_virtual_assistants', stored);
+
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('ugra_assistants_updated'));
+          }
+          return data as Assistant;
+        }
+      } catch (err: any) {
+        console.error('setAssistantStatus exception:', err);
+        throw err;
+      }
+    }
+
+    const stored = getStored<Assistant>('ugra_virtual_assistants');
+    const idx = stored.findIndex(a => a.id === id);
+    if (idx !== -1) {
+      stored[idx] = {
+        ...stored[idx],
+        status: targetStatus,
+        active: isActive,
+        is_online: isActive,
+        task_status: isActive ? 'Müsait' : 'Pasif',
+        updated_at: new Date().toISOString()
+      };
+      setStored('ugra_virtual_assistants', stored);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('ugra_assistants_updated'));
+      }
+      return stored[idx];
+    }
+
+    return { id, status: targetStatus, active: isActive } as Assistant;
   },
 
   async updateAssistant(id: string, updates: Partial<Assistant>): Promise<Assistant> {
@@ -4458,6 +4593,12 @@ export const db = {
           .maybeSingle();
 
         if (!error && data) {
+          const stored = getStored<Assistant>('ugra_virtual_assistants');
+          const idx = stored.findIndex(a => a.id === id || a.id === validId);
+          if (idx !== -1) {
+            stored[idx] = { ...stored[idx], ...updates };
+            setStored('ugra_virtual_assistants', stored);
+          }
           return data as Assistant;
         }
       } catch (err) {
@@ -4465,7 +4606,7 @@ export const db = {
       }
     }
 
-    const assistants = await this.getAssistants();
+    const assistants = await this.getAdminAssistants();
     const index = assistants.findIndex(a => a.id === id);
     if (index !== -1) {
       assistants[index] = { ...assistants[index], ...updates };
@@ -4476,9 +4617,8 @@ export const db = {
   },
 
   async deleteAssistant(id: string): Promise<void> {
-    const assistants = await this.getAssistants();
-    const filtered = assistants.filter(a => a.id !== id);
-    await this.saveAssistants(filtered);
+    // Physical deletion is strictly disabled. Deactivating assistant (status = 'passive').
+    await this.setAssistantStatus(id, 'passive');
   },
 
   // --- BANNERS SERVICE ---
