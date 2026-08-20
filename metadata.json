@@ -1,6 +1,6 @@
 {
   "name": "Remix HERO",
-  "description": "Imported from GitHub: carkkurye-code/HERO",
+  "description": "UĞRA Platformu - Şehir, Bayi ve Asistan Yönetim Paneli",
   "requestFramePermissions": [
     "geolocation"
   ],
