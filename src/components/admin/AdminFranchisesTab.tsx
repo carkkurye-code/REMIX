@@ -44,6 +44,7 @@ export function AdminFranchisesTab({
   const [fAuthorizedPerson, setFAuthorizedPerson] = useState('');
   const [fPhone, setFPhone] = useState('');
   const [fEmail, setFEmail] = useState('');
+  const [fPassword, setFPassword] = useState('');
   const [fStatus, setFStatus] = useState<'active' | 'suspended' | 'passive'>('active');
   const [fRevenueShare, setFRevenueShare] = useState<number>(0);
   const [fDistrictsText, setFDistrictsText] = useState('');
@@ -137,6 +138,7 @@ export function AdminFranchisesTab({
       setFAuthorizedPerson(franchise.authorized_person || '');
       setFPhone(franchise.phone || '');
       setFEmail(franchise.email || '');
+      setFPassword('');
       setFStatus(franchise.status || 'active');
       setFRevenueShare(franchise.revenue_share_percentage || 0);
       setFDistrictsText(franchise.districts_covered?.join(', ') || '');
@@ -148,6 +150,7 @@ export function AdminFranchisesTab({
       setFAuthorizedPerson('');
       setFPhone('');
       setFEmail('');
+      setFPassword('');
       setFStatus('active');
       setFRevenueShare(0);
       setFDistrictsText('');
@@ -170,6 +173,8 @@ export function AdminFranchisesTab({
 
     try {
       setActionLoading(true);
+      let franchiseId: string;
+
       if (editingFranchise) {
         const updated = await db.updateFranchise(editingFranchise.id, {
           city_id: fCityId,
@@ -182,6 +187,7 @@ export function AdminFranchisesTab({
           revenue_share_percentage: Number(fRevenueShare),
           districts_covered: districts
         });
+        franchiseId = updated.id;
         setFranchises(prev => prev.map(f => f.id === updated.id ? updated : f));
         showFeedback(`${updated.name} bayisi güncellendi.`);
       } else {
@@ -196,9 +202,27 @@ export function AdminFranchisesTab({
           revenue_share_percentage: Number(fRevenueShare),
           districts_covered: districts
         });
+        franchiseId = created.id;
         setFranchises(prev => [created, ...prev]);
         showFeedback(`${created.name} bayisi sisteme eklendi.`);
       }
+
+      // Provision or update Franchise Manager User if Email is provided
+      if (fEmail.trim()) {
+        try {
+          await db.createOrUpdateFranchiseManager({
+            franchise_id: franchiseId,
+            city_id: fCityId,
+            email: fEmail.trim(),
+            password: fPassword.trim() || undefined,
+            full_name: fAuthorizedPerson.trim() || `${fName.trim()} Yöneticisi`,
+            phone: fPhone.trim() || undefined,
+          });
+        } catch (authErr) {
+          console.warn('Franchise manager account sync note:', authErr);
+        }
+      }
+
       setIsFranchiseModalOpen(false);
       onRefresh();
     } catch (err: any) {
@@ -558,13 +582,25 @@ export function AdminFranchisesTab({
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => handleOpenFranchiseModal(franchise)}
-                            className="p-1.5 hover:bg-[#E5E7EB] text-[#666666] hover:text-[#111111] rounded-lg transition-all cursor-pointer"
-                            title="Bayiyi Düzenle"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <a
+                              href="/bayi"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-2.5 py-1 rounded-lg bg-[#111111] hover:bg-[#222222] text-white text-[11px] font-bold inline-flex items-center gap-1 transition-all no-underline"
+                              title="Bayi Paneline Git"
+                            >
+                              <span>Bayi Paneli</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </a>
+                            <button
+                              onClick={() => handleOpenFranchiseModal(franchise)}
+                              className="p-1.5 hover:bg-[#E5E7EB] text-[#666666] hover:text-[#111111] rounded-lg transition-all cursor-pointer"
+                              title="Bayiyi Düzenle"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -760,13 +796,40 @@ export function AdminFranchisesTab({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">E-posta</label>
+                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Bayi Giriş E-posta (Yetkili Hesabı)</label>
                   <input
                     type="email"
-                    placeholder="bayi@ugra.com.tr"
+                    placeholder="kocaeli@ugra.app"
                     value={fEmail}
                     onChange={e => setFEmail(e.target.value)}
                     className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">
+                    {editingFranchise ? 'Yeni Giriş Şifresi (Opsiyonel)' : 'Başlangıç Giriş Şifresi'}
+                  </label>
+                  <input
+                    type="password"
+                    placeholder={editingFranchise ? 'Değiştirmek için giriniz' : 'En az 6 karakter'}
+                    value={fPassword}
+                    onChange={e => setFPassword(e.target.value)}
+                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Gelir Paylaşım Oranı (%)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="0"
+                    value={fRevenueShare}
+                    onChange={e => setFRevenueShare(Number(e.target.value))}
+                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
                   />
                 </div>
                 <div>
@@ -781,19 +844,6 @@ export function AdminFranchisesTab({
                     <option value="passive">Pasif</option>
                   </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Gelir Paylaşım Oranı (%)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  placeholder="0"
-                  value={fRevenueShare}
-                  onChange={e => setFRevenueShare(Number(e.target.value))}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
-                />
               </div>
 
               <div>

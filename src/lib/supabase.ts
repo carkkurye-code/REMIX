@@ -144,12 +144,28 @@ export const supabaseAdmin = isSupabaseConfigured
     }) 
   : createMockSupabaseClient();
 
+export const supabaseFranchise = isSupabaseConfigured 
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storageKey: 'ugra_auth_franchise',
+        persistSession: true,
+        autoRefreshToken: true,
+      }
+    }) 
+  : createMockSupabaseClient();
+
 // Default Supabase client for generic database queries
 export const supabase = supabaseCustomer;
 
 // Helper to return the active authenticated client based on logged-in role session
 export async function getActiveSupabaseClient() {
   if (isSupabaseConfigured) {
+    try {
+      if (supabaseFranchise) {
+        const { data: franchiseSession } = await supabaseFranchise.auth.getSession();
+        if (franchiseSession?.session) return supabaseFranchise;
+      }
+    } catch (_) {}
     try {
       if (supabasePartner) {
         const { data: partnerSession } = await supabasePartner.auth.getSession();
@@ -238,11 +254,13 @@ export interface UserProfile {
   phone?: string;
   address?: string;
   avatar_url?: string;
-  role: 'customer' | 'partner' | 'assistant' | 'admin' | 'super_admin';
+  role: 'customer' | 'partner' | 'assistant' | 'admin' | 'super_admin' | 'franchise_manager';
   is_admin?: boolean;
   is_active?: boolean;
   partner_id?: string;
   assistant_id?: string;
+  franchise_id?: string | null;
+  city_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -1050,9 +1068,10 @@ export interface SystemSettings {
 
 export interface AdminRoleUser {
   id: string;
+  user_id?: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'operasyon' | 'destek' | 'finans' | 'pazarlama';
+  role: 'super_admin' | 'admin' | 'operasyon' | 'destek' | 'finans' | 'pazarlama' | 'franchise_manager';
   scope?: AdminScope;
   city_id?: string | null;
   franchise_id?: string | null;
@@ -3320,79 +3339,6 @@ export const db = {
   },
 
   // --- EXTRA ADMIN & CUSTOMER/TICKET SERVICES ---
-  async isUserAdmin(userId: string): Promise<boolean> {
-    if (userId === '8987cf9f-8bcf-4e2e-a648-da996c0b0fbb' || userId === 'admin_id') {
-      return true;
-    }
-    if (isSupabaseConfigured) {
-      // 1. Check supabaseAdmin session directly
-      try {
-        if (supabaseAdmin) {
-          const { data: adminSessionData } = await supabaseAdmin.auth.getSession();
-          const adminUser = adminSessionData?.session?.user;
-          if (adminUser) {
-            if (adminUser.id === userId || adminUser.email === 'goko@ugra.app' || adminUser.email === 'admin@ugra.app' || adminUser.user_metadata?.is_admin === true || adminUser.app_metadata?.claims_admin === true || adminUser.role === 'admin' || adminUser.role === 'service_role') {
-              return true;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('isUserAdmin supabaseAdmin check notice:', err);
-      }
-
-      // 2. Try retrieving from profiles table using authenticated client
-      const client = supabaseAdmin || await getActiveSupabaseClient();
-      try {
-        const { data, error } = await client
-          .from('profiles')
-          .select('is_admin, role')
-          .eq('id', userId)
-          .maybeSingle();
-        
-        if (!error && data && (data.is_admin || data.role === 'admin')) {
-          return true;
-        }
-      } catch (err) {
-        console.warn('Error reading from profiles table, falling back to session metadata:', err);
-      }
-
-      // 3. Dynamic fallback check using client user's email and metadata
-      try {
-        const { data: { user } } = await client.auth.getUser();
-        if (user) {
-          if (user.id === userId || user.email === 'goko@ugra.app' || user.email === 'admin@ugra.app' || user.user_metadata?.is_admin === true || user.app_metadata?.claims_admin === true) {
-            return true;
-          }
-        }
-      } catch (err) {
-        console.error('Error in getUser fallback:', err);
-      }
-
-      // 4. Check admin storage key or fallback storage
-      const adminStorage = localStorage.getItem('ugra_auth_admin') || localStorage.getItem(LOCAL_STORAGE_KEYS.SESSION);
-      if (adminStorage) {
-        try {
-          const parsed = JSON.parse(adminStorage);
-          const email = (parsed?.user?.email || parsed?.currentSession?.user?.email)?.toLowerCase();
-          if (email === 'goko@ugra.app' || email === 'admin@ugra.app' || parsed?.user?.is_admin || parsed?.user?.role === 'admin') return true;
-        } catch (e) {}
-      }
-
-      return false;
-    } else {
-      const session = localStorage.getItem('ugra_auth_admin') || localStorage.getItem(LOCAL_STORAGE_KEYS.SESSION);
-      if (!session) return false;
-      try {
-        const parsed = JSON.parse(session);
-        const user = parsed?.user || parsed?.currentSession?.user;
-        const email = user?.email?.toLowerCase();
-        return email === 'goko@ugra.app' || email === 'admin@ugra.app' || !!user?.is_admin || user?.role === 'admin';
-      } catch (e) {
-        return false;
-      }
-    }
-  },
-
   async resetPassword(email: string) {
     if (isSupabaseConfigured && supabase) {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -4732,7 +4678,357 @@ export const db = {
   },
 
   // --- ADMIN USERS & ROLES SERVICE ---
+  async isUserSuperAdmin(userId?: string, userEmail?: string): Promise<boolean> {
+    if (!userId && !userEmail) return false;
+    const cleanEmail = userEmail?.trim().toLowerCase();
+
+    // Fast-path known Super Admin emails
+    if (cleanEmail === 'goko@ugra.app' || cleanEmail === 'admin@ugra.app') {
+      return true;
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        
+        // 1. Check admin_role_users table for super_admin role & global scope
+        let query = client.from('admin_role_users').select('*').eq('active', true);
+        if (userId && isUUID(userId)) {
+          query = query.or(`user_id.eq.${userId},id.eq.${userId}`);
+        } else if (cleanEmail) {
+          query = query.ilike('email', cleanEmail);
+        }
+        const { data: roleUsers, error: roleError } = await query.limit(1);
+        if (!roleError && roleUsers && roleUsers.length > 0) {
+          const u = roleUsers[0] as AdminRoleUser;
+          if (
+            (u.role === 'super_admin' || (u.role === 'admin' && (u.scope === 'global' || !u.scope)))
+          ) {
+            return true;
+          }
+        }
+
+        // 2. Check profiles table for super_admin
+        if (userId && isUUID(userId)) {
+          const { data: profile } = await client.from('profiles').select('role, is_admin').eq('id', userId).maybeSingle();
+          if (profile && profile.role === 'super_admin') {
+            return true;
+          }
+          if (profile && profile.is_admin === true && profile.role !== 'franchise_manager') {
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn('isUserSuperAdmin check error:', err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const adminUsers = await this.getAdminUsers();
+    return adminUsers.some(u => 
+      u.active && 
+      (u.role === 'super_admin' || (u.role === 'admin' && (u.scope === 'global' || !u.scope))) &&
+      (
+        (userId && (u.id === userId || u.user_id === userId)) ||
+        (cleanEmail && u.email.toLowerCase() === cleanEmail)
+      )
+    );
+  },
+
+  async isUserAdmin(userId?: string, userEmail?: string): Promise<boolean> {
+    if (!userId && !userEmail) return false;
+    const cleanEmail = userEmail?.trim().toLowerCase();
+
+    // Fast-path known super admins
+    if (cleanEmail === 'goko@ugra.app' || cleanEmail === 'admin@ugra.app') {
+      return true;
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        
+        // 1. Check admin_role_users table
+        let query = client.from('admin_role_users').select('*').eq('active', true);
+        if (userId && isUUID(userId)) {
+          query = query.or(`user_id.eq.${userId},id.eq.${userId}`);
+        } else if (cleanEmail) {
+          query = query.ilike('email', cleanEmail);
+        }
+        const { data: roleUsers, error: roleError } = await query.limit(1);
+        if (!roleError && roleUsers && roleUsers.length > 0) {
+          const roleUser = roleUsers[0] as AdminRoleUser;
+          // franchise_manager is NOT a central admin staff
+          if (['super_admin', 'admin', 'operasyon', 'destek', 'finans', 'pazarlama'].includes(roleUser.role)) {
+            return true;
+          }
+        }
+
+        // 2. Check profiles table
+        if (userId && isUUID(userId)) {
+          const { data: profile } = await client.from('profiles').select('role, is_admin').eq('id', userId).maybeSingle();
+          if (profile && (profile.role === 'super_admin' || profile.role === 'admin' || (profile.is_admin && profile.role !== 'franchise_manager'))) {
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn('isUserAdmin check error:', err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const adminUsers = await this.getAdminUsers();
+    return adminUsers.some(u => 
+      u.active && 
+      ['super_admin', 'admin', 'operasyon', 'destek', 'finans', 'pazarlama'].includes(u.role) &&
+      (
+        (userId && (u.id === userId || u.user_id === userId)) ||
+        (cleanEmail && u.email.toLowerCase() === cleanEmail)
+      )
+    );
+  },
+
+  async getUserRoleAndScope(userId: string, userEmail?: string): Promise<{
+    role: string;
+    scope: AdminScope;
+    city_id?: string | null;
+    franchise_id?: string | null;
+    franchise_name?: string | null;
+    city_name?: string | null;
+    admin_user?: AdminRoleUser | null;
+  } | null> {
+    const cleanEmail = userEmail?.trim().toLowerCase();
+
+    // Super Admin Default Fallback
+    if (cleanEmail === 'goko@ugra.app' || cleanEmail === 'admin@ugra.app') {
+      return {
+        role: 'super_admin',
+        scope: 'global',
+        city_id: null,
+        franchise_id: null,
+        franchise_name: 'Genel Merkez',
+        city_name: 'Tüm Türkiye'
+      };
+    }
+
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        let query = client.from('admin_role_users').select('*').eq('active', true);
+        if (userId && isUUID(userId)) {
+          query = query.or(`user_id.eq.${userId},id.eq.${userId}`);
+        } else if (cleanEmail) {
+          query = query.ilike('email', cleanEmail);
+        }
+        const { data: roleUsers } = await query.limit(1);
+        if (roleUsers && roleUsers.length > 0) {
+          const userRec = roleUsers[0] as AdminRoleUser;
+          let cityName: string | null = null;
+          let franchiseName: string | null = null;
+
+          if (userRec.city_id) {
+            const city = await this.getCity(userRec.city_id);
+            cityName = city?.name || null;
+          }
+          if (userRec.franchise_id) {
+            const f = await this.getFranchise(userRec.franchise_id);
+            franchiseName = f?.name || null;
+          }
+
+          return {
+            role: userRec.role,
+            scope: userRec.scope || (userRec.role === 'franchise_manager' ? 'franchise' : 'global'),
+            city_id: userRec.city_id || null,
+            franchise_id: userRec.franchise_id || null,
+            city_name: cityName,
+            franchise_name: franchiseName,
+            admin_user: userRec
+          };
+        }
+      } catch (err) {
+        console.warn('getUserRoleAndScope error:', err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const adminUsers = await this.getAdminUsers();
+    const matched = adminUsers.find(u => 
+      u.active && (
+        (userId && (u.id === userId || u.user_id === userId)) ||
+        (cleanEmail && u.email.toLowerCase() === cleanEmail)
+      )
+    );
+
+    if (matched) {
+      let cityName: string | null = null;
+      let franchiseName: string | null = null;
+      if (matched.city_id) {
+        const city = await this.getCity(matched.city_id);
+        cityName = city?.name || null;
+      }
+      if (matched.franchise_id) {
+        const f = await this.getFranchise(matched.franchise_id);
+        franchiseName = f?.name || null;
+      }
+
+      return {
+        role: matched.role,
+        scope: matched.scope || (matched.role === 'franchise_manager' ? 'franchise' : 'global'),
+        city_id: matched.city_id || null,
+        franchise_id: matched.franchise_id || null,
+        city_name: cityName,
+        franchise_name: franchiseName,
+        admin_user: matched
+      };
+    }
+
+    return null;
+  },
+
+  async createOrUpdateFranchiseManager(params: {
+    franchise_id: string;
+    city_id: string;
+    email: string;
+    password?: string;
+    full_name?: string;
+    phone?: string;
+  }): Promise<{ success: boolean; error?: string; user_id?: string }> {
+    const cleanEmail = params.email.trim().toLowerCase();
+
+    // 1. Try Edge Function if configured
+    if (isSupabaseConfigured && supabaseUrl) {
+      try {
+        let authToken = supabaseAnonKey;
+        if (supabaseAdmin) {
+          const { data: sessionData } = await supabaseAdmin.auth.getSession();
+          if (sessionData?.session?.access_token) {
+            authToken = sessionData.session.access_token;
+          }
+        }
+        if (authToken === supabaseAnonKey && supabase) {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session?.access_token) {
+            authToken = sessionData.session.access_token;
+          }
+        }
+
+        const edgeFunctionUrl = `${supabaseUrl}/functions/v1/manage-franchise-user`;
+        const res = await fetch(edgeFunctionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(params),
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success) {
+            // Also sync to local admin users cache
+            const users = await this.getAdminUsers();
+            const existingIdx = users.findIndex(u => u.email.toLowerCase() === cleanEmail || u.franchise_id === params.franchise_id);
+            const userObj: AdminRoleUser = {
+              id: json.user_id || `adm_f_${Date.now()}`,
+              user_id: json.user_id,
+              name: params.full_name || 'Bayi Yöneticisi',
+              email: cleanEmail,
+              role: 'franchise_manager',
+              scope: 'franchise',
+              city_id: params.city_id,
+              franchise_id: params.franchise_id,
+              active: true,
+              created_at: new Date().toISOString()
+            };
+            if (existingIdx !== -1) {
+              users[existingIdx] = { ...users[existingIdx], ...userObj };
+            } else {
+              users.push(userObj);
+            }
+            await this.saveAdminUsers(users);
+            return { success: true, user_id: json.user_id };
+          }
+        }
+      } catch (edgeErr) {
+        console.warn('manage-franchise-user edge function error, falling back to direct auth/db:', edgeErr);
+      }
+    }
+
+    // 2. Direct Supabase / Local Fallback
+    try {
+      let createdUserId = `user_f_${Date.now()}`;
+      if (isSupabaseConfigured && supabaseAdmin) {
+        try {
+          const client = await getActiveSupabaseClient();
+          // Upsert in admin_role_users table directly
+          const { data: insertedRole, error: roleErr } = await client
+            .from('admin_role_users')
+            .upsert({
+              email: cleanEmail,
+              name: params.full_name || 'Bayi Yöneticisi',
+              role: 'franchise_manager',
+              scope: 'franchise',
+              city_id: params.city_id,
+              franchise_id: params.franchise_id,
+              active: true,
+              created_at: new Date().toISOString()
+            }, { onConflict: 'email' })
+            .select()
+            .maybeSingle();
+
+          if (!roleErr && insertedRole) {
+            createdUserId = insertedRole.id;
+          }
+        } catch (e) {
+          console.warn('Direct admin_role_users upsert warning:', e);
+        }
+      }
+
+      // Sync local storage
+      const users = await this.getAdminUsers();
+      const existingIdx = users.findIndex(u => u.email.toLowerCase() === cleanEmail || u.franchise_id === params.franchise_id);
+      const userObj: AdminRoleUser = {
+        id: createdUserId,
+        user_id: createdUserId,
+        name: params.full_name || 'Bayi Yöneticisi',
+        email: cleanEmail,
+        role: 'franchise_manager',
+        scope: 'franchise',
+        city_id: params.city_id,
+        franchise_id: params.franchise_id,
+        active: true,
+        created_at: new Date().toISOString()
+      };
+      if (existingIdx !== -1) {
+        users[existingIdx] = { ...users[existingIdx], ...userObj };
+      } else {
+        users.push(userObj);
+      }
+      await this.saveAdminUsers(users);
+
+      return { success: true, user_id: createdUserId };
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Bayi kullanıcısı oluşturulamadı.' };
+    }
+  },
+
   async getAdminUsers(): Promise<AdminRoleUser[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const { data, error } = await client
+          .from('admin_role_users')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          return data as AdminRoleUser[];
+        }
+      } catch (err) {
+        console.warn('Supabase getAdminUsers notice:', err);
+      }
+    }
+
     const stored = getStored<AdminRoleUser>('ugra_virtual_admin_users');
     // Filter out old demo accounts if present
     const cleaned = stored.filter(u => u.email !== 'operasyon@ugra.app' && u.email !== 'destek@ugra.app');
@@ -4746,6 +5042,7 @@ export const db = {
           name: 'Gökhan (Sistem Yöneticisi)',
           email: 'goko@ugra.app',
           role: 'super_admin',
+          scope: 'global',
           active: true,
           created_at: new Date().toISOString(),
           last_login: new Date().toISOString()
@@ -4755,6 +5052,19 @@ export const db = {
           name: 'Sistem Yöneticisi',
           email: 'admin@ugra.app',
           role: 'super_admin',
+          scope: 'global',
+          active: true,
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString()
+        },
+        {
+          id: 'adm_kocaeli',
+          name: 'Mehmet Yılmaz (Kocaeli Bayi Yöneticisi)',
+          email: 'kocaeli@ugra.app',
+          role: 'franchise_manager',
+          scope: 'franchise',
+          city_id: 'city_kocaeli_41',
+          franchise_id: 'franchise_kocaeli_merkez',
           active: true,
           created_at: new Date().toISOString(),
           last_login: new Date().toISOString()
@@ -4768,6 +5078,60 @@ export const db = {
 
   async saveAdminUsers(users: AdminRoleUser[]): Promise<void> {
     setStored('ugra_virtual_admin_users', users);
+  },
+
+  // --- FRANCHISE SCOPED DATA SERVICES ---
+  async getFranchiseAssistants(franchiseId: string, cityId?: string | null): Promise<Assistant[]> {
+    const allAssistants = await this.getAdminAssistants();
+    return allAssistants.filter((a: Assistant) => {
+      if (a.franchise_id === franchiseId) return true;
+      if (cityId && a.city_id === cityId && (!a.franchise_id || a.franchise_id === franchiseId)) return true;
+      return false;
+    });
+  },
+
+  async getFranchiseOrders(franchiseId: string, cityId?: string | null): Promise<Order[]> {
+    const allOrders = await this.adminGetAllOrders();
+    return allOrders.filter((o: Order) => {
+      if (o.franchise_id === franchiseId) return true;
+      if (cityId && o.city_id === cityId && (!o.franchise_id || o.franchise_id === franchiseId)) return true;
+      return false;
+    });
+  },
+
+  async getFranchisePartners(franchiseId: string, cityId?: string | null): Promise<Partner[]> {
+    const allPartners = await this.getAdminPartners();
+    return allPartners.filter((p: Partner) => {
+      if (p.franchise_id === franchiseId) return true;
+      if (cityId && p.city_id === cityId && (!p.franchise_id || p.franchise_id === franchiseId)) return true;
+      return false;
+    });
+  },
+
+  async getAllAssistantSubscriptions(): Promise<AssistantSubscription[]> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const { data, error } = await client
+          .from('assistant_subscriptions')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data) return data as AssistantSubscription[];
+      } catch (err) {
+        console.warn('Supabase getAllAssistantSubscriptions notice:', err);
+      }
+    }
+    return getStored<AssistantSubscription>('ugra_virtual_assistant_subscriptions');
+  },
+
+  async getFranchiseSubscriptions(franchiseId: string, cityId?: string | null): Promise<AssistantSubscription[]> {
+    const allSubs = await this.getAllAssistantSubscriptions();
+    return allSubs.filter((s: AssistantSubscription) => {
+      if (s.franchise_id === franchiseId) return true;
+      if (cityId && s.city_id === cityId) return true;
+      return false;
+    });
   },
 
   // --- PARTNER SUBSCRIPTIONS SERVICE ---

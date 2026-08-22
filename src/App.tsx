@@ -10,6 +10,8 @@ import { AsistanPage } from '@/pages/AsistanPage';
 import { TaskDetailPage } from '@/pages/TaskDetailPage';
 import { PartnerDashboard } from '@/pages/PartnerDashboard';
 import { AdminPanel } from '@/pages/AdminPanel';
+import FranchiseDashboard from '@/pages/FranchiseDashboard';
+import { FranchiseAuthProvider } from '@/context/FranchiseAuthContext';
 import { StoreFront } from '@/pages/StoreFront';
 import { CategoryPage } from '@/pages/CategoryPage';
 import { SeninDukkaninPage } from '@/pages/SeninDukkaninPage';
@@ -52,6 +54,9 @@ function Router() {
       <Route path="/partner" component={PartnerDashboard} />
       <Route path="/partner/dashboard" component={PartnerDashboard} />
       <Route path="/admin" component={AdminPanel} />
+      <Route path="/bayi" component={FranchiseDashboard} />
+      <Route path="/bayi/dashboard" component={FranchiseDashboard} />
+      <Route path="/franchise" component={FranchiseDashboard} />
       <Route path="/senin-dukkanin" component={SeninDukkaninPage} />
       <Route path="/kategori/:slug" component={CategoryPage} />
       <Route path="/:slug" component={StoreFront} />
@@ -64,13 +69,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <RealtimeEngineBridge>
-          <WouterRouter base={(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}>
-            <ScrollRestoration />
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </RealtimeEngineBridge>
+        <FranchiseAuthProvider>
+          <RealtimeEngineBridge>
+            <WouterRouter base={(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}>
+              <ScrollRestoration />
+              <Router />
+            </WouterRouter>
+            <Toaster />
+          </RealtimeEngineBridge>
+        </FranchiseAuthProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

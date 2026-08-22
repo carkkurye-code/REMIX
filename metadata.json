@@ -1,6 +1,6 @@
 {
-  "name": "Remix HERO",
-  "description": "UĞRA Platformu - Şehir, Bayi ve Asistan Yönetim Paneli",
+  "name": "UĞRA - 81 İl Bayilik & Asistan Yönetim Platformu",
+  "description": "UĞRA Platformu - 81 İl Bağımsız Bayilik, Şehir, Kurye ve Asistan Yönetim Sistemi",
   "requestFramePermissions": [
     "geolocation"
   ],

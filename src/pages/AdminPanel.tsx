@@ -52,10 +52,22 @@ export function AdminPanel() {
         setLoading(false);
         return;
       }
-      const adminCheck = await db.isUserAdmin(user.id);
-      setIsAdmin(adminCheck);
-      if (adminCheck) {
+
+      // 1. Strict Gate: If user is a franchise manager, block /admin and redirect to /bayi
+      const roleScope = await db.getUserRoleAndScope(user.id, user.email);
+      if (roleScope?.role === 'franchise_manager' || roleScope?.scope === 'franchise') {
+        console.warn('Franchise manager attempted to access /admin. Redirecting to /bayi...');
+        setLocation('/bayi');
+        return;
+      }
+
+      // 2. Strict Super Admin Check for Central Admin Panel
+      const superAdminCheck = await db.isUserSuperAdmin(user.id, user.email);
+      setIsAdmin(superAdminCheck);
+      if (superAdminCheck) {
         await loadAdminData();
+      } else {
+        setIsAdmin(false);
       }
     } catch (err) {
       console.error('Error checking admin auth:', err);
@@ -152,10 +164,19 @@ export function AdminPanel() {
       }
       
       if (user) {
-        const adminCheck = await db.isUserAdmin(user.id);
-        if (!adminCheck) {
+        // 1. Check if the user is a franchise manager
+        const roleScope = await db.getUserRoleAndScope(user.id, user.email);
+        if (roleScope?.role === 'franchise_manager' || roleScope?.scope === 'franchise') {
+          console.warn('Franchise manager logged in via /admin. Redirecting to /bayi...');
+          setLocation('/bayi');
+          return;
+        }
+
+        // 2. Strict Super Admin Check
+        const superAdminCheck = await db.isUserSuperAdmin(user.id, user.email);
+        if (!superAdminCheck) {
           if (isSupabaseConfigured && supabaseAdmin) await supabaseAdmin.auth.signOut();
-          throw new Error('Yetkisiz erişim. Sadece yöneticiler giriş yapabilir.');
+          throw new Error('Yetkisiz erişim. Bu panele sadece Merkez Super Admin yöneticileri giriş yapabilir. Bayi yöneticileri için lütfen /bayi adresini kullanın.');
         }
         setIsAdmin(true);
         await loadAdminData();

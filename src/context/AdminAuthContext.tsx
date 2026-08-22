@@ -38,7 +38,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     try {
-      const isAdm = await db.isUserAdmin(authUser.id);
+      const isAdm = await db.isUserSuperAdmin(authUser.id, authUser.email);
       setIsAdmin(isAdm);
       return isAdm;
     } catch (err) {
