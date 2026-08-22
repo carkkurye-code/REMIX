@@ -11,6 +11,7 @@ import { TaskDetailPage } from '@/pages/TaskDetailPage';
 import { PartnerDashboard } from '@/pages/PartnerDashboard';
 import { AdminPanel } from '@/pages/AdminPanel';
 import FranchiseDashboard from '@/pages/FranchiseDashboard';
+import { LoginPage } from '@/pages/LoginPage';
 import { FranchiseAuthProvider } from '@/context/FranchiseAuthContext';
 import { StoreFront } from '@/pages/StoreFront';
 import { CategoryPage } from '@/pages/CategoryPage';
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/tasima-kosullari" component={TasimaKosullari} />
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/terms" component={TermsOfService} />
+      <Route path="/login" component={LoginPage} />
       <Route path="/asistan" component={AsistanPage} />
       <Route path="/assistant/task/:id" component={TaskDetailPage} />
       <Route path="/asistan/task/:id" component={TaskDetailPage} />

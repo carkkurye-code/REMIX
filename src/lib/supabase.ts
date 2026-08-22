@@ -238,8 +238,11 @@ export interface Franchise {
   name: string;
   company_title?: string | null;
   authorized_person?: string | null;
+  contact_person?: string | null;
   phone?: string | null;
   email?: string | null;
+  iban?: string | null;
+  bank_name?: string | null;
   status: 'active' | 'suspended' | 'passive';
   revenue_share_percentage?: number;
   districts_covered?: string[];
@@ -351,7 +354,8 @@ export interface Assistant {
   avatar_url?: string | null;
   city?: string;
   vehicle_type: 'motosiklet' | 'bisiklet' | 'arac';
-  status: 'active' | 'passive' | 'aktif' | 'pasif' | 'görevde' | 'suspended' | 'pending';
+  plate_number?: string | null;
+  status: 'active' | 'passive' | 'aktif' | 'pasif' | 'görevde' | 'suspended' | 'pending' | 'rejected' | string;
   task_status?: string;
   active?: boolean;
   is_online?: boolean;
@@ -480,6 +484,7 @@ export interface Partner {
   description?: string;
   phone?: string;
   address?: string;
+  district?: string;
   city?: string;
   category?: string;
   active: boolean;
@@ -896,6 +901,8 @@ export interface Product {
   attributes?: ProductAttributes;
 }
 
+export type OrderStatus = 'pending' | 'created' | 'accepted' | 'in_progress' | 'on_the_way' | 'bekliyor' | 'beklemede' | 'hazirlaniyor' | 'hazir' | 'kurye_bekleniyor' | 'kurye_atandi' | 'yolda' | 'teslim_edildi' | 'tamamlandi' | 'iptal' | 'iptal_edildi' | 'delivered' | 'cancelled' | string;
+
 export interface Order {
   id: string;
   partner_id?: string;
@@ -903,7 +910,9 @@ export interface Order {
   partner_name?: string;
   user_id?: string;
   customer_id?: string;
-  assistant_id?: string;
+  assistant_id?: string | null;
+  assistant_name?: string;
+  assistant_phone?: string;
   assistant_iban?: string;
   city_id?: string | null;
   franchise_id?: string | null;
@@ -926,9 +935,8 @@ export interface Order {
   pickup_lng?: number;
   delivery_lat?: number;
   delivery_lng?: number;
-  assistant_name?: string;
   payment_type: 'kapida_nakit' | 'kapida_kart' | 'online' | string;
-  status: 'pending' | 'created' | 'accepted' | 'in_progress' | 'on_the_way' | 'bekliyor' | 'beklemede' | 'hazirlaniyor' | 'hazir' | 'yolda' | 'teslim_edildi' | 'tamamlandi' | 'iptal' | string;
+  status: OrderStatus;
   total_price: number;
   service_type?: string;
   pickup_zone?: string;
@@ -949,6 +957,8 @@ export interface Order {
   items?: { product_id?: string; title: string; name?: string; quantity: number; price: number }[];
   notes?: string;
   task_description?: string;
+  delivery_notes?: string;
+  cancel_reason?: string;
   address_detail?: string;
   preferred_time?: string | null;
   archived?: boolean;
@@ -988,6 +998,27 @@ export interface SupportTicket {
   message: string;
   status: 'acik' | 'cozuldu' | 'iptal';
   created_at: string;
+}
+
+export interface FranchiseSupportTicket {
+  id: string;
+  franchise_id: string;
+  city_id?: string | null;
+  franchise_name?: string;
+  user_id?: string | null;
+  user_name?: string | null;
+  user_email?: string | null;
+  subject: string;
+  category: 'finans_hakedis' | 'isletme_onay' | 'sozlesme_hukuk' | 'teknik_destek' | 'bolgesel_talep' | 'genel';
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  message: string;
+  attachment_url?: string | null;
+  status: 'pending' | 'in_review' | 'answered' | 'resolved' | 'closed';
+  admin_reply?: string | null;
+  replied_at?: string | null;
+  replied_by?: string | null;
+  created_at: string;
+  updated_at?: string;
 }
 
 export type AssistantApplication = Assistant;
@@ -1091,7 +1122,8 @@ export const LOCAL_STORAGE_KEYS = {
   SESSION: 'ugra_virtual_session',
   CITIES: 'ugra_virtual_cities',
   FRANCHISES: 'ugra_virtual_franchises',
-  ASSISTANTS: 'ugra_virtual_assistants'
+  ASSISTANTS: 'ugra_virtual_assistants',
+  FRANCHISE_SUPPORT_TICKETS: 'ugra_virtual_franchise_support_tickets'
 };
 
 const inMemoryStore = new Map<string, string>();
@@ -5082,6 +5114,21 @@ export const db = {
 
   // --- FRANCHISE SCOPED DATA SERVICES ---
   async getFranchiseAssistants(franchiseId: string, cityId?: string | null): Promise<Assistant[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        let query = client.from('assistants').select('*').order('created_at', { ascending: false });
+        if (franchiseId) {
+          query = query.eq('franchise_id', franchiseId);
+        }
+        const { data, error } = await query;
+        if (!error && data) {
+          return data as Assistant[];
+        }
+      } catch (err) {
+        console.warn('Supabase getFranchiseAssistants notice:', err);
+      }
+    }
     const allAssistants = await this.getAdminAssistants();
     return allAssistants.filter((a: Assistant) => {
       if (a.franchise_id === franchiseId) return true;
@@ -5091,6 +5138,26 @@ export const db = {
   },
 
   async getFranchiseOrders(franchiseId: string, cityId?: string | null): Promise<Order[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        let query = client.from('orders').select('*, partners(business_name)').order('created_at', { ascending: false });
+        if (franchiseId) {
+          query = query.eq('franchise_id', franchiseId);
+        }
+        const { data, error } = await query;
+        if (!error && data) {
+          return (data || [])
+            .filter((o: any) => !o.deleted && !o.customer_name?.startsWith('PARTNER_APP:'))
+            .map((o: any) => ({
+              ...o,
+              partner_name: o.partners?.business_name
+            }));
+        }
+      } catch (err) {
+        console.warn('Supabase getFranchiseOrders notice:', err);
+      }
+    }
     const allOrders = await this.adminGetAllOrders();
     return allOrders.filter((o: Order) => {
       if (o.franchise_id === franchiseId) return true;
@@ -5099,7 +5166,155 @@ export const db = {
     });
   },
 
+  async updateFranchiseOrder(orderId: string, updates: { 
+    status?: OrderStatus; 
+    assistant_id?: string | null; 
+    cancel_reason?: string; 
+    delivery_notes?: string;
+  }): Promise<{ success: boolean; error?: string }> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const validId = isUUID(orderId) ? orderId : toUUID(orderId);
+        
+        // Filter down to strictly operational allowed columns
+        const payload: Record<string, any> = {
+          updated_at: new Date().toISOString()
+        };
+        if (updates.status !== undefined) payload.status = updates.status;
+        if (updates.assistant_id !== undefined) {
+          payload.assistant_id = updates.assistant_id ? (isUUID(updates.assistant_id) ? updates.assistant_id : toUUID(updates.assistant_id)) : null;
+        }
+        if (updates.cancel_reason !== undefined) payload.cancel_reason = updates.cancel_reason;
+        if (updates.delivery_notes !== undefined) payload.delivery_notes = updates.delivery_notes;
+
+        const { error } = await client
+          .from('orders')
+          .update(payload)
+          .eq('id', validId);
+
+        if (error) {
+          console.error('updateFranchiseOrder Supabase error:', error);
+          return { success: false, error: error.message };
+        }
+      } catch (err: any) {
+        console.error('updateFranchiseOrder exception:', err);
+        return { success: false, error: err.message || 'Sipariş güncellenemedi.' };
+      }
+    }
+
+    // Local storage fallback sync
+    const stored = getStored<Order>(LOCAL_STORAGE_KEYS.ORDERS);
+    const idx = stored.findIndex(o => o.id === orderId);
+    if (idx !== -1) {
+      stored[idx] = {
+        ...stored[idx],
+        ...updates
+      };
+      setStored(LOCAL_STORAGE_KEYS.ORDERS, stored);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('ugra_orders_updated'));
+      }
+    }
+    return { success: true };
+  },
+
+  async rejectAssistantApplication(appId: string, reason?: string): Promise<{ success: boolean; error?: string }> {
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const validId = isUUID(appId) ? appId : toUUID(appId);
+        const { error } = await client
+          .from('assistants')
+          .update({
+            status: 'rejected',
+            active: false,
+            notes: reason ? `[Reddedildi: ${reason}]` : 'Bayi tarafından reddedildi',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', validId);
+
+        if (error) {
+          console.error('rejectAssistantApplication Supabase error:', error);
+          return { success: false, error: error.message };
+        }
+      } catch (err: any) {
+        console.error('rejectAssistantApplication exception:', err);
+        return { success: false, error: err.message || 'Başvuru reddedilemedi.' };
+      }
+    }
+
+    const stored = getStored<Assistant>(LOCAL_STORAGE_KEYS.ASSISTANTS);
+    const idx = stored.findIndex(a => a.id === appId);
+    if (idx !== -1) {
+      stored[idx] = {
+        ...stored[idx],
+        status: 'rejected' as any,
+        active: false,
+        notes: reason ? `[Reddedildi: ${reason}]` : 'Bayi tarafından reddedildi'
+      };
+      setStored(LOCAL_STORAGE_KEYS.ASSISTANTS, stored);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('ugra_assistants_updated'));
+      }
+    }
+    return { success: true };
+  },
+
+  async createPartner(partnerData: {
+    businessName: string;
+    email?: string;
+    phone?: string;
+    category?: string;
+    address?: string;
+    franchise_id?: string;
+    city_id?: string;
+    password?: string;
+  }): Promise<Partner> {
+    const slug = (partnerData.businessName || 'magaza')
+      .toLowerCase()
+      .trim()
+      .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
+
+    const payload: Omit<Partner, 'id' | 'created_at'> = {
+      slug,
+      business_name: partnerData.businessName,
+      email: partnerData.email,
+      phone: partnerData.phone,
+      category: partnerData.category || 'Senin Dükkanın',
+      address: partnerData.address,
+      franchise_id: partnerData.franchise_id,
+      city_id: partnerData.city_id,
+      active: true,
+      status: 'approved'
+    };
+
+    return this.adminCreatePartner(payload);
+  },
+
+  async togglePartnerStatus(partnerId: string, active: boolean): Promise<boolean> {
+    const res = await this.updatePartner(partnerId, { active });
+    return !!res;
+  },
+
   async getFranchisePartners(franchiseId: string, cityId?: string | null): Promise<Partner[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        let query = client.from('partners').select('*').order('created_at', { ascending: false });
+        if (franchiseId) {
+          query = query.eq('franchise_id', franchiseId);
+        }
+        const { data, error } = await query;
+        if (!error && data) {
+          return data as Partner[];
+        }
+      } catch (err) {
+        console.warn('Supabase getFranchisePartners notice:', err);
+      }
+    }
     const allPartners = await this.getAdminPartners();
     return allPartners.filter((p: Partner) => {
       if (p.franchise_id === franchiseId) return true;
@@ -5126,6 +5341,21 @@ export const db = {
   },
 
   async getFranchiseSubscriptions(franchiseId: string, cityId?: string | null): Promise<AssistantSubscription[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        let query = client.from('assistant_subscriptions').select('*').order('created_at', { ascending: false });
+        if (franchiseId) {
+          query = query.eq('franchise_id', franchiseId);
+        }
+        const { data, error } = await query;
+        if (!error && data) {
+          return data as AssistantSubscription[];
+        }
+      } catch (err) {
+        console.warn('Supabase getFranchiseSubscriptions notice:', err);
+      }
+    }
     const allSubs = await this.getAllAssistantSubscriptions();
     return allSubs.filter((s: AssistantSubscription) => {
       if (s.franchise_id === franchiseId) return true;
@@ -5682,6 +5912,119 @@ export const db = {
       city_id: targetCityId || null,
       franchise_id: targetFranchiseId || null
     };
+  },
+
+  // ==========================================
+  // FRANCHISE SUPPORT TICKETS (DESTEK / MERKEZ İLETİŞİMİ)
+  // ==========================================
+  async getFranchiseSupportTickets(franchiseId?: string | null): Promise<FranchiseSupportTicket[]> {
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        let query = client
+          .from('franchise_support_tickets')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (franchiseId) {
+          query = query.eq('franchise_id', franchiseId);
+        }
+
+        const { data, error } = await query;
+        if (!error && data) return data as FranchiseSupportTicket[];
+      } catch (err) {
+        console.warn('Supabase getFranchiseSupportTickets notice:', err);
+      }
+    }
+
+    const stored = getStored<FranchiseSupportTicket>(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS);
+    if (!franchiseId) return stored;
+    return stored.filter(t => t.franchise_id === franchiseId);
+  },
+
+  async createFranchiseSupportTicket(ticketData: {
+    franchise_id: string;
+    city_id?: string | null;
+    franchise_name?: string;
+    user_id?: string;
+    user_name?: string;
+    user_email?: string;
+    subject: string;
+    category?: FranchiseSupportTicket['category'];
+    priority?: FranchiseSupportTicket['priority'];
+    message: string;
+    attachment_url?: string | null;
+  }): Promise<FranchiseSupportTicket> {
+    const payload = {
+      franchise_id: ticketData.franchise_id,
+      city_id: ticketData.city_id || null,
+      user_id: ticketData.user_id || null,
+      user_name: ticketData.user_name || null,
+      user_email: ticketData.user_email || null,
+      subject: ticketData.subject.trim(),
+      category: ticketData.category || 'genel',
+      priority: ticketData.priority || 'normal',
+      message: ticketData.message.trim(),
+      attachment_url: ticketData.attachment_url || null,
+      status: 'pending' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const { data, error } = await client
+          .from('franchise_support_tickets')
+          .insert(payload)
+          .select()
+          .single();
+        if (!error && data) return data as FranchiseSupportTicket;
+      } catch (err) {
+        console.warn('Supabase createFranchiseSupportTicket notice:', err);
+      }
+    }
+
+    const stored = getStored<FranchiseSupportTicket>(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS);
+    const newTicket: FranchiseSupportTicket = {
+      id: `fst_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      franchise_name: ticketData.franchise_name || 'Bayi Destek',
+      ...payload
+    };
+    stored.unshift(newTicket);
+    setStored(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS, stored);
+    return newTicket;
+  },
+
+  async updateFranchiseSupportTicket(id: string, updates: Partial<FranchiseSupportTicket>): Promise<FranchiseSupportTicket> {
+    const payload = {
+      ...updates,
+      updated_at: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured) {
+      try {
+        const client = await getActiveSupabaseClient();
+        const { data, error } = await client
+          .from('franchise_support_tickets')
+          .update(payload)
+          .eq('id', id)
+          .select()
+          .single();
+        if (!error && data) return data as FranchiseSupportTicket;
+      } catch (err) {
+        console.warn('Supabase updateFranchiseSupportTicket notice:', err);
+      }
+    }
+
+    const stored = getStored<FranchiseSupportTicket>(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS);
+    const index = stored.findIndex(t => t.id === id);
+    if (index !== -1) {
+      stored[index] = { ...stored[index], ...payload };
+      setStored(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS, stored);
+      return stored[index];
+    }
+    throw new Error('Support ticket not found');
   }
 };
 
