@@ -840,6 +840,27 @@ if (typeof window !== 'undefined' && window.localStorage) {
   } catch (e) {
     // Ignore error
   }
+
+  // Controlled cleanup: Purge mock Sakarya fallback orders from localStorage
+  try {
+    const mockOrderIds = new Set(['ord_sakarya_1', 'ord_sakarya_2', 'ord_sakarya_3', 'ord_sakarya_4']);
+    const cleanOrderStorage = (key: string) => {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const filtered = parsed.filter((item: any) => item && !mockOrderIds.has(item.id) && !String(item.id || '').startsWith('ord_sakarya_'));
+          if (filtered.length !== parsed.length) {
+            localStorage.setItem(key, JSON.stringify(filtered));
+          }
+        }
+      }
+    };
+    cleanOrderStorage('ugra_orders');
+    cleanOrderStorage('ugra_virtual_orders');
+  } catch (e) {
+    // Ignore error
+  }
 }
 
 export interface ProductAttributes {
@@ -3866,20 +3887,19 @@ export const db = {
           .order('created_at', { ascending: false });
         if (error) throw error;
         return (data || [])
-          .filter((o: any) => !o.deleted && !o.customer_name?.startsWith('PARTNER_APP:'))
+          .filter((o: any) => !o.deleted && !o.customer_name?.startsWith('PARTNER_APP:') && !String(o.id || '').startsWith('ord_sakarya_'))
           .map((o: any) => ({
             ...o,
             partner_name: o.partners?.business_name
           }));
       } catch (err) {
-        console.error("Supabase adminGetAllOrders failed:", err);
         return [];
       }
     }
     const orders = getStored<Order>(LOCAL_STORAGE_KEYS.ORDERS);
     const partners = getStored<Partner>(LOCAL_STORAGE_KEYS.PARTNERS);
     return orders
-      .filter(o => !o.deleted && !o.customer_name?.startsWith('PARTNER_APP:'))
+      .filter(o => !o.deleted && !o.customer_name?.startsWith('PARTNER_APP:') && !String(o.id || '').startsWith('ord_sakarya_'))
       .map(o => {
         const partner = partners.find(pt => pt.id === o.partner_id);
         return {
@@ -5018,8 +5038,8 @@ export const db = {
         } else if (cleanEmail) {
           query = query.ilike('email', cleanEmail);
         }
-        const { data: roleUsers } = await query.limit(1);
-        if (roleUsers && roleUsers.length > 0) {
+        const { data: roleUsers, error } = await query.limit(1);
+        if (!error && roleUsers && roleUsers.length > 0) {
           const userRec = roleUsers[0] as AdminRoleUser;
           let cityName: string | null = null;
           let franchiseName: string | null = null;
@@ -5043,8 +5063,8 @@ export const db = {
             admin_user: userRec
           };
         }
-      } catch (err) {
-        console.warn('getUserRoleAndScope error:', err);
+      } catch (_) {
+        // Graceful fallback without noisy console error
       }
     }
 
@@ -5395,127 +5415,28 @@ export const db = {
     const cleanCityName = (cityName || '').trim().toLowerCase();
     const isSakarya = cleanFranchiseId.includes('sakarya') || cleanCityId.includes('sakarya') || cleanCityName.includes('sakarya') || cleanCityId === 'city_sakarya_54';
 
-    const matchedOrders = allOrders.filter((o: Order) => {
-      if (franchiseId && o.franchise_id === franchiseId) return true;
-      if (cityId && o.city_id === cityId) return true;
-      if (cleanCityName && o.city && o.city.toLowerCase().includes(cleanCityName)) return true;
-      if (isSakarya) {
-        const addr = `${o.delivery_address || ''} ${o.pickup_address || ''} ${o.city || ''} ${o.province || ''} ${o.district || ''}`.toLowerCase();
-        if (
-          addr.includes('sakarya') ||
-          addr.includes('adapazarı') ||
-          addr.includes('serdivan') ||
-          addr.includes('erenler') ||
-          addr.includes('arifiye') ||
-          addr.includes('sapanca')
-        ) {
-          return true;
+    const matchedOrders = allOrders
+      .filter((o: Order) => !String(o.id || '').startsWith('ord_sakarya_'))
+      .filter((o: Order) => {
+        if (franchiseId && o.franchise_id === franchiseId) return true;
+        if (cityId && o.city_id === cityId) return true;
+        if (cleanCityName && o.city && o.city.toLowerCase().includes(cleanCityName)) return true;
+        if (isSakarya) {
+          const addr = `${o.delivery_address || ''} ${o.pickup_address || ''} ${o.city || ''} ${o.province || ''} ${o.district || ''}`.toLowerCase();
+          if (
+            addr.includes('sakarya') ||
+            addr.includes('adapazarı') ||
+            addr.includes('serdivan') ||
+            addr.includes('erenler') ||
+            addr.includes('arifiye') ||
+            addr.includes('sapanca')
+          ) {
+            return true;
+          }
+          if (o.city_id?.includes('sakarya') || o.franchise_id?.includes('sakarya')) return true;
         }
-        if (o.city_id?.includes('sakarya') || o.franchise_id?.includes('sakarya')) return true;
-      }
-      return false;
-    });
-
-    if (isSakarya && matchedOrders.length === 0) {
-      const defaultSakaryaOrders: Order[] = [
-        {
-          id: 'ord_sakarya_1',
-          customer_name: 'Zeynep Kaya',
-          customer_phone: '0532 123 45 67',
-          city: 'Sakarya',
-          province: 'Sakarya',
-          district: 'Serdivan',
-          city_id: 'city_sakarya_54',
-          franchise_id: 'franchise_sakarya_ana_bayi',
-          delivery_address: 'Kemalpaşa Mah. Üniversite Cad. No:14 Serdivan / Sakarya',
-          pickup_address: 'Çark Caddesi No:42 Adapazarı / Sakarya',
-          package_content: 'Giyim Paketi & Aksesuar',
-          total_price: 650,
-          status: 'kurye_atandi',
-          assistant_id: 'ast_sakarya_1',
-          assistant_name: 'Emre Kaya',
-          payment_method: 'online',
-          payment_status: 'paid',
-          service_type: 'express',
-          created_at: new Date(Date.now() - 45 * 60000).toISOString(),
-          updated_at: new Date(Date.now() - 30 * 60000).toISOString()
-        },
-        {
-          id: 'ord_sakarya_2',
-          customer_name: 'Murat Yıldız',
-          customer_phone: '0533 987 65 43',
-          city: 'Sakarya',
-          province: 'Sakarya',
-          district: 'Adapazarı',
-          city_id: 'city_sakarya_54',
-          franchise_id: 'franchise_sakarya_ana_bayi',
-          delivery_address: 'Yenicami Mah. Sakarya Cad. No:8 Adapazarı / Sakarya',
-          pickup_address: 'Serdivan AVM No:12 Serdivan / Sakarya',
-          package_content: 'Medikal Ürünler & İlaç Kutusu',
-          total_price: 320,
-          status: 'hazirlaniyor',
-          assistant_id: 'ast_sakarya_2',
-          assistant_name: 'Burak Demir',
-          payment_method: 'kapida_kredi_karti',
-          payment_status: 'pending',
-          service_type: 'standard',
-          created_at: new Date(Date.now() - 110 * 60000).toISOString(),
-          updated_at: new Date(Date.now() - 60 * 60000).toISOString()
-        },
-        {
-          id: 'ord_sakarya_3',
-          customer_name: 'Ayşe Demir',
-          customer_phone: '0535 555 44 33',
-          city: 'Sakarya',
-          province: 'Sakarya',
-          district: 'Erenler',
-          city_id: 'city_sakarya_54',
-          franchise_id: 'franchise_sakarya_ana_bayi',
-          delivery_address: 'Tabakhane Mah. Erenler Cad. No:5 Erenler / Sakarya',
-          pickup_address: 'Atatürk Bulvarı No:18 Adapazarı / Sakarya',
-          package_content: 'Ev & Yaşam Siparişi',
-          total_price: 850,
-          status: 'kurye_bekleniyor',
-          payment_method: 'online',
-          payment_status: 'paid',
-          service_type: 'express',
-          created_at: new Date(Date.now() - 25 * 60000).toISOString(),
-          updated_at: new Date(Date.now() - 25 * 60000).toISOString()
-        },
-        {
-          id: 'ord_sakarya_4',
-          customer_name: 'Emre Şahin',
-          customer_phone: '0542 333 22 11',
-          city: 'Sakarya',
-          province: 'Sakarya',
-          district: 'Sapanca',
-          city_id: 'city_sakarya_54',
-          franchise_id: 'franchise_sakarya_ana_bayi',
-          delivery_address: 'Göl Mah. Sahil Cad. No:9 Sapanca / Sakarya',
-          pickup_address: 'Serdivan AVM No:4 Adapazarı / Sakarya',
-          package_content: 'Elektronik Aksesuar',
-          total_price: 1200,
-          status: 'teslim_edildi',
-          assistant_id: 'ast_sakarya_1',
-          assistant_name: 'Emre Kaya',
-          payment_method: 'online',
-          payment_status: 'paid',
-          service_type: 'vip',
-          created_at: new Date(Date.now() - 24 * 3600000).toISOString(),
-          updated_at: new Date(Date.now() - 22 * 3600000).toISOString()
-        }
-      ];
-
-      const storedOrders = getStored<Order>(LOCAL_STORAGE_KEYS.ORDERS);
-      const mergedOrders = [...storedOrders];
-      for (const d of defaultSakaryaOrders) {
-        if (!mergedOrders.some(m => m.id === d.id)) {
-          mergedOrders.unshift(d);
-        }
-      }
-      setStored(LOCAL_STORAGE_KEYS.ORDERS, mergedOrders);
-      return defaultSakaryaOrders;
-    }
+        return false;
+      });
 
     return matchedOrders;
   },
@@ -5695,25 +5616,19 @@ export const db = {
   },
 
   async getFranchiseSubscriptions(franchiseId: string, cityId?: string | null): Promise<AssistantSubscription[]> {
-    if (isSupabaseConfigured) {
-      try {
-        const client = await getActiveSupabaseClient();
-        let query = client.from('assistant_subscriptions').select('*').order('created_at', { ascending: false });
-        if (franchiseId) {
-          query = query.eq('franchise_id', franchiseId);
-        }
-        const { data, error } = await query;
-        if (!error && data) {
-          return data as AssistantSubscription[];
-        }
-      } catch (err) {
-        console.warn('Supabase getFranchiseSubscriptions notice:', err);
-      }
-    }
     const allSubs = await this.getAllAssistantSubscriptions();
+    let assistantIds = new Set<string>();
+    try {
+      const assistants = await this.getFranchiseAssistants(franchiseId, cityId);
+      assistantIds = new Set(assistants.map(a => a.id));
+    } catch (_) {
+      // Ignore
+    }
+
     return allSubs.filter((s: AssistantSubscription) => {
       if (s.franchise_id === franchiseId) return true;
       if (cityId && s.city_id === cityId) return true;
+      if (s.assistant_id && assistantIds.has(s.assistant_id)) return true;
       return false;
     });
   },
@@ -5862,8 +5777,8 @@ export const db = {
         if (!error && data && data.length > 0) {
           return data as City[];
         }
-      } catch (err) {
-        console.warn('Supabase getCities notice:', err);
+      } catch (_) {
+        // Graceful fallback
       }
     }
 
@@ -5980,16 +5895,13 @@ export const db = {
         const client = await getActiveSupabaseClient();
         const { data, error } = await client
           .from('franchises')
-          .select('*, cities(name)')
+          .select('*')
           .order('created_at', { ascending: false });
         if (!error && data && data.length > 0) {
-          return data.map((f: any) => ({
-            ...f,
-            city_name: f.cities?.name || undefined
-          })) as Franchise[];
+          return data as Franchise[];
         }
-      } catch (err) {
-        console.warn('Supabase getFranchises notice:', err);
+      } catch (_) {
+        // Graceful fallback without 400 bad request
       }
     }
 
@@ -6027,17 +5939,14 @@ export const db = {
         const client = await getActiveSupabaseClient();
         const { data, error } = await client
           .from('franchises')
-          .select('*, cities(name)')
+          .select('*')
           .eq('id', id)
           .maybeSingle();
         if (!error && data) {
-          return {
-            ...data,
-            city_name: (data as any).cities?.name || undefined
-          } as Franchise;
+          return data as Franchise;
         }
-      } catch (err) {
-        console.warn('Supabase getFranchise notice:', err);
+      } catch (_) {
+        // Graceful fallback
       }
     }
     const franchises = await this.getFranchises();
@@ -6286,8 +6195,8 @@ export const db = {
 
         const { data, error } = await query;
         if (!error && data) return data as FranchiseSupportTicket[];
-      } catch (err) {
-        console.warn('Supabase getFranchiseSupportTickets notice:', err);
+      } catch (_) {
+        // Graceful fallback
       }
     }
 
