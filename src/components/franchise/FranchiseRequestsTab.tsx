@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { 
-  Search, ShoppingBag, Bike, CheckCircle2, Clock, 
-  AlertTriangle, Filter, ChevronRight, MapPin, 
-  Phone, User, ArrowRight, X, Sparkles, Navigation
+  Search, Bike, CheckCircle2, Clock, 
+  AlertTriangle, Filter, MapPin, 
+  Phone, User, ArrowRight, X, AlertCircle, Eye, RefreshCw
 } from 'lucide-react';
 import { Order, OrderStatus } from '@/lib/supabase';
 import { FranchiseKPIs } from './types';
@@ -13,7 +13,7 @@ interface Props {
   cityNameDisplay: string;
   onSelectOrder: (order: Order) => void;
   onOpenAssignModal: (order: Order) => void;
-  onOpenCancelModal: (order: Order) => void;
+  onOpenCancelModal?: (order: Order) => void;
   onUpdateStatus: (orderId: string, status: OrderStatus) => void;
   actionLoading: boolean;
 }
@@ -90,251 +90,200 @@ export const FranchiseRequestsTab: React.FC<Props> = ({
     return 0;
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'kurye_bekleniyor':
+      case 'pending':
+      case 'bekliyor':
+        return { label: 'Asistan Bekliyor', bg: 'bg-amber-50 text-amber-800 border-amber-200', icon: Clock };
+      case 'kurye_atandi':
+      case 'accepted':
+        return { label: 'Asistan Atandı', bg: 'bg-blue-50 text-blue-800 border-blue-200', icon: Bike };
+      case 'yolda':
+      case 'on_the_way':
+        return { label: 'Yolda', bg: 'bg-indigo-50 text-indigo-800 border-indigo-200', icon: Bike };
+      case 'hazirlaniyor':
+      case 'preparing':
+        return { label: 'Hazırlanıyor', bg: 'bg-purple-50 text-purple-800 border-purple-200', icon: RefreshCw };
+      case 'teslim_edildi':
+      case 'tamamlandi':
+      case 'delivered':
+        return { label: 'Tamamlandı', bg: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: CheckCircle2 };
+      case 'iptal':
+      case 'iptal_edildi':
+      case 'cancelled':
+        return { label: 'İptal', bg: 'bg-red-50 text-red-800 border-red-200', icon: AlertCircle };
+      default:
+        return { label: status, bg: 'bg-gray-50 text-gray-800 border-gray-200', icon: Clock };
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header & Subtitle */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs">
         <div>
-          <h2 className="text-lg font-black text-white flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-amber-400" />
-            Canlı Talepler / Operasyon Yönetimi
-          </h2>
-          <p className="text-xs text-gray-400">
-            {cityNameDisplay} bölgesindeki tüm asistanlık ve teslimat taleplerini anlık takip edin, asistan atayın ve operasyon durumunu yönetin.
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-black text-[#111111] flex items-center gap-2">
+              <Bike className="w-5 h-5 text-[#111111]" />
+              Bölgesel Talep & Görev Yönetimi
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#F7F7F8] text-[#111111] border border-[#E5E7EB]">
+              Toplam {orders.length} Talep
+            </span>
+          </div>
+          <p className="text-xs text-[#666666] mt-0.5">
+            {cityNameDisplay} bölgesine gelen tüm talepleri inceleyin, bölgenizdeki asistanlara atayın ve operasyonu takip edin.
           </p>
         </div>
+      </div>
 
-        {/* Quick Mini Stats */}
-        <div className="flex items-center gap-2 bg-[#131826] p-1.5 rounded-2xl border border-white/5 text-xs font-bold">
-          <div className="px-3 py-1 bg-amber-400/10 text-amber-400 rounded-xl">
-            {kpis.pendingOrders} Bekleyen
-          </div>
-          <div className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-xl">
-            {kpis.inProgressOrders} Süreçte
-          </div>
-          <div className="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-xl">
-            {kpis.completedOrders} Tamamlanan
-          </div>
+      {/* Filter Tabs & Count Badges */}
+      <div className="flex flex-wrap items-center gap-2 p-2 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs">
+        {[
+          { key: 'all', label: 'Tüm Talepler' },
+          { key: 'pending', label: 'Asistan Bekleyen' },
+          { key: 'assigned', label: 'Asistan Atandı' },
+          { key: 'in_progress', label: 'Süreçte / Yolda' },
+          { key: 'completed', label: 'Tamamlanan' },
+          { key: 'cancelled', label: 'İptal Edilen' },
+        ].map(tab => {
+          const count = countByFilter(tab.key);
+          const isSelected = statusFilter === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setStatusFilter(tab.key)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                isSelected
+                  ? 'bg-[#111111] text-white shadow-xs'
+                  : 'text-[#666666] hover:text-[#111111] hover:bg-[#F7F7F8]'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isSelected ? 'bg-white/20 text-white' : 'bg-[#F2F2F3] text-[#111111]'}`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Search Bar */}
+      <div className="p-4 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A8A8A]" />
+          <input
+            type="text"
+            placeholder="Talep no, müşteri adı, telefon, adres veya atanan asistan adı ile ara..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#111111] transition-all"
+          />
         </div>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="space-y-3">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Talep No, Müşteri, Adres, Görev Açıklaması veya Asistan Ara..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#131826] border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-amber-400"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* Quick Refresh Info */}
-          <div className="text-[11px] text-gray-400 shrink-0 font-medium">
-            Toplam: <strong className="text-white">{filteredOrders.length}</strong> talep listeleniyor
-          </div>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          {[
-            { id: 'all', label: 'Tüm Talepler' },
-            { id: 'pending', label: 'Asistan Bekleniyor' },
-            { id: 'assigned', label: 'Asistan Atandı' },
-            { id: 'in_progress', label: 'Görevde / Yolda' },
-            { id: 'completed', label: 'Tamamlandı' },
-            { id: 'cancelled', label: 'İptal Edildi' }
-          ].map((tab) => {
-            const count = countByFilter(tab.id);
-            const active = statusFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                  active
-                    ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/20'
-                    : 'bg-[#131826] hover:bg-[#1A2133] text-gray-300 border border-white/5'
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  active ? 'bg-black/20 text-black' : 'bg-white/10 text-gray-400'
-                }`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Requests Table / Cards */}
-      <div className="rounded-3xl bg-[#131826] border border-white/5 overflow-hidden">
+      {/* Orders List Table */}
+      <div className="p-6 rounded-2xl bg-white border border-[#E5E7EB] shadow-xs">
         {filteredOrders.length === 0 ? (
-          <div className="py-16 text-center text-gray-500 text-xs space-y-2">
-            <ShoppingBag className="w-8 h-8 mx-auto text-gray-600" />
-            <div className="font-bold text-gray-400">Kriterlere uygun talep bulunamadı</div>
-            <div>Arama kriterlerini veya durum filtrelerini değiştirmeyi deneyebilirsiniz.</div>
+          <div className="p-8 text-center bg-[#F7F7F8] rounded-xl border border-[#E5E7EB] space-y-2">
+            <AlertCircle className="w-8 h-8 text-[#8A8A8A] mx-auto" />
+            <p className="text-xs font-bold text-[#111111]">Filtreye uygun talep bulunamadı.</p>
+            <p className="text-[11px] text-[#666666]">Farklı bir arama terimi veya filtre seçmeyi deneyin.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-[#182033] text-gray-400 text-[11px] uppercase border-b border-white/5">
-                  <th className="py-3.5 px-4 font-bold">Talep No & Zaman</th>
-                  <th className="py-3.5 px-4 font-bold">Talep Başlığı & Açıklama</th>
-                  <th className="py-3.5 px-4 font-bold">Müşteri</th>
-                  <th className="py-3.5 px-4 font-bold">Adres / Güzergah</th>
-                  <th className="py-3.5 px-4 font-bold">Teklif Edilen Ücret</th>
-                  <th className="py-3.5 px-4 font-bold">Atanan Asistan</th>
-                  <th className="py-3.5 px-4 font-bold">Durum</th>
-                  <th className="py-3.5 px-4 font-bold text-right">Operasyon</th>
+                <tr className="border-b border-[#E5E7EB] text-[#666666] uppercase text-[10px] tracking-wider font-bold">
+                  <th className="py-3 px-3">Talep No / Tarih</th>
+                  <th className="py-3 px-3">Müşteri & İletişim</th>
+                  <th className="py-3 px-3">Adres / Görev Açıklaması</th>
+                  <th className="py-3 px-3">Atanan Asistan</th>
+                  <th className="py-3 px-3">Tutar</th>
+                  <th className="py-3 px-3">Durum</th>
+                  <th className="py-3 px-3 text-right">İşlemler</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
-                {filteredOrders.map((order) => {
-                  const title = order.service_type || order.items?.[0]?.title || 'Özel Asistanlık / Kurye Görevi';
-                  const description = order.task_description || order.delivery_notes || order.notes || (order.items && order.items.length > 0 ? order.items.map(i => `${i.quantity || 1}x ${i.title || i.name}`).join(', ') : 'Talep ayrıntısı girilmedi');
-                  const isCompleted = order.status === 'teslim_edildi' || order.status === 'delivered' || order.status === 'tamamlandi';
-                  const isCancelled = order.status === 'iptal_edildi' || order.status === 'cancelled' || order.status === 'iptal';
-                  const isPending = ['kurye_bekleniyor', 'pending', 'beklemede', 'bekliyor'].includes(order.status);
-                  const isAssigned = ['kurye_atandi', 'accepted'].includes(order.status);
+              <tbody className="divide-y divide-[#F2F2F3]">
+                {filteredOrders.map(order => {
+                  const statusObj = getStatusBadge(order.status);
+                  const isAssigned = !!order.assistant_id || !!order.assistant_name;
 
                   return (
-                    <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                      {/* Talep No & Created At */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-mono font-black text-amber-400 text-xs">
-                          #TALEP-{order.id.slice(0, 8)}
-                        </div>
-                        <div className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3" />
-                          {order.created_at ? new Date(order.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                    <tr key={order.id} className="hover:bg-[#F7F7F8] transition-colors">
+                      <td className="py-3.5 px-3">
+                        <div className="font-mono font-bold text-[#111111]">#{order.id.slice(0, 8)}</div>
+                        <div className="text-[10px] text-[#666666]">
+                          {order.created_at ? new Date(order.created_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : '-'}
                         </div>
                       </td>
 
-                      {/* Talep Başlığı & Açıklama */}
-                      <td className="py-3.5 px-4 max-w-[220px]">
-                        <div className="font-bold text-white truncate">{title}</div>
-                        <div className="text-[11px] text-gray-400 truncate mt-0.5">{description}</div>
-                      </td>
-
-                      {/* Müşteri */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-gray-200">{order.customer_name || 'Misafir Müşteri'}</div>
+                      <td className="py-3.5 px-3">
+                        <div className="font-bold text-[#111111]">{order.customer_name || 'Misafir Müşteri'}</div>
                         {order.customer_phone && (
-                          <div className="text-[10px] text-gray-400 font-mono flex items-center gap-1 mt-0.5">
-                            <Phone className="w-2.5 h-2.5" />
-                            {order.customer_phone}
+                          <div className="text-[10px] text-[#666666] font-mono">{order.customer_phone}</div>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-3 max-w-xs">
+                        <div className="text-[11px] font-medium text-[#111111] line-clamp-1">
+                          📍 {order.delivery_address || order.customer_address || 'Adres belirtilmedi'}
+                        </div>
+                        {order.task_description && (
+                          <div className="text-[10px] text-[#666666] line-clamp-1 mt-0.5">
+                            📝 {order.task_description}
                           </div>
                         )}
                       </td>
 
-                      {/* Güzergah */}
-                      <td className="py-3.5 px-4 max-w-[200px]">
-                        <div className="text-[11px] text-gray-300 truncate">
-                          <span className="text-gray-500 font-bold">Varış: </span>
-                          {order.delivery_address || order.customer_address || 'Belirtilmedi'}
-                        </div>
-                        {order.pickup_address && (
-                          <div className="text-[10px] text-gray-400 truncate mt-0.5">
-                            <span className="text-gray-500">Çıkış: </span>{order.pickup_address}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Teklif Edilen Ücret & Bayi Payı */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-mono font-black text-white text-sm">
-                          ₺{order.total_price}
-                        </div>
-                        <div className="text-[10px] text-amber-400 font-mono font-bold mt-0.5">
-                          Bayi: ₺{((Number(order.total_price) || 0) * kpis.revenueSharePct / 100).toFixed(2)}
-                        </div>
-                      </td>
-
-                      {/* Atanan Asistan */}
-                      <td className="py-3.5 px-4">
-                        {order.assistant_name ? (
-                          <div className="space-y-0.5">
-                            <div className="text-white font-bold flex items-center gap-1">
-                              <Bike className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                              <span className="truncate">{order.assistant_name}</span>
+                      <td className="py-3.5 px-3">
+                        {isAssigned ? (
+                          <div className="flex items-center gap-1.5">
+                            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-xs">
+                              <Bike className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>{order.assistant_name || `Asistan #${order.assistant_id?.slice(0, 6)}`}</span>
                             </div>
-                            {order.assistant_phone && (
-                              <div className="text-[10px] text-gray-400 font-mono">
-                                {order.assistant_phone}
-                              </div>
-                            )}
+                            <button
+                              onClick={() => onOpenAssignModal(order)}
+                              title="Asistanı Değiştir"
+                              className="p-1 rounded-md bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#666666] hover:text-[#111111] cursor-pointer"
+                            >
+                              <RefreshCw className="w-3 h-3" />
+                            </button>
                           </div>
                         ) : (
                           <button
                             onClick={() => onOpenAssignModal(order)}
-                            className="px-2 py-1 rounded-lg bg-amber-400/10 hover:bg-amber-400/20 text-amber-400 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 font-bold text-xs cursor-pointer transition-all"
                           >
-                            <Bike className="w-3 h-3" />
-                            Asistan Ata
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Asistan Ata</span>
                           </button>
                         )}
                       </td>
 
-                      {/* Durum */}
-                      <td className="py-3.5 px-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                          isCompleted
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                            : isCancelled
-                            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                            : isPending
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse'
-                            : isAssigned
-                            ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                            : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                        }`}>
-                          {order.status}
+                      <td className="py-3.5 px-3 font-mono font-bold text-[#111111]">
+                        ₺{order.total_price || 0}
+                      </td>
+
+                      <td className="py-3.5 px-3">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusObj.bg}`}>
+                          <statusObj.icon className="w-3 h-3" />
+                          {statusObj.label}
                         </span>
                       </td>
 
-                      {/* İşlem Butonları */}
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-3.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => onSelectOrder(order)}
-                            className="px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-[11px] cursor-pointer transition-all"
+                            title="Talebi İncele"
+                            className="px-2.5 py-1.5 rounded-lg bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] font-bold text-[11px] cursor-pointer transition-all inline-flex items-center gap-1"
                           >
-                            Detay
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Detay</span>
                           </button>
-
-                          <button
-                            onClick={() => onOpenAssignModal(order)}
-                            className="p-1.5 rounded-xl bg-white/5 hover:bg-amber-400/10 text-gray-300 hover:text-amber-400 cursor-pointer"
-                            title="Asistan Ata / Değiştir"
-                          >
-                            <Bike className="w-3.5 h-3.5" />
-                          </button>
-
-                          {!isCompleted && !isCancelled && (
-                            <button
-                              onClick={() => onOpenCancelModal(order)}
-                              className="p-1.5 rounded-xl bg-white/5 hover:bg-red-500/10 text-gray-400 hover:text-red-400 cursor-pointer"
-                              title="Talebi İptal Et"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          )}
                         </div>
                       </td>
                     </tr>

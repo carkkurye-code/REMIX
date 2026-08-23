@@ -1,387 +1,173 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  X, ShieldCheck, Bike, AlertTriangle, Store, 
+  X, ShieldCheck, Bike, AlertTriangle, 
   Headphones, Send, MessageSquare, Clock, CheckCircle2,
-  Calendar, Phone, Mail, MapPin, Tag, FileText
+  Calendar, Phone, Mail, MapPin, Tag, FileText, User,
+  Car, Footprints, AlertCircle, ShoppingBag, ArrowRight
 } from 'lucide-react';
 import { 
-  Assistant, Order, Partner, OFFICIAL_PARTNER_CATEGORIES,
+  Assistant, Order, OrderStatus,
   FranchiseSupportTicket 
 } from '@/lib/supabase';
 
 // ============================================================================
-// MODAL: ASSIGN ASSISTANT TO REQUEST
+// MODAL: ADD ASSISTANT (YENİ ASİSTAN EKLE)
 // ============================================================================
-interface AssignAssistantModalProps {
-  order: Order | null;
-  availableCouriers: Assistant[];
-  selectedCourierId: string;
-  setSelectedCourierId: (id: string) => void;
-  onConfirm: () => void;
-  onClose: () => void;
-  loading: boolean;
-}
-
-export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
-  order,
-  availableCouriers,
-  selectedCourierId,
-  setSelectedCourierId,
-  onConfirm,
-  onClose,
-  loading
-}) => {
-  if (!order) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-md rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <div>
-            <h3 className="text-sm font-black text-white">Talebe Asistan Ata / Değiştir</h3>
-            <p className="text-[11px] text-gray-400">Talep #TALEP-{order.id.slice(0, 8)}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="space-y-3">
-          <label className="text-gray-400 font-bold block">Bölgenizdeki Aktif Asistanı Seçin</label>
-          <select
-            value={selectedCourierId}
-            onChange={(e) => setSelectedCourierId(e.target.value)}
-            className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-400"
-          >
-            <option value="">-- Asistan Seçilmedi / Atamayı Kaldır --</option>
-            {availableCouriers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.full_name} ({c.vehicle_type || 'Motosiklet'}) {c.is_online ? '● Online' : ''}
-              </option>
-            ))}
-          </select>
-          <p className="text-[10px] text-gray-500">
-            * Yalnızca aynı bayilik ve şehir yetki alanındaki asistanlar listelenir.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
-          >
-            Vazgeç
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold cursor-pointer transition-colors"
-          >
-            {loading ? 'Atanıyor...' : 'Atamayı Onayla'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// MODAL: CANCEL REQUEST
-// ============================================================================
-interface CancelRequestModalProps {
-  order: Order | null;
-  cancelReason: string;
-  setCancelReason: (r: string) => void;
-  onConfirm: () => void;
-  onClose: () => void;
-  loading: boolean;
-}
-
-export const CancelRequestModal: React.FC<CancelRequestModalProps> = ({
-  order,
-  cancelReason,
-  setCancelReason,
-  onConfirm,
-  onClose,
-  loading
-}) => {
-  if (!order) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-md rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <h3 className="text-sm font-black text-red-400">Talebi İptal Et</h3>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-gray-300">
-            <strong>#TALEP-{order.id.slice(0, 8)}</strong> numaralı talebi iptal etmek üzeresiniz.
-          </p>
-          <label className="text-gray-400 font-bold block">İptal Gerekçesi</label>
-          <textarea
-            rows={3}
-            placeholder="Örn: Müşteri adreste bulunamadı veya müşteri iptal talep etti..."
-            value={cancelReason}
-            onChange={(e) => setCancelReason(e.target.value)}
-            className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-red-400"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
-          >
-            Vazgeç
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-extrabold cursor-pointer transition-colors"
-          >
-            {loading ? 'İptal Ediliyor...' : 'İptali Onayla'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// MODAL: REJECT ASSISTANT APPLICATION
-// ============================================================================
-interface RejectAssistantModalProps {
-  assistant: Assistant | null;
-  reason: string;
-  setReason: (r: string) => void;
-  onConfirm: () => void;
-  onClose: () => void;
-  loading: boolean;
-}
-
-export const RejectAssistantModal: React.FC<RejectAssistantModalProps> = ({
-  assistant,
-  reason,
-  setReason,
-  onConfirm,
-  onClose,
-  loading
-}) => {
-  if (!assistant) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-md rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <h3 className="text-sm font-black text-red-400">Asistan Başvurusunu Reddet</h3>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <p className="text-gray-300">
-            <strong>{assistant.full_name}</strong> adayının başvurusunu reddetmek üzeresiniz.
-          </p>
-          <label className="text-gray-400 font-bold block">Red Nedeni (Adaya bildirilecektir)</label>
-          <textarea
-            rows={3}
-            placeholder="Örn: Belgeler eksik veya araç koşulları yetersiz..."
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-red-400"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
-          >
-            Vazgeç
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-extrabold cursor-pointer transition-colors"
-          >
-            {loading ? 'Reddediliyor...' : 'Reddet'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================================================
-// MODAL: ADD PARTNER
-// ============================================================================
-interface AddPartnerModalProps {
+interface AddAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (data: {
+    fullName: string;
+    phone: string;
+    email: string;
+    vehicleType: 'motosiklet' | 'bisiklet' | 'arac';
+    plateNumber?: string;
+  }) => Promise<void>;
   cityNameDisplay: string;
   franchiseId?: string;
-  name: string;
-  setName: (v: string) => void;
-  category: string;
-  setCategory: (v: string) => void;
-  phone: string;
-  setPhone: (v: string) => void;
-  email: string;
-  setEmail: (v: string) => void;
-  district: string;
-  setDistrict: (v: string) => void;
-  address: string;
-  setAddress: (v: string) => void;
   loading: boolean;
 }
 
-export const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
+export const AddAssistantModal: React.FC<AddAssistantModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
   cityNameDisplay,
   franchiseId,
-  name,
-  setName,
-  category,
-  setCategory,
-  phone,
-  setPhone,
-  email,
-  setEmail,
-  district,
-  setDistrict,
-  address,
-  setAddress,
   loading
 }) => {
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [vehicleType, setVehicleType] = useState<'motosiklet' | 'bisiklet' | 'arac'>('motosiklet');
+  const [plateNumber, setPlateNumber] = useState('');
+
   if (!isOpen) return null;
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !phone.trim()) {
+      alert('Lütfen asistanın adı-soyadı ve telefon numarasını giriniz.');
+      return;
+    }
+    await onSubmit({
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      vehicleType,
+      plateNumber: plateNumber.trim() || undefined
+    });
+    setFullName('');
+    setPhone('');
+    setEmail('');
+    setPlateNumber('');
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-lg rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <div>
-            <h3 className="text-sm font-black text-white">Yeni İşletme / Mağaza Ekle</h3>
-            <p className="text-[11px] text-gray-400">{cityNameDisplay} Bölgesine Yeni Partner</p>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center">
+              <User className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-[#111111]">Yeni Asistan Ekle</h3>
+              <p className="text-xs text-[#666666] font-medium">{cityNameDisplay} Bölgesi Asistan Kadrosu</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">İşletme / Mağaza Adı</label>
+            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Asistan Adı & Soyadı</label>
             <input
               type="text"
               required
-              placeholder="Örn: Lezzet Döner & Kebap"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-400"
+              placeholder="Örn: Ahmet Yılmaz"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-gray-400 font-bold uppercase text-[10px]">Kategori</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none"
-              >
-                {OFFICIAL_PARTNER_CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-gray-400 font-bold uppercase text-[10px]">Telefon Numarası</label>
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Telefon Numarası</label>
               <input
                 type="tel"
                 required
                 placeholder="0532 000 00 00"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-mono outline-none focus:border-amber-400"
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono font-bold transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">E-Posta (İsteğe Bağlı)</label>
+              <input
+                type="email"
+                placeholder="asistan@ugra.app"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] transition-all"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-gray-400 font-bold uppercase text-[10px]">Giriş E-postası</label>
-              <input
-                type="email"
-                placeholder="partner@isletme.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-amber-400"
-              />
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Ulaşım / Araç Tipi</label>
+              <select
+                value={vehicleType}
+                onChange={(e) => setVehicleType(e.target.value as any)}
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+              >
+                <option value="motosiklet">🛵 Motosiklet</option>
+                <option value="arac">🚗 Otomobil / Araç</option>
+                <option value="bisiklet">🚲 Bisiklet / Scooter</option>
+              </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-gray-400 font-bold uppercase text-[10px]">İlçe</label>
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Plaka (Varsa)</label>
               <input
                 type="text"
-                placeholder="Örn: Kadıköy, Adapazarı..."
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-amber-400"
+                placeholder="34 ABC 123"
+                value={plateNumber}
+                onChange={(e) => setPlateNumber(e.target.value)}
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono transition-all uppercase"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">Açık Adres</label>
-            <textarea
-              rows={2}
-              placeholder="Cadde, sokak, no ve mahalle bilgileri..."
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-amber-400"
-            />
-          </div>
-
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-400 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 shrink-0" />
-            <span>Bu işletme otomatik olarak <strong>{cityNameDisplay}</strong> bayinize ({franchiseId?.slice(0, 8) || 'Bölge'}) bağlanacaktır.</span>
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+            <span>Eklenen asistan otomatik olarak <strong>{cityNameDisplay}</strong> bayinize tanımlanır ve talepler atanabilir.</span>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
             >
               Vazgeç
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-black font-extrabold cursor-pointer transition-colors"
+              className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
             >
-              {loading ? 'Kaydediliyor...' : 'İşletmeyi Kaydet'}
+              {loading ? 'Ekleniyor...' : 'Asistanı Kaydet'}
             </button>
           </div>
         </form>
@@ -391,94 +177,144 @@ export const AddPartnerModal: React.FC<AddPartnerModalProps> = ({
 };
 
 // ============================================================================
-// MODAL: EDIT PARTNER
+// MODAL: EDIT ASSISTANT (ASİSTAN DÜZENLE)
 // ============================================================================
-interface EditPartnerModalProps {
-  partner: Partner | null;
+interface EditAssistantModalProps {
+  assistant: Assistant | null;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
-  name: string;
-  setName: (v: string) => void;
-  category: string;
-  setCategory: (v: string) => void;
-  phone: string;
-  setPhone: (v: string) => void;
-  address: string;
-  setAddress: (v: string) => void;
+  onSubmit: (id: string, updates: Partial<Assistant>) => Promise<void>;
   loading: boolean;
 }
 
-export const EditPartnerModal: React.FC<EditPartnerModalProps> = ({
-  partner,
+export const EditAssistantModal: React.FC<EditAssistantModalProps> = ({
+  assistant,
   onClose,
   onSubmit,
-  name,
-  setName,
-  category,
-  setCategory,
-  phone,
-  setPhone,
-  address,
-  setAddress,
   loading
 }) => {
-  if (!partner) return null;
+  const [fullName, setFullName] = useState(assistant?.full_name || '');
+  const [phone, setPhone] = useState(assistant?.phone || '');
+  const [email, setEmail] = useState(assistant?.email || '');
+  const [vehicleType, setVehicleType] = useState<'motosiklet' | 'bisiklet' | 'arac'>(
+    (assistant?.vehicle_type as any) || 'motosiklet'
+  );
+  const [plateNumber, setPlateNumber] = useState(assistant?.plate_number || '');
+  const [status, setStatus] = useState(assistant?.status || 'active');
+
+  React.useEffect(() => {
+    if (assistant) {
+      setFullName(assistant.full_name || '');
+      setPhone(assistant.phone || '');
+      setEmail(assistant.email || '');
+      setVehicleType((assistant.vehicle_type as any) || 'motosiklet');
+      setPlateNumber(assistant.plate_number || '');
+      setStatus(assistant.status || 'active');
+    }
+  }, [assistant]);
+
+  if (!assistant) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSubmit(assistant.id, {
+      full_name: fullName.trim(),
+      phone: phone.trim(),
+      email: email.trim() || undefined,
+      vehicle_type: vehicleType,
+      plate_number: plateNumber.trim() || null,
+      status: status,
+      active: status === 'active' || status === 'aktif'
+    });
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-md rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <h3 className="text-sm font-black text-white">İşletmeyi Düzenle</h3>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+          <div>
+            <h3 className="text-base font-black text-[#111111]">Asistan Bilgilerini Düzenle</h3>
+            <p className="text-[11px] text-[#666666] font-mono">ID: {assistant.id.slice(0, 8)}</p>
+          </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">İşletme Adı</label>
+            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Ad Soyad</label>
             <input
               type="text"
               required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none focus:border-amber-400"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">Kategori</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none"
-            >
-              {OFFICIAL_PARTNER_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Telefon</label>
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono font-bold transition-all"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">E-Posta</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Araç Tipi</label>
+              <select
+                value={vehicleType}
+                onChange={(e) => setVehicleType(e.target.value as any)}
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+              >
+                <option value="motosiklet">🛵 Motosiklet</option>
+                <option value="arac">🚗 Araç / Otomobil</option>
+                <option value="bisiklet">🚲 Bisiklet</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Durum</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+              >
+                <option value="active">Aktif (Göreve Hazır)</option>
+                <option value="passive">Pasif (Kapalı)</option>
+                <option value="suspended">Askıya Alındı</option>
+              </select>
+            </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">Telefon</label>
+            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Araç Plakası</label>
             <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-mono outline-none focus:border-amber-400"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">Adres</label>
-            <textarea
-              rows={2}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-amber-400"
+              type="text"
+              placeholder="34 ABC 123"
+              value={plateNumber}
+              onChange={(e) => setPlateNumber(e.target.value)}
+              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono uppercase transition-all"
             />
           </div>
 
@@ -486,14 +322,14 @@ export const EditPartnerModal: React.FC<EditPartnerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
             >
               Vazgeç
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-extrabold cursor-pointer transition-colors"
+              className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
             >
               {loading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
             </button>
@@ -505,78 +341,83 @@ export const EditPartnerModal: React.FC<EditPartnerModalProps> = ({
 };
 
 // ============================================================================
-// MODAL: PARTNER DETAILS MODAL
+// MODAL: ASSISTANT DETAILS (ASİSTAN DETAY)
 // ============================================================================
-interface PartnerDetailModalProps {
-  partner: Partner | null;
+interface AssistantDetailModalProps {
+  assistant: Assistant | null;
   cityNameDisplay: string;
   onClose: () => void;
-  onOpenEdit: (partner: Partner) => void;
-  onToggleStatus: (partner: Partner) => void;
+  onOpenEdit: (assistant: Assistant) => void;
+  onToggleStatus: (assistant: Assistant) => void;
 }
 
-export const PartnerDetailModal: React.FC<PartnerDetailModalProps> = ({
-  partner,
+export const AssistantDetailModal: React.FC<AssistantDetailModalProps> = ({
+  assistant,
   cityNameDisplay,
   onClose,
   onOpenEdit,
   onToggleStatus
 }) => {
-  if (!partner) return null;
-  const isActive = partner.active !== false;
+  if (!assistant) return null;
+  const isActive = assistant.status === 'active' || assistant.status === 'aktif' || assistant.active !== false;
 
   return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-md rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <Store className="w-4 h-4" />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-md rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold text-sm">
+              {assistant.full_name?.charAt(0) || 'A'}
             </div>
             <div>
-              <h3 className="text-sm font-black text-white">{partner.business_name}</h3>
-              <p className="text-[11px] text-gray-400 font-mono">ID: {partner.id.slice(0, 8)}</p>
+              <h3 className="text-sm font-black text-[#111111]">{assistant.full_name}</h3>
+              <p className="text-[11px] text-[#666666] font-mono">ID: {assistant.id.slice(0, 8)}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="space-y-2.5">
-          <div className="flex justify-between py-1.5 border-b border-white/5">
-            <span className="text-gray-400">Durum:</span>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-              {isActive ? 'Aktif / Açık' : 'Pasif / Kapalı'}
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Çalışma Durumu:</span>
+            <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              {isActive ? 'Aktif (Göreve Hazır)' : 'Pasif'}
             </span>
           </div>
 
-          <div className="flex justify-between py-1.5 border-b border-white/5">
-            <span className="text-gray-400">Kategori:</span>
-            <span className="font-bold text-white">{partner.category || 'Genel'}</span>
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Telefon:</span>
+            <span className="font-mono font-bold text-[#111111]">{assistant.phone || '-'}</span>
           </div>
 
-          <div className="flex justify-between py-1.5 border-b border-white/5">
-            <span className="text-gray-400">Telefon:</span>
-            <span className="font-mono font-bold text-gray-200">{partner.phone || '-'}</span>
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">E-Posta:</span>
+            <span className="font-mono text-[#111111]">{assistant.email || '-'}</span>
           </div>
 
-          <div className="flex justify-between py-1.5 border-b border-white/5">
-            <span className="text-gray-400">E-posta:</span>
-            <span className="font-mono text-gray-300">{partner.email || '-'}</span>
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Araç & Plaka:</span>
+            <span className="font-bold text-[#111111] flex items-center gap-1.5">
+              {assistant.vehicle_type === 'arac' ? '🚗 Otomobil' : assistant.vehicle_type === 'bisiklet' ? '🚲 Bisiklet' : '🛵 Motosiklet'}
+              {assistant.plate_number ? `(${assistant.plate_number})` : ''}
+            </span>
           </div>
 
-          <div className="flex justify-between py-1.5 border-b border-white/5">
-            <span className="text-gray-400">Yetkili Şehir:</span>
-            <span className="font-bold text-amber-400">{cityNameDisplay}</span>
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Tamamlanan Görev Sayısı:</span>
+            <span className="font-mono font-bold text-[#111111]">{assistant.completed_orders || 0} Talep</span>
           </div>
 
-          <div className="py-1.5 border-b border-white/5 space-y-1">
-            <span className="text-gray-400 block">Adres / İlçe:</span>
-            <div className="text-gray-200 bg-[#1A2133] p-2.5 rounded-xl">{partner.address || 'Adres belirtilmedi'}</div>
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Kayıt Tarihi:</span>
+            <span className="font-medium text-[#111111]">
+              {assistant.created_at ? new Date(assistant.created_at).toLocaleDateString('tr-TR') : '-'}
+            </span>
           </div>
         </div>
 
@@ -584,23 +425,348 @@ export const PartnerDetailModal: React.FC<PartnerDetailModalProps> = ({
           <button
             onClick={() => {
               onClose();
-              onOpenEdit(partner);
+              onOpenEdit(assistant);
             }}
-            className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer transition-colors"
+            className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
           >
-            Düzenle
+            Bilgileri Düzenle
           </button>
           <button
             onClick={() => {
-              onToggleStatus(partner);
+              onToggleStatus(assistant);
               onClose();
             }}
-            className={`flex-1 py-2.5 rounded-xl font-bold cursor-pointer transition-colors ${
-              isActive ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+            className={`flex-1 py-3 rounded-xl font-bold cursor-pointer transition-all ${
+              isActive ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
             }`}
           >
             {isActive ? 'Pasife Al' : 'Aktif Et'}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MODAL: ASSIGN ASSISTANT TO ORDER (TALEBE ASİSTAN ATA)
+// ============================================================================
+interface AssignAssistantModalProps {
+  order: Order | null;
+  assistants: Assistant[];
+  onClose: () => void;
+  onAssign: (orderId: string, assistantId: string, assistantName: string) => Promise<void>;
+  loading: boolean;
+}
+
+export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
+  order,
+  assistants,
+  onClose,
+  onAssign,
+  loading
+}) => {
+  const [selectedAssistantId, setSelectedAssistantId] = useState<string>('');
+  const [search, setSearch] = useState('');
+
+  React.useEffect(() => {
+    if (order?.assistant_id) {
+      setSelectedAssistantId(order.assistant_id);
+    } else {
+      setSelectedAssistantId('');
+    }
+  }, [order]);
+
+  if (!order) return null;
+
+  const activeAssistants = assistants.filter(a => a.status === 'active' || a.status === 'aktif' || a.active !== false);
+
+  const filtered = activeAssistants.filter(a => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      (a.full_name || '').toLowerCase().includes(q) ||
+      (a.phone || '').includes(q) ||
+      (a.vehicle_type || '').toLowerCase().includes(q)
+    );
+  });
+
+  const handleConfirm = async () => {
+    if (!selectedAssistantId) {
+      alert('Lütfen atanacak bir asistan seçiniz.');
+      return;
+    }
+    const chosen = assistants.find(a => a.id === selectedAssistantId);
+    await onAssign(order.id, selectedAssistantId, chosen?.full_name || 'Bölge Asistanı');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+          <div>
+            <h3 className="text-base font-black text-[#111111]">Talebe Asistan Ata</h3>
+            <p className="text-xs text-[#666666] font-mono">Talep ID: #{order.id.slice(0, 8)}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Order Preview */}
+        <div className="p-3 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] space-y-1">
+          <div className="flex justify-between font-bold text-[#111111]">
+            <span>Müşteri: {order.customer_name || 'Misafir Müşteri'}</span>
+            <span className="font-mono">{order.total_price ? `₺${order.total_price}` : ''}</span>
+          </div>
+          <p className="text-[#666666] text-[11px] line-clamp-2">
+            📍 {order.delivery_address || order.customer_address || 'Adres belirtilmedi'}
+          </p>
+          {order.task_description && (
+            <p className="text-[#111111] text-[11px] font-medium pt-1">
+              📝 {order.task_description}
+            </p>
+          )}
+        </div>
+
+        {/* Search Assistant */}
+        <div className="space-y-2">
+          <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">
+            Bölgedeki Müsait Asistanı Seçin ({activeAssistants.length} Aktif)
+          </label>
+          <input
+            type="text"
+            placeholder="Asistan adı, telefon veya araç ile ara..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-2.5 text-[#111111] transition-all"
+          />
+
+          <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+            {filtered.length === 0 ? (
+              <div className="p-4 text-center text-[#8A8A8A]">Müsait asistan bulunamadı.</div>
+            ) : (
+              filtered.map(ast => {
+                const isSelected = selectedAssistantId === ast.id;
+                return (
+                  <button
+                    key={ast.id}
+                    type="button"
+                    onClick={() => setSelectedAssistantId(ast.id)}
+                    className={`w-full text-left p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
+                      isSelected 
+                        ? 'bg-[#111111] text-white border-[#111111]' 
+                        : 'bg-white text-[#111111] border-[#E5E7EB] hover:bg-[#F7F7F8]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${isSelected ? 'bg-white text-[#111111]' : 'bg-[#F7F7F8] text-[#111111]'}`}>
+                        {ast.vehicle_type === 'arac' ? '🚗' : ast.vehicle_type === 'bisiklet' ? '🚲' : '🛵'}
+                      </div>
+                      <div>
+                        <div className="font-black text-xs">{ast.full_name}</div>
+                        <div className={`text-[10px] font-mono ${isSelected ? 'text-gray-300' : 'text-[#666666]'}`}>
+                          {ast.phone} {ast.plate_number ? `• ${ast.plate_number}` : ''}
+                        </div>
+                      </div>
+                    </div>
+
+                    {isSelected && (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
+          >
+            Vazgeç
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            disabled={loading || !selectedAssistantId}
+            className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50"
+          >
+            {loading ? 'Atanıyor...' : 'Asistanı Göreve Ata'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// MODAL: REQUEST DETAILS (TALEP DETAY & DURUM YÖNETİMİ)
+// ============================================================================
+interface RequestDetailModalProps {
+  order: Order | null;
+  cityNameDisplay: string;
+  onClose: () => void;
+  onOpenAssign: (order: Order) => void;
+  onUpdateStatus: (orderId: string, status: OrderStatus) => Promise<void>;
+  loading: boolean;
+}
+
+export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
+  order,
+  cityNameDisplay,
+  onClose,
+  onOpenAssign,
+  onUpdateStatus,
+  loading
+}) => {
+  if (!order) return null;
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'kurye_bekleniyor':
+      case 'pending':
+      case 'bekliyor':
+        return { label: 'Asistan Bekliyor', bg: 'bg-amber-50 text-amber-800 border-amber-200' };
+      case 'kurye_atandi':
+      case 'accepted':
+        return { label: 'Asistan Atandı', bg: 'bg-blue-50 text-blue-800 border-blue-200' };
+      case 'hazirlaniyor':
+      case 'preparing':
+        return { label: 'Hazırlanıyor', bg: 'bg-purple-50 text-purple-800 border-purple-200' };
+      case 'yolda':
+      case 'on_the_way':
+        return { label: 'Asistan Yolda', bg: 'bg-indigo-50 text-indigo-800 border-indigo-200' };
+      case 'teslim_edildi':
+      case 'delivered':
+      case 'tamamlandi':
+        return { label: 'Tamamlandı', bg: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+      case 'iptal':
+      case 'iptal_edildi':
+      case 'cancelled':
+        return { label: 'İptal Edildi', bg: 'bg-red-50 text-red-800 border-red-200' };
+      default:
+        return { label: status, bg: 'bg-gray-50 text-gray-800 border-gray-200' };
+    }
+  };
+
+  const statusObj = getStatusLabel(order.status);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] text-[#666666] uppercase">TALEP #{order.id.slice(0, 8)}</span>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusObj.bg}`}>
+                {statusObj.label}
+              </span>
+            </div>
+            <h3 className="text-base font-black text-[#111111] mt-0.5">
+              {order.customer_name || 'Bölgesel Talep'}
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Assigned Assistant Banner */}
+        <div className="p-3.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] flex items-center justify-between">
+          <div>
+            <span className="text-[10px] text-[#8A8A8A] font-bold uppercase block">Görevli Asistan</span>
+            <div className="font-black text-xs text-[#111111] flex items-center gap-1.5 mt-0.5">
+              <Bike className="w-4 h-4 text-[#111111]" />
+              {order.assistant_name || (order.assistant_id ? `Asistan #${order.assistant_id.slice(0, 6)}` : 'Asistan Atanmadı')}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onOpenAssign(order);
+            }}
+            className="px-3 py-1.5 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-bold text-[11px] cursor-pointer transition-all shadow-sm"
+          >
+            {order.assistant_id ? 'Asistanı Değiştir' : 'Asistan Ata'}
+          </button>
+        </div>
+
+        {/* Details Grid */}
+        <div className="space-y-2">
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Müşteri Telefon:</span>
+            <span className="font-mono font-bold text-[#111111]">{order.customer_phone || '-'}</span>
+          </div>
+
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Tutar / Ödeme:</span>
+            <span className="font-mono font-bold text-[#111111]">
+              ₺{order.total_price || 0} ({order.payment_type === 'cash' ? 'Nakit' : 'Kredi Kartı'})
+            </span>
+          </div>
+
+          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
+            <span className="text-[#666666]">Tarih / Saat:</span>
+            <span className="font-medium text-[#111111]">
+              {order.created_at ? new Date(order.created_at).toLocaleString('tr-TR') : '-'}
+            </span>
+          </div>
+
+          <div className="py-2 border-b border-[#F2F2F3] space-y-1">
+            <span className="text-[#666666] block font-medium">Teslimat / Görev Adresi:</span>
+            <p className="p-2.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] font-medium text-[#111111]">
+              {order.delivery_address || order.customer_address || 'Adres belirtilmedi'}
+            </p>
+          </div>
+
+          {order.task_description && (
+            <div className="py-2 space-y-1">
+              <span className="text-[#666666] block font-medium">Görev / Sipariş Detayı:</span>
+              <p className="p-2.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] font-medium text-[#111111]">
+                {order.task_description}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Status Buttons */}
+        <div className="space-y-1.5 pt-2">
+          <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Operasyon Durumunu Güncelle</label>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              disabled={loading}
+              onClick={() => onUpdateStatus(order.id, 'yolda')}
+              className="py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 cursor-pointer transition-all text-center"
+            >
+              Yolda
+            </button>
+            <button
+              disabled={loading}
+              onClick={() => onUpdateStatus(order.id, 'teslim_edildi')}
+              className="py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold border border-emerald-200 cursor-pointer transition-all text-center"
+            >
+              Tamamla
+            </button>
+            <button
+              disabled={loading}
+              onClick={() => onUpdateStatus(order.id, 'iptal_edildi')}
+              className="py-2 px-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-bold border border-red-200 cursor-pointer transition-all text-center"
+            >
+              İptal Et
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -648,29 +814,29 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
       setSubject('');
       setMessage('');
       onClose();
-    } catch (e: any) {
-      alert('Talep oluşturulamadı: ' + e?.message);
+    } catch (err: any) {
+      alert('Destek bileti oluşturulamadı: ' + err?.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-lg rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+            <div className="w-8 h-8 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] flex items-center justify-center text-[#111111]">
               <Headphones className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-white">Genel Merkeze Destek Talebi</h3>
-              <p className="text-[11px] text-gray-400">{cityNameDisplay} Bayiliği Resmi İletişim</p>
+              <h3 className="text-base font-black text-[#111111]">Genel Merkeze Destek Talebi</h3>
+              <p className="text-xs text-[#666666] font-medium">{cityNameDisplay} Ana Bayiliği İletişim Formu</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
@@ -678,58 +844,57 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">Talep Konusu / Başlık</label>
+            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Talep Konusu / Başlık</label>
             <input
               type="text"
               required
-              placeholder="Örn: Bu Ayki Hak Ediş Mutabakatı Hk."
+              placeholder="Örn: Hak ediş mutabakatı veya sistem entegrasyonu..."
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none focus:border-blue-400"
+              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-gray-400 font-bold uppercase text-[10px]">Kategori</label>
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Kategori</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none"
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
               >
                 <option value="finans_hakedis">Finans & Hak Ediş</option>
-                <option value="isletme_onay">İşletme Onayları</option>
-                <option value="sozlesme_hukuk">Sözleşme & Hukuk</option>
-                <option value="teknik_destek">Teknik Destek</option>
-                <option value="bolgesel_talep">Bölgesel Talep</option>
-                <option value="genel">Genel Konu</option>
+                <option value="sozlesme_lisans">Sözleşme & Lisans</option>
+                <option value="operasyon_destek">Bölgesel Operasyon & Asistanlık</option>
+                <option value="teknik_sistem">Teknik / Sistem Talebi</option>
+                <option value="diger">Diğer Konular</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-gray-400 font-bold uppercase text-[10px]">Öncelik Seviyesi</label>
+              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Öncelik Derecesi</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white font-bold outline-none"
+                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
               >
-                <option value="low">Düşük</option>
+                <option value="low">Düşük (Bilgilendirme)</option>
                 <option value="normal">Normal</option>
-                <option value="high">Yüksek</option>
-                <option value="urgent">Acil</option>
+                <option value="high">Yüksek (Önemli)</option>
+                <option value="urgent">Acil (Operasyonu Etkiliyor)</option>
               </select>
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-gray-400 font-bold uppercase text-[10px]">Açıklama / Mesaj</label>
+            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Açıklama / Mesajınız</label>
             <textarea
               rows={4}
               required
-              placeholder="Talebinizi, ilgili işlem/işletme detaylarını ve merkezden beklentinizi detaylıca açıklayınız..."
+              placeholder="Talebinizi detaylı olarak açıklayınız..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-[#1A2133] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-blue-400"
+              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] transition-all leading-relaxed"
             />
           </div>
 
@@ -737,17 +902,17 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
+              className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
             >
               Vazgeç
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-extrabold cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2"
             >
               <Send className="w-3.5 h-3.5" />
-              {loading ? 'Gönderiliyor...' : 'Talebi Merkeze İlet'}
+              <span>{loading ? 'Gönderiliyor...' : 'Talebi İlet'}</span>
             </button>
           </div>
         </form>
@@ -761,78 +926,87 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
 // ============================================================================
 interface SupportTicketDetailModalProps {
   ticket: FranchiseSupportTicket | null;
+  cityNameDisplay: string;
   onClose: () => void;
 }
 
 export const SupportTicketDetailModal: React.FC<SupportTicketDetailModalProps> = ({
   ticket,
+  cityNameDisplay,
   onClose
 }) => {
   if (!ticket) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-      <div className="bg-[#131826] w-full max-w-lg rounded-3xl p-6 border border-white/10 shadow-2xl space-y-4 text-xs">
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
           <div>
-            <h3 className="text-sm font-black text-white">{ticket.subject}</h3>
-            <p className="text-[11px] text-gray-400 font-mono">Talep #{ticket.id.slice(0, 8)}</p>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] text-[#666666] uppercase">BİLET #{ticket.id.slice(0, 8)}</span>
+              <span className="px-2 py-0.5 rounded-md bg-[#F7F7F8] text-[#111111] text-[10px] font-bold border border-[#E5E7EB]">
+                {ticket.category}
+              </span>
+            </div>
+            <h3 className="text-base font-black text-[#111111] mt-0.5">{ticket.subject}</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white cursor-pointer"
+            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2 text-[10px]">
-            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold border border-blue-500/20">
-              Durum: {ticket.status}
-            </span>
-            <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 font-bold border border-purple-500/20">
-              Kategori: {ticket.category}
-            </span>
-            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20">
-              Öncelik: {ticket.priority}
+        {/* Ticket Info Details */}
+        <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] text-[11px]">
+          <div>
+            <span className="text-[#666666] block">Oluşturulma:</span>
+            <span className="font-medium text-[#111111]">
+              {ticket.created_at ? new Date(ticket.created_at).toLocaleString('tr-TR') : '-'}
             </span>
           </div>
-
-          <div className="space-y-1">
-            <span className="text-gray-400 font-bold block uppercase text-[10px]">Bayi Mesajı:</span>
-            <div className="p-3 bg-[#1A2133] rounded-2xl text-gray-200 whitespace-pre-wrap leading-relaxed">
-              {ticket.message}
-            </div>
+          <div>
+            <span className="text-[#666666] block">Öncelik:</span>
+            <span className="font-bold text-[#111111] uppercase">{ticket.priority}</span>
           </div>
-
-          {ticket.admin_reply ? (
-            <div className="space-y-1">
-              <span className="text-purple-400 font-bold block uppercase text-[10px] flex items-center gap-1">
-                <MessageSquare className="w-3.5 h-3.5" />
-                Genel Merkez Yanıtı:
-              </span>
-              <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-purple-200 whitespace-pre-wrap leading-relaxed">
-                {ticket.admin_reply}
-                {ticket.replied_at && (
-                  <div className="text-[10px] text-purple-400/80 mt-2 font-mono">
-                    Yanıt Tarihi: {new Date(ticket.replied_at).toLocaleString('tr-TR')}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-amber-300 flex items-center gap-2">
-              <Clock className="w-4 h-4 shrink-0" />
-              <span>Talebiniz Genel Merkez operasyon ekibi tarafından incelenmektedir.</span>
-            </div>
-          )}
         </div>
+
+        {/* Initial Ticket Message */}
+        <div className="space-y-1">
+          <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Bayi Talebi</label>
+          <div className="p-3.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] text-[#111111] leading-relaxed whitespace-pre-wrap font-medium">
+            {ticket.message}
+          </div>
+        </div>
+
+        {/* Headquarters Response */}
+        {ticket.admin_reply ? (
+          <div className="space-y-1">
+            <label className="text-emerald-700 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              Genel Merkez Yanıtı
+            </label>
+            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 leading-relaxed whitespace-pre-wrap font-medium">
+              {ticket.admin_reply}
+              {ticket.replied_at && (
+                <div className="text-[10px] text-emerald-600 mt-2 font-mono">
+                  İşlem Tarihi: {new Date(ticket.replied_at).toLocaleString('tr-TR')}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Genel Merkez operasyon ve destek ekibi talebinizi incelemektedir.</span>
+          </div>
+        )}
 
         <div className="pt-2">
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold cursor-pointer"
+            className="w-full py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
           >
             Kapat
           </button>

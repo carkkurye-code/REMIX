@@ -1,14 +1,16 @@
-import { Assistant, Order, Partner, Franchise, City, AssistantSubscription, FranchiseSupportTicket } from '@/lib/supabase';
+import { Assistant, Order, Franchise, City, AssistantSubscription, FranchiseSupportTicket } from '@/lib/supabase';
 
-export type TabType = 'overview' | 'partners' | 'finance' | 'reports' | 'settings' | 'support';
+export type TabType = 'overview' | 'assistants' | 'requests' | 'finance' | 'settings' | 'support';
 export type TimePeriod = 'today' | 'week' | 'month' | 'custom' | 'all';
 
 export interface FranchiseKPIs {
-  totalPartners: number;
-  activePartners: number;
+  totalCouriers: number;
+  activeCouriersCount: number;
+  onlineCouriers: number;
+  pendingApplications: number;
   totalOrders: number;
-  pendingOrders?: number;
-  inProgressOrders?: number;
+  pendingOrders: number;
+  inProgressOrders: number;
   completedOrders: number;
   cancelledOrders: number;
   totalVolume: number;
@@ -19,4 +21,3 @@ export interface FranchiseKPIs {
   totalSubRevenue: number;
   openTicketsCount: number;
 }
-

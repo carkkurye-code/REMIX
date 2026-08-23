@@ -81,6 +81,12 @@ export const FranchiseAuthProvider: React.FC<{ children: React.ReactNode }> = ({
         resolvedFranchise = allFranchises.find(f => f.email?.toLowerCase() === email.toLowerCase()) || null;
       }
 
+      // Sakarya fallback in preview mode if email or scope matches Sakarya
+      if (!resolvedFranchise && (email?.includes('sakarya') || email === 'gngp54@gmail.com' || roleScope.city_name?.includes('Sakarya') || roleScope.franchise_name?.includes('Sakarya'))) {
+        const allFranchises = await db.getFranchises();
+        resolvedFranchise = allFranchises.find(f => f.name.toLowerCase().includes('sakarya') || f.id.includes('sakarya') || f.city_id?.includes('sakarya')) || null;
+      }
+
       // Kocaeli fallback in preview mode if email is kocaeli
       if (!resolvedFranchise && (email?.includes('kocaeli') || roleScope.city_name?.includes('Kocaeli'))) {
         const allFranchises = await db.getFranchises();
