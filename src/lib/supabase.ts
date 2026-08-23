@@ -5805,7 +5805,7 @@ export const db = {
   },
 
   async getCity(id: string): Promise<City | null> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && isUUID(id)) {
       try {
         const client = await getActiveSupabaseClient();
         const { data, error } = await client
@@ -5814,12 +5814,12 @@ export const db = {
           .eq('id', id)
           .maybeSingle();
         if (!error && data) return data as City;
-      } catch (err) {
-        console.warn('Supabase getCity notice:', err);
+      } catch (_) {
+        // Graceful fallback
       }
     }
     const cities = await this.getCities();
-    return cities.find(c => c.id === id) || null;
+    return cities.find(c => c.id === id || c.name.toLowerCase() === id.toLowerCase()) || null;
   },
 
   async createCity(cityData: { name: string; plate_code: number; center_lat?: number | null; center_lng?: number | null; is_active?: boolean }): Promise<City> {
@@ -5857,7 +5857,7 @@ export const db = {
   },
 
   async updateCity(id: string, updates: Partial<City>): Promise<City> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && isUUID(id)) {
       try {
         const client = await getActiveSupabaseClient();
         const { data, error } = await client
@@ -5934,7 +5934,7 @@ export const db = {
   },
 
   async getFranchise(id: string): Promise<Franchise | null> {
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && isUUID(id)) {
       try {
         const client = await getActiveSupabaseClient();
         const { data, error } = await client
@@ -5977,7 +5977,7 @@ export const db = {
       updated_at: new Date().toISOString()
     };
 
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && isUUID(franchiseData.city_id)) {
       try {
         const client = await getActiveSupabaseClient();
         const { data, error } = await client
@@ -6013,7 +6013,7 @@ export const db = {
       updated_at: new Date().toISOString()
     };
 
-    if (isSupabaseConfigured) {
+    if (isSupabaseConfigured && isUUID(id)) {
       try {
         const client = await getActiveSupabaseClient();
         const { data, error } = await client
@@ -6181,25 +6181,6 @@ export const db = {
   // FRANCHISE SUPPORT TICKETS (DESTEK / MERKEZ İLETİŞİMİ)
   // ==========================================
   async getFranchiseSupportTickets(franchiseId?: string | null): Promise<FranchiseSupportTicket[]> {
-    if (isSupabaseConfigured) {
-      try {
-        const client = await getActiveSupabaseClient();
-        let query = client
-          .from('franchise_support_tickets')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (franchiseId) {
-          query = query.eq('franchise_id', franchiseId);
-        }
-
-        const { data, error } = await query;
-        if (!error && data) return data as FranchiseSupportTicket[];
-      } catch (_) {
-        // Graceful fallback
-      }
-    }
-
     const stored = getStored<FranchiseSupportTicket>(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS);
     if (!franchiseId) return stored;
     return stored.filter(t => t.franchise_id === franchiseId);
@@ -6234,20 +6215,6 @@ export const db = {
       updated_at: new Date().toISOString()
     };
 
-    if (isSupabaseConfigured) {
-      try {
-        const client = await getActiveSupabaseClient();
-        const { data, error } = await client
-          .from('franchise_support_tickets')
-          .insert(payload)
-          .select()
-          .single();
-        if (!error && data) return data as FranchiseSupportTicket;
-      } catch (err) {
-        console.warn('Supabase createFranchiseSupportTicket notice:', err);
-      }
-    }
-
     const stored = getStored<FranchiseSupportTicket>(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS);
     const newTicket: FranchiseSupportTicket = {
       id: `fst_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -6264,21 +6231,6 @@ export const db = {
       ...updates,
       updated_at: new Date().toISOString()
     };
-
-    if (isSupabaseConfigured) {
-      try {
-        const client = await getActiveSupabaseClient();
-        const { data, error } = await client
-          .from('franchise_support_tickets')
-          .update(payload)
-          .eq('id', id)
-          .select()
-          .single();
-        if (!error && data) return data as FranchiseSupportTicket;
-      } catch (err) {
-        console.warn('Supabase updateFranchiseSupportTicket notice:', err);
-      }
-    }
 
     const stored = getStored<FranchiseSupportTicket>(LOCAL_STORAGE_KEYS.FRANCHISE_SUPPORT_TICKETS);
     const index = stored.findIndex(t => t.id === id);
