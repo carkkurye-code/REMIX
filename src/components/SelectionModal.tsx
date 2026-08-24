@@ -468,10 +468,11 @@ export function SelectionModal({
             max-w-[470px]
             p-0
             border
-            border-white/[0.09]
-            bg-[#171719]
+            border-border/80
+            bg-card
+            text-foreground
             rounded-[28px]
-            shadow-[0_35px_100px_rgba(0,0,0,0.7)]
+            shadow-[0_20px_60px_hsl(256_24%_17%_/_0.15)]
             overflow-hidden
             outline-none
           "
@@ -482,18 +483,18 @@ export function SelectionModal({
               : 'Hemen UĞRA'}
           </DialogTitle>
 
-          {/* Hafif premium ışık */}
+          {/* Hafif sıcak vurgulu arka plan ışığı */}
           <div
             className="
               pointer-events-none
               absolute
-              -right-28
-              -top-28
-              h-72
-              w-72
+              -right-20
+              -top-20
+              h-64
+              w-64
               rounded-full
-              bg-white/[0.035]
-              blur-[80px]
+              bg-accent/40
+              blur-[60px]
             "
           />
 
@@ -502,15 +503,17 @@ export function SelectionModal({
               <div className="mb-5 flex items-center justify-between">
                 <h3
                   className="
-                    text-[18px]
-                    font-semibold
+                    font-serif
+                    text-[22px]
+                    sm:text-[24px]
+                    font-normal
                     tracking-[-0.02em]
-                    text-white
+                    text-foreground
                   "
                 >
                   {activeDeliveryType === 'gecerken'
-                    ? 'GEÇERKEN UĞRA'
-                    : 'HEMEN UĞRA'}
+                    ? 'Geçerken UĞRA'
+                    : 'Hemen UĞRA'}
                 </h3>
 
                 <DialogClose
@@ -523,12 +526,13 @@ export function SelectionModal({
                     justify-center
                     rounded-full
                     border
-                    border-white/[0.08]
-                    bg-white/[0.04]
-                    text-zinc-500
+                    border-border
+                    bg-background/80
+                    text-muted-foreground
                     transition-all
-                    hover:bg-white/[0.08]
-                    hover:text-white
+                    hover:bg-background
+                    hover:text-foreground
+                    hover:border-foreground/30
                     cursor-pointer
                   "
                 >
@@ -542,15 +546,15 @@ export function SelectionModal({
                   <div
                     key={index}
                     className={`
-                      h-[2px]
+                      h-[3px]
                       flex-1
                       rounded-full
                       transition-all
                       duration-300
                       ${
                         index + 1 <= step
-                          ? 'bg-white'
-                          : 'bg-white/[0.08]'
+                          ? 'bg-primary'
+                          : 'bg-muted'
                       }
                     `}
                   />
@@ -560,7 +564,7 @@ export function SelectionModal({
               {/* STEP 1: NE YAPMAK İSTİYORSUN? (Hem Hemen hem Geçerken) */}
               {step === 1 && (
                 <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-                  <div className="mb-2 text-[12px] font-medium text-zinc-300">
+                  <div className="mb-2 text-[13px] font-semibold text-foreground/80 font-sans">
                     Ne yapmak istiyorsun?
                   </div>
 
@@ -569,24 +573,26 @@ export function SelectionModal({
                     rows={5}
                     value={taskDescription}
                     onChange={(e) => setTaskDescription(e.target.value)}
-                    placeholder="Ne yapmak istiyorsun?"
+                    placeholder="Örn: Kadıköy'den evrak alıp Beşiktaş'a bırakılması gerekiyor..."
                     className="
                       min-h-[160px]
                       w-full
                       resize-none
                       rounded-[20px]
                       border
-                      border-white/[0.08]
-                      bg-white/[0.025]
+                      border-border
+                      bg-background/90
                       p-4
                       text-[14px]
                       leading-6
-                      text-white
-                      placeholder:text-zinc-600
+                      text-foreground
+                      placeholder:text-muted-foreground/70
                       outline-none
                       transition-all
-                      focus:border-white/[0.16]
-                      focus:bg-white/[0.04]
+                      focus:border-primary/60
+                      focus:ring-2
+                      focus:ring-primary/20
+                      focus:bg-background
                     "
                   />
 
@@ -599,14 +605,17 @@ export function SelectionModal({
                         items-center
                         gap-2
                         rounded-full
-                        bg-white
-                        px-5
+                        bg-primary
+                        px-6
                         py-3
-                        text-[12px]
+                        text-[13px]
                         font-bold
-                        text-black
+                        text-primary-foreground
+                        shadow-[0_4px_16px_hsl(10_76%_57%_/_0.2)]
                         transition-all
-                        hover:bg-zinc-200
+                        hover:bg-primary/90
+                        hover:shadow-[0_6px_20px_hsl(10_76%_57%_/_0.3)]
+                        active:scale-[0.98]
                         cursor-pointer
                       "
                     >
@@ -620,7 +629,7 @@ export function SelectionModal({
               {/* STEP 2: TELEFON NUMARASI (Hem Hemen hem Geçerken) */}
               {step === 2 && (
                 <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-                  <div className="mb-2 text-[12px] font-medium text-zinc-300">
+                  <div className="mb-2 text-[13px] font-semibold text-foreground/80 font-sans">
                     Telefon Numaran
                   </div>
 
@@ -628,9 +637,13 @@ export function SelectionModal({
                     className="
                       rounded-[20px]
                       border
-                      border-white/[0.08]
-                      bg-white/[0.025]
+                      border-border
+                      bg-background/90
                       p-4
+                      focus-within:border-primary/60
+                      focus-within:ring-2
+                      focus-within:ring-primary/20
+                      transition-all
                     "
                   >
                     <input
@@ -647,9 +660,9 @@ export function SelectionModal({
                         text-[20px]
                         font-semibold
                         tracking-tight
-                        text-white
+                        text-foreground
                         outline-none
-                        placeholder:text-zinc-700
+                        placeholder:text-muted-foreground/50
                       "
                     />
                   </div>
@@ -662,11 +675,11 @@ export function SelectionModal({
                         flex
                         items-center
                         gap-2
-                        text-[12px]
+                        text-[13px]
                         font-medium
-                        text-zinc-500
+                        text-muted-foreground
                         transition-colors
-                        hover:text-white
+                        hover:text-foreground
                         cursor-pointer
                       "
                     >
@@ -682,14 +695,17 @@ export function SelectionModal({
                         items-center
                         gap-2
                         rounded-full
-                        bg-white
-                        px-5
+                        bg-primary
+                        px-6
                         py-3
-                        text-[12px]
+                        text-[13px]
                         font-bold
-                        text-black
+                        text-primary-foreground
+                        shadow-[0_4px_16px_hsl(10_76%_57%_/_0.2)]
                         transition-all
-                        hover:bg-zinc-200
+                        hover:bg-primary/90
+                        hover:shadow-[0_6px_20px_hsl(10_76%_57%_/_0.3)]
+                        active:scale-[0.98]
                         cursor-pointer
                       "
                     >
@@ -703,7 +719,7 @@ export function SelectionModal({
               {/* STEP 3 (GEÇERKEN UĞRA): SAAT SEÇİMİ */}
               {activeDeliveryType === 'gecerken' && step === 3 && (
                 <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-                  <div className="mb-2 text-[12px] font-medium text-zinc-300">
+                  <div className="mb-2 text-[13px] font-semibold text-foreground/80 font-sans">
                     Hangi saat aralığında UĞRA'yalım?
                   </div>
 
@@ -729,8 +745,8 @@ export function SelectionModal({
                             cursor-pointer
                             ${
                               selected
-                                ? 'border-white bg-white text-black'
-                                : 'border-white/[0.08] bg-white/[0.025] text-zinc-400 hover:border-white/[0.16] hover:bg-white/[0.05] hover:text-white'
+                                ? 'border-primary bg-primary/10 text-foreground ring-1 ring-primary/40 shadow-sm'
+                                : 'border-border bg-background/70 text-muted-foreground hover:border-foreground/30 hover:bg-background hover:text-foreground'
                             }
                           `}
                         >
@@ -738,7 +754,7 @@ export function SelectionModal({
                             className={`
                               text-[13px]
                               font-semibold
-                              ${selected ? 'text-black' : 'text-white'}
+                              ${selected ? 'text-foreground font-bold' : 'text-foreground/90'}
                             `}
                           >
                             {slot}
@@ -747,15 +763,15 @@ export function SelectionModal({
                           <div
                             className={`
                               mt-1
-                              text-[10px]
-                              ${selected ? 'text-zinc-500' : 'text-zinc-600'}
+                              text-[11px]
+                              ${selected ? 'text-primary font-medium' : 'text-muted-foreground'}
                             `}
                           >
                             UĞRA zamanı
                           </div>
 
                           {selected && (
-                            <Check className="absolute right-3 top-3 h-3.5 w-3.5 stroke-[3]" />
+                            <Check className="absolute right-3 top-3 h-4 w-4 text-primary stroke-[3]" />
                           )}
                         </button>
                       );
@@ -770,11 +786,11 @@ export function SelectionModal({
                         flex
                         items-center
                         gap-2
-                        text-[12px]
+                        text-[13px]
                         font-medium
-                        text-zinc-500
+                        text-muted-foreground
                         transition-colors
-                        hover:text-white
+                        hover:text-foreground
                         cursor-pointer
                       "
                     >
@@ -790,14 +806,17 @@ export function SelectionModal({
                         items-center
                         gap-2
                         rounded-full
-                        bg-white
-                        px-5
+                        bg-primary
+                        px-6
                         py-3
-                        text-[12px]
+                        text-[13px]
                         font-bold
-                        text-black
+                        text-primary-foreground
+                        shadow-[0_4px_16px_hsl(10_76%_57%_/_0.2)]
                         transition-all
-                        hover:bg-zinc-200
+                        hover:bg-primary/90
+                        hover:shadow-[0_6px_20px_hsl(10_76%_57%_/_0.3)]
+                        active:scale-[0.98]
                         cursor-pointer
                       "
                     >
@@ -811,7 +830,7 @@ export function SelectionModal({
               {/* TEKLİF ADIMI (Hemen için Step 3, Geçerken için Step 4) */}
               {isOfferStep && (
                 <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-                  <div className="mb-2 text-[12px] font-medium text-zinc-300">
+                  <div className="mb-2 text-[13px] font-semibold text-foreground/80 font-sans">
                     Kaç TL teklif ediyorsun?
                   </div>
 
@@ -819,9 +838,13 @@ export function SelectionModal({
                     className="
                       rounded-[20px]
                       border
-                      border-white/[0.08]
-                      bg-white/[0.025]
+                      border-border
+                      bg-background/90
                       p-5
+                      focus-within:border-primary/60
+                      focus-within:ring-2
+                      focus-within:ring-primary/20
+                      transition-all
                     "
                   >
                     <div className="flex items-center justify-center">
@@ -833,7 +856,7 @@ export function SelectionModal({
                         onChange={(e) =>
                           setCustomerOffer(e.target.value.replace(/\D/g, ''))
                         }
-                        placeholder="Kaç TL teklif ediyorsun?"
+                        placeholder="Teklif tutarı girin"
                         className="
                           w-full
                           bg-transparent
@@ -842,9 +865,9 @@ export function SelectionModal({
                           sm:text-[32px]
                           font-semibold
                           tracking-[-0.03em]
-                          text-white
+                          text-foreground
                           outline-none
-                          placeholder:text-zinc-700
+                          placeholder:text-muted-foreground/50
                           placeholder:text-[14px]
                           placeholder:font-normal
                         "
@@ -854,9 +877,9 @@ export function SelectionModal({
                         <span
                           className="
                             ml-1
-                            text-[15px]
-                            font-semibold
-                            text-zinc-500
+                            text-[16px]
+                            font-bold
+                            text-primary
                           "
                         >
                           TL
@@ -869,9 +892,9 @@ export function SelectionModal({
                         className="
                           mt-3
                           text-center
-                          text-[11px]
+                          text-[12px]
                           font-medium
-                          text-rose-400
+                          text-destructive
                         "
                       >
                         Minimum teklif tutarı 100 TL'dir.
@@ -887,11 +910,11 @@ export function SelectionModal({
                         flex
                         items-center
                         gap-2
-                        text-[12px]
+                        text-[13px]
                         font-medium
-                        text-zinc-500
+                        text-muted-foreground
                         transition-colors
-                        hover:text-white
+                        hover:text-foreground
                         cursor-pointer
                       "
                     >
@@ -907,14 +930,17 @@ export function SelectionModal({
                         items-center
                         gap-2
                         rounded-full
-                        bg-white
-                        px-5
+                        bg-primary
+                        px-6
                         py-3
-                        text-[12px]
+                        text-[13px]
                         font-bold
-                        text-black
+                        text-primary-foreground
+                        shadow-[0_4px_16px_hsl(10_76%_57%_/_0.2)]
                         transition-all
-                        hover:bg-zinc-200
+                        hover:bg-primary/90
+                        hover:shadow-[0_6px_20px_hsl(10_76%_57%_/_0.3)]
+                        active:scale-[0.98]
                         cursor-pointer
                       "
                     >
@@ -928,7 +954,7 @@ export function SelectionModal({
               {/* SON KONTROL & TALEBİ GÖNDER (Hemen için Step 4, Geçerken için Step 5) */}
               {isReviewStep && (
                 <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-                  <div className="mb-2 text-[12px] font-medium text-zinc-300">
+                  <div className="mb-2 text-[13px] font-semibold text-foreground/80 font-sans">
                     Son kontrol
                   </div>
 
@@ -937,45 +963,45 @@ export function SelectionModal({
                       space-y-3
                       rounded-[20px]
                       border
-                      border-white/[0.08]
-                      bg-white/[0.025]
+                      border-border
+                      bg-background/90
                       p-4
                     "
                   >
-                    <div className="border-b border-white/[0.06] pb-2.5">
-                      <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                    <div className="border-b border-border/60 pb-2.5">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Ne yapılacak?
                       </div>
-                      <div className="mt-1 text-[13px] font-medium text-white line-clamp-2">
+                      <div className="mt-1 text-[13px] font-medium text-foreground line-clamp-2">
                         {taskDescription}
                       </div>
                     </div>
 
-                    <div className="border-b border-white/[0.06] pb-2.5">
-                      <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                    <div className="border-b border-border/60 pb-2.5">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Telefon
                       </div>
-                      <div className="mt-1 text-[13px] font-medium text-white">
+                      <div className="mt-1 text-[13px] font-medium text-foreground">
                         {phoneNumber}
                       </div>
                     </div>
 
                     {activeDeliveryType === 'gecerken' && (
-                      <div className="border-b border-white/[0.06] pb-2.5">
-                        <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                      <div className="border-b border-border/60 pb-2.5">
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                           Saat Aralığı
                         </div>
-                        <div className="mt-1 text-[13px] font-medium text-white">
+                        <div className="mt-1 text-[13px] font-medium text-foreground">
                           {selectedTimeSlot}
                         </div>
                       </div>
                     )}
 
                     <div>
-                      <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Teklif Tutarı
                       </div>
-                      <div className="mt-1 text-[16px] font-bold text-white">
+                      <div className="mt-1 text-[18px] font-bold text-primary">
                         {customerOffer} TL
                       </div>
                     </div>
@@ -989,11 +1015,11 @@ export function SelectionModal({
                         flex
                         items-center
                         gap-2
-                        text-[12px]
+                        text-[13px]
                         font-medium
-                        text-zinc-500
+                        text-muted-foreground
                         transition-colors
-                        hover:text-white
+                        hover:text-foreground
                         cursor-pointer
                       "
                     >
@@ -1010,15 +1036,17 @@ export function SelectionModal({
                         items-center
                         gap-2
                         rounded-full
-                        bg-white
-                        px-6
+                        bg-primary
+                        px-7
                         py-3.5
-                        text-[12px]
+                        text-[13px]
                         font-bold
-                        text-black
-                        shadow-[0_10px_30px_rgba(0,0,0,0.3)]
+                        text-primary-foreground
+                        shadow-[0_10px_24px_hsl(10_76%_57%_/_0.25)]
                         transition-all
-                        hover:bg-zinc-200
+                        hover:bg-primary/90
+                        hover:shadow-[0_14px_30px_hsl(10_76%_57%_/_0.35)]
+                        active:scale-[0.98]
                         disabled:cursor-not-allowed
                         disabled:opacity-40
                         cursor-pointer
@@ -1026,13 +1054,13 @@ export function SelectionModal({
                     >
                       {isSubmittingOrder ? (
                         <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           UĞRA'ya iletiyoruz...
                         </>
                       ) : (
                         <>
                           UĞRA'YALIM
-                          <ArrowRight className="h-3.5 w-3.5" />
+                          <ArrowRight className="h-4 w-4" />
                         </>
                       )}
                     </button>

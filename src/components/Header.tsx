@@ -351,7 +351,7 @@ export function Header() {
                       className="flex items-center gap-3 w-full p-3 rounded-2xl border border-border bg-background/50 hover:bg-background hover:border-foreground/30 text-foreground transition-all cursor-pointer text-left"
                     >
                       <Download className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-medium">Ana Ekrana Ekle (PWA)</span>
+                      <span className="text-sm font-medium">Ana Ekrana Ekle</span>
                     </button>
                   </div>
 
@@ -390,8 +390,8 @@ export function Header() {
                 </div>
 
                 {/* Footer Section / Logout */}
-                <div className="p-6 sm:p-7 border-t border-border/60 bg-background/30 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-                  {user ? (
+                {user && (
+                  <div className="p-6 sm:p-7 border-t border-border/60 bg-background/30 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
                     <button
                       type="button"
                       onClick={async () => {
@@ -403,12 +403,8 @@ export function Header() {
                       <LogOut className="w-3.5 h-3.5" />
                       Oturumu Kapat
                     </button>
-                  ) : (
-                    <p className="text-center font-mono text-[10px] text-muted-foreground">
-                      UĞRA TEKNOLOJİ YAZILIM A.Ş.
-                    </p>
-                  )}
-                </div>
+                  </div>
+                )}
               </motion.div>
             </>
           )}
