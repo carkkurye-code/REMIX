@@ -259,24 +259,24 @@ export function AdminFranchisesTab({
       {feedbackMsg && (
         <div className={`p-4 rounded-2xl border text-sm font-bold flex items-center gap-3 transition-all ${
           feedbackMsg.type === 'success' 
-            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-            : 'bg-red-50 text-red-800 border-red-200'
+            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20' 
+            : 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20'
         }`}>
-          {feedbackMsg.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <XCircle className="w-5 h-5 text-red-600 shrink-0" />}
+          {feedbackMsg.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" /> : <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />}
           <span>{feedbackMsg.text}</span>
         </div>
       )}
 
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-[1.65rem] sm:rounded-2xl border border-border shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-[#F7F7F8] text-[#111111] border border-[#E5E7EB]">
-              <MapPin className="w-5 h-5" />
+            <span className="p-2 rounded-xl bg-accent/40 text-foreground border border-border">
+              <MapPin className="w-5 h-5 text-foreground" />
             </span>
-            <h1 className="text-2xl font-black text-[#111111]">Şehirler & Bayiler (Franchise)</h1>
+            <h1 className="text-2xl font-black text-foreground">Şehirler & Bayiler (Franchise)</h1>
           </div>
-          <p className="text-sm text-[#666666] mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             UĞRA Türkiye geneli il bazlı operasyon bölgeleri ve yetkili bayi yönetimi.
           </p>
         </div>
@@ -285,7 +285,7 @@ export function AdminFranchisesTab({
           {subTab === 'cities' ? (
             <button
               onClick={() => handleOpenCityModal()}
-              className="bg-[#111111] hover:bg-[#222222] text-white text-xs font-black px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all shadow-sm active:scale-95"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-black px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all shadow-sm active:scale-95 border-0"
             >
               <Plus className="w-4 h-4" />
               <span>Yeni Şehir Ekle</span>
@@ -293,7 +293,7 @@ export function AdminFranchisesTab({
           ) : (
             <button
               onClick={() => handleOpenFranchiseModal()}
-              className="bg-[#111111] hover:bg-[#222222] text-white text-xs font-black px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all shadow-sm active:scale-95"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-black px-4 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer transition-all shadow-sm active:scale-95 border-0"
             >
               <Plus className="w-4 h-4" />
               <span>Yeni Bayi Ekle</span>
@@ -304,59 +304,59 @@ export function AdminFranchisesTab({
 
       {/* STATS OVERVIEW */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+        <div className="bg-card p-5 rounded-[1.65rem] sm:rounded-2xl border border-border shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-[#666666] uppercase tracking-wider">Tanımlı Şehir</span>
-            <h3 className="text-2xl font-black text-[#111111] mt-1">{cities.length}</h3>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tanımlı Şehir</span>
+            <h3 className="text-2xl font-black text-foreground mt-1">{cities.length}</h3>
           </div>
-          <span className="p-3 bg-blue-50 text-blue-700 rounded-xl border border-blue-100">
+          <span className="p-3 bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-xl border border-blue-500/20">
             <MapPin className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+        <div className="bg-card p-5 rounded-[1.65rem] sm:rounded-2xl border border-border shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-[#666666] uppercase tracking-wider">Aktif Bayiler</span>
-            <h3 className="text-2xl font-black text-emerald-700 mt-1">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Aktif Bayiler</span>
+            <h3 className="text-2xl font-black text-emerald-700 dark:text-emerald-400 mt-1">
               {franchises.filter(f => f.status === 'active').length}
             </h3>
           </div>
-          <span className="p-3 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
+          <span className="p-3 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-xl border border-emerald-500/20">
             <Building className="w-6 h-6" />
           </span>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+        <div className="bg-card p-5 rounded-[1.65rem] sm:rounded-2xl border border-border shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-[#666666] uppercase tracking-wider">Toplam Bayi</span>
-            <h3 className="text-2xl font-black text-[#111111] mt-1">{franchises.length}</h3>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Toplam Bayi</span>
+            <h3 className="text-2xl font-black text-foreground mt-1">{franchises.length}</h3>
           </div>
-          <span className="p-3 bg-purple-50 text-purple-700 rounded-xl border border-purple-100">
+          <span className="p-3 bg-purple-500/10 text-purple-700 dark:text-purple-400 rounded-xl border border-purple-500/20">
             <Layers className="w-6 h-6" />
           </span>
         </div>
       </div>
 
       {/* SUB-TABS NAVIGATION & SEARCH / FILTERS */}
-      <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E7EB] pb-4">
-          <div className="flex items-center gap-2 bg-[#F7F7F8] p-1 rounded-xl border border-[#E5E7EB]">
+      <div className="bg-card p-4 rounded-[1.65rem] sm:rounded-2xl border border-border shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+          <div className="flex items-center gap-2 bg-accent/30 p-1 rounded-xl border border-border">
             <button
               onClick={() => setSubTab('franchises')}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer border-0 ${
                 subTab === 'franchises'
-                  ? 'bg-white text-[#111111] shadow-xs'
-                  : 'text-[#666666] hover:text-[#111111]'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'bg-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               Bayiler (Franchise) ({franchises.length})
             </button>
             <button
               onClick={() => setSubTab('cities')}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-lg text-xs font-black transition-all cursor-pointer border-0 ${
                 subTab === 'cities'
-                  ? 'bg-white text-[#111111] shadow-xs'
-                  : 'text-[#666666] hover:text-[#111111]'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'bg-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               Şehirler & İller ({cities.length})
@@ -365,13 +365,13 @@ export function AdminFranchisesTab({
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 sm:w-64">
-              <Search className="w-4 h-4 text-[#8A8A8A] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="İsim, yetkili veya şehir ara..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs bg-[#F7F7F8] border border-[#E5E7EB] rounded-xl outline-none focus:border-[#111111] text-[#111111]"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-background border border-border rounded-xl outline-none focus:border-primary text-foreground placeholder:text-muted-foreground/60"
               />
             </div>
 
@@ -380,7 +380,7 @@ export function AdminFranchisesTab({
                 <select
                   value={selectedCityFilter}
                   onChange={e => setSelectedCityFilter(e.target.value)}
-                  className="text-xs bg-[#F7F7F8] border border-[#E5E7EB] rounded-xl px-3 py-2 outline-none text-[#111111] font-bold"
+                  className="text-xs bg-background border border-border rounded-xl px-3 py-2 outline-none text-foreground font-bold focus:border-primary"
                 >
                   <option value="all">Tüm Şehirler</option>
                   {cities.map(c => (
@@ -393,7 +393,7 @@ export function AdminFranchisesTab({
                 <select
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value)}
-                  className="text-xs bg-[#F7F7F8] border border-[#E5E7EB] rounded-xl px-3 py-2 outline-none text-[#111111] font-bold"
+                  className="text-xs bg-background border border-border rounded-xl px-3 py-2 outline-none text-foreground font-bold focus:border-primary"
                 >
                   <option value="all">Tüm Durumlar</option>
                   <option value="active">Aktif</option>
@@ -410,7 +410,7 @@ export function AdminFranchisesTab({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-[#E5E7EB] text-[#666666] uppercase text-[10px] tracking-wider">
+                <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider">
                   <th className="py-3 px-4 font-bold">Plaka</th>
                   <th className="py-3 px-4 font-bold">Şehir Adı</th>
                   <th className="py-3 px-4 font-bold">Merkez Koordinat</th>
@@ -419,10 +419,10 @@ export function AdminFranchisesTab({
                   <th className="py-3 px-4 font-bold text-right">İşlemler</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E7EB]">
+              <tbody className="divide-y divide-border/60">
                 {filteredCities.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-[#666666] font-bold">
+                    <td colSpan={6} className="py-12 text-center text-muted-foreground font-bold">
                       Arama kriterine uygun şehir bulunamadı.
                     </td>
                   </tr>
@@ -430,24 +430,24 @@ export function AdminFranchisesTab({
                   filteredCities.map(city => {
                     const linkedCount = franchises.filter(f => f.city_id === city.id).length;
                     return (
-                      <tr key={city.id} className="hover:bg-[#F7F7F8] transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-black text-sm text-[#111111]">
-                          <span className="px-2.5 py-1 bg-[#F7F7F8] border border-[#E5E7EB] rounded-lg">
+                      <tr key={city.id} className="hover:bg-accent/20 transition-colors">
+                        <td className="py-3.5 px-4 font-mono font-black text-sm text-foreground">
+                          <span className="px-2.5 py-1 bg-accent/30 border border-border rounded-lg">
                             {city.plate_code.toString().padStart(2, '0')}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 font-black text-sm text-[#111111]">
+                        <td className="py-3.5 px-4 font-black text-sm text-foreground">
                           {city.name}
                         </td>
-                        <td className="py-3.5 px-4 text-[#666666] font-mono">
+                        <td className="py-3.5 px-4 text-muted-foreground font-mono">
                           {city.center_lat && city.center_lng ? (
                             `${city.center_lat.toFixed(4)}, ${city.center_lng.toFixed(4)}`
                           ) : (
-                            <span className="text-[#8A8A8A] italic">Belirtilmedi</span>
+                            <span className="text-muted-foreground/60 italic">Belirtilmedi</span>
                           )}
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-bold text-[11px]">
+                          <span className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 font-bold text-[11px]">
                             {linkedCount} Bayi
                           </span>
                         </td>
@@ -457,8 +457,8 @@ export function AdminFranchisesTab({
                             disabled={actionLoading}
                             className={`px-3 py-1 rounded-lg text-[11px] font-black border transition-all cursor-pointer ${
                               city.is_active
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/20'
+                                : 'bg-accent/30 text-muted-foreground border-border hover:bg-accent/50'
                             }`}
                           >
                             {city.is_active ? 'Aktif' : 'Pasif'}
@@ -467,7 +467,7 @@ export function AdminFranchisesTab({
                         <td className="py-3.5 px-4 text-right">
                           <button
                             onClick={() => handleOpenCityModal(city)}
-                            className="p-1.5 hover:bg-[#E5E7EB] text-[#666666] hover:text-[#111111] rounded-lg transition-all cursor-pointer"
+                            className="p-1.5 hover:bg-accent/40 text-muted-foreground hover:text-foreground rounded-lg transition-all cursor-pointer border-0 bg-transparent"
                             title="Şehri Düzenle"
                           >
                             <Edit2 className="w-4 h-4" />
@@ -487,7 +487,7 @@ export function AdminFranchisesTab({
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-[#E5E7EB] text-[#666666] uppercase text-[10px] tracking-wider">
+                <tr className="border-b border-border text-muted-foreground uppercase text-[10px] tracking-wider">
                   <th className="py-3 px-4 font-bold">Bayi / Şube</th>
                   <th className="py-3 px-4 font-bold">Şehir</th>
                   <th className="py-3 px-4 font-bold">Yetkili / Şirket</th>
@@ -498,10 +498,10 @@ export function AdminFranchisesTab({
                   <th className="py-3 px-4 font-bold text-right">İşlemler</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E7EB]">
+              <tbody className="divide-y divide-border/60">
                 {filteredFranchises.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-[#666666] font-bold">
+                    <td colSpan={8} className="py-12 text-center text-muted-foreground font-bold">
                       Arama kriterine uygun bayi bulunamadı.
                     </td>
                   </tr>
@@ -509,56 +509,56 @@ export function AdminFranchisesTab({
                   filteredFranchises.map(franchise => {
                     const cityName = franchise.city_name || cities.find(c => c.id === franchise.city_id)?.name || 'Bilinmiyor';
                     return (
-                      <tr key={franchise.id} className="hover:bg-[#F7F7F8] transition-colors">
+                      <tr key={franchise.id} className="hover:bg-accent/20 transition-colors">
                         <td className="py-3.5 px-4">
-                          <div className="font-black text-sm text-[#111111]">{franchise.name}</div>
+                          <div className="font-black text-sm text-foreground">{franchise.name}</div>
                           {franchise.company_title && (
-                            <div className="text-[11px] text-[#666666] mt-0.5">{franchise.company_title}</div>
+                            <div className="text-[11px] text-muted-foreground mt-0.5">{franchise.company_title}</div>
                           )}
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="px-2.5 py-1 rounded-lg bg-[#F7F7F8] border border-[#E5E7EB] font-extrabold text-[#111111]">
+                          <span className="px-2.5 py-1 rounded-lg bg-accent/30 border border-border font-extrabold text-foreground">
                             {cityName}
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-bold text-[#111111]">
-                            {franchise.authorized_person || <span className="text-[#8A8A8A] font-normal italic">Atanmadı</span>}
+                          <div className="font-bold text-foreground">
+                            {franchise.authorized_person || <span className="text-muted-foreground/60 font-normal italic">Atanmadı</span>}
                           </div>
                         </td>
                         <td className="py-3.5 px-4 space-y-1">
                           {franchise.phone && (
-                            <div className="flex items-center gap-1.5 text-[#666666]">
-                              <Phone className="w-3.5 h-3.5 text-[#8A8A8A]" />
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <Phone className="w-3.5 h-3.5 text-muted-foreground/70" />
                               <span>{franchise.phone}</span>
                             </div>
                           )}
                           {franchise.email && (
-                            <div className="flex items-center gap-1.5 text-[#666666]">
-                              <Mail className="w-3.5 h-3.5 text-[#8A8A8A]" />
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                              <Mail className="w-3.5 h-3.5 text-muted-foreground/70" />
                               <span>{franchise.email}</span>
                             </div>
                           )}
                           {!franchise.phone && !franchise.email && (
-                            <span className="text-[#8A8A8A] italic">İletişim yok</span>
+                            <span className="text-muted-foreground/60 italic">İletişim yok</span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#111111]">
+                        <td className="py-3.5 px-4 font-mono font-bold text-foreground">
                           %{franchise.revenue_share_percentage || 0}
                         </td>
                         <td className="py-3.5 px-4 max-w-xs">
                           <div className="flex flex-wrap gap-1">
                             {franchise.districts_covered && franchise.districts_covered.length > 0 ? (
                               franchise.districts_covered.slice(0, 3).map((dist, idx) => (
-                                <span key={idx} className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 text-[10px] font-bold">
+                                <span key={idx} className="px-2 py-0.5 rounded-md bg-accent/40 text-foreground text-[10px] font-bold border border-border/50">
                                   {dist}
                                 </span>
                               ))
                             ) : (
-                              <span className="text-[#8A8A8A] italic text-[11px]">Tüm Şehir</span>
+                              <span className="text-muted-foreground/60 italic text-[11px]">Tüm Şehir</span>
                             )}
                             {franchise.districts_covered && franchise.districts_covered.length > 3 && (
-                              <span className="px-1.5 py-0.5 rounded-md bg-gray-200 text-gray-700 text-[10px] font-bold">
+                              <span className="px-1.5 py-0.5 rounded-md bg-accent/50 text-foreground text-[10px] font-bold border border-border/50">
                                 +{franchise.districts_covered.length - 3}
                               </span>
                             )}
@@ -566,17 +566,17 @@ export function AdminFranchisesTab({
                         </td>
                         <td className="py-3.5 px-4">
                           {franchise.status === 'active' && (
-                            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px] uppercase">
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 font-bold text-[10px] uppercase">
                               Aktif
                             </span>
                           )}
                           {franchise.status === 'suspended' && (
-                            <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 font-bold text-[10px] uppercase">
+                            <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 font-bold text-[10px] uppercase">
                               Askıda
                             </span>
                           )}
                           {franchise.status === 'passive' && (
-                            <span className="px-2.5 py-1 rounded-lg bg-gray-100 text-gray-600 border border-gray-200 font-bold text-[10px] uppercase">
+                            <span className="px-2.5 py-1 rounded-lg bg-accent/30 text-muted-foreground border border-border font-bold text-[10px] uppercase">
                               Pasif
                             </span>
                           )}
@@ -587,7 +587,7 @@ export function AdminFranchisesTab({
                               href="/bayi"
                               target="_blank"
                               rel="noreferrer"
-                              className="px-2.5 py-1 rounded-lg bg-[#111111] hover:bg-[#222222] text-white text-[11px] font-bold inline-flex items-center gap-1 transition-all no-underline"
+                              className="px-2.5 py-1 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold inline-flex items-center gap-1 transition-all no-underline shadow-sm"
                               title="Bayi Paneline Git"
                             >
                               <span>Bayi Paneli</span>
@@ -595,7 +595,7 @@ export function AdminFranchisesTab({
                             </a>
                             <button
                               onClick={() => handleOpenFranchiseModal(franchise)}
-                              className="p-1.5 hover:bg-[#E5E7EB] text-[#666666] hover:text-[#111111] rounded-lg transition-all cursor-pointer"
+                              className="p-1.5 hover:bg-accent/40 text-muted-foreground hover:text-foreground rounded-lg transition-all cursor-pointer border-0 bg-transparent"
                               title="Bayiyi Düzenle"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -614,15 +614,15 @@ export function AdminFranchisesTab({
 
       {/* CITY CREATE / EDIT MODAL */}
       {isCityModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl border border-[#E5E7EB] space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
-              <h3 className="text-lg font-black text-[#111111]">
+        <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-md rounded-[1.65rem] sm:rounded-2xl p-6 shadow-2xl border border-border space-y-5 animate-in zoom-in-95 duration-200 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h3 className="text-lg font-black text-foreground">
                 {editingCity ? 'Şehri Düzenle' : 'Yeni Şehir Ekle'}
               </h3>
               <button
                 onClick={() => setIsCityModalOpen(false)}
-                className="p-1.5 hover:bg-[#F7F7F8] rounded-xl text-[#666666] hover:text-[#111111] transition-all border-0 bg-transparent cursor-pointer"
+                className="p-1.5 hover:bg-accent/40 rounded-xl text-muted-foreground hover:text-foreground transition-all border-0 bg-transparent cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -630,19 +630,19 @@ export function AdminFranchisesTab({
 
             <form onSubmit={handleSaveCity} className="space-y-4">
               <div>
-                <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Şehir Adı *</label>
+                <label className="block text-xs font-extrabold text-foreground mb-1.5">Şehir Adı *</label>
                 <input
                   type="text"
                   required
                   placeholder="Örn: Sakarya, Kocaeli, İzmir"
                   value={cityName}
                   onChange={e => setCityName(e.target.value)}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
+                  className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Plaka Kodu *</label>
+                <label className="block text-xs font-extrabold text-foreground mb-1.5">Plaka Kodu *</label>
                 <input
                   type="number"
                   required
@@ -651,31 +651,31 @@ export function AdminFranchisesTab({
                   placeholder="Örn: 54, 41, 35"
                   value={cityPlate}
                   onChange={e => setCityPlate(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
+                  className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Merkez Lat</label>
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">Merkez Lat</label>
                   <input
                     type="number"
                     step="any"
                     placeholder="40.7731"
                     value={cityLat}
                     onChange={e => setCityLat(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Merkez Lng</label>
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">Merkez Lng</label>
                   <input
                     type="number"
                     step="any"
                     placeholder="30.4005"
                     value={cityLng}
                     onChange={e => setCityLng(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                   />
                 </div>
               </div>
@@ -686,25 +686,25 @@ export function AdminFranchisesTab({
                   id="cityActiveInput"
                   checked={cityActive}
                   onChange={e => setCityActive(e.target.checked)}
-                  className="w-4 h-4 rounded text-[#111111] focus:ring-0 cursor-pointer"
+                  className="w-4 h-4 rounded border-border text-primary focus:ring-0 cursor-pointer"
                 />
-                <label htmlFor="cityActiveInput" className="text-xs font-bold text-[#111111] cursor-pointer">
+                <label htmlFor="cityActiveInput" className="text-xs font-bold text-foreground cursor-pointer">
                   Şehir Operasyonu Aktif Olsun
                 </label>
               </div>
 
-              <div className="flex items-center gap-3 pt-4 border-t border-[#E5E7EB]">
+              <div className="flex items-center gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setIsCityModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-[#E5E7EB] text-xs font-extrabold text-[#666666] hover:bg-[#F7F7F8] transition-all cursor-pointer bg-transparent"
+                  className="flex-1 py-3 rounded-xl border border-border text-xs font-extrabold text-foreground hover:bg-accent/40 transition-all cursor-pointer bg-card"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-xs font-extrabold text-white transition-all cursor-pointer border-0 shadow-sm disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-xs font-extrabold text-primary-foreground transition-all cursor-pointer border-0 shadow-sm disabled:opacity-50"
                 >
                   {actionLoading ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
@@ -716,15 +716,15 @@ export function AdminFranchisesTab({
 
       {/* FRANCHISE CREATE / EDIT MODAL */}
       {isFranchiseModalOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-lg rounded-3xl p-6 shadow-2xl border border-[#E5E7EB] space-y-5 my-8 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
-              <h3 className="text-lg font-black text-[#111111]">
+        <div className="fixed inset-0 bg-foreground/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-card w-full max-w-lg rounded-[1.65rem] sm:rounded-2xl p-6 shadow-2xl border border-border space-y-5 my-8 animate-in zoom-in-95 duration-200 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h3 className="text-lg font-black text-foreground">
                 {editingFranchise ? 'Bayiyi Düzenle' : 'Yeni Bayi Ekle'}
               </h3>
               <button
                 onClick={() => setIsFranchiseModalOpen(false)}
-                className="p-1.5 hover:bg-[#F7F7F8] rounded-xl text-[#666666] hover:text-[#111111] transition-all border-0 bg-transparent cursor-pointer"
+                className="p-1.5 hover:bg-accent/40 rounded-xl text-muted-foreground hover:text-foreground transition-all border-0 bg-transparent cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -732,12 +732,12 @@ export function AdminFranchisesTab({
 
             <form onSubmit={handleSaveFranchise} className="space-y-4">
               <div>
-                <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Bağlı Şehir (İl) *</label>
+                <label className="block text-xs font-extrabold text-foreground mb-1.5">Bağlı Şehir (İl) *</label>
                 <select
                   required
                   value={fCityId}
                   onChange={e => setFCityId(e.target.value)}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
+                  className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground font-bold"
                 >
                   <option value="">Şehir Seçiniz</option>
                   {cities.map(c => (
@@ -749,64 +749,64 @@ export function AdminFranchisesTab({
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Bayi Adı *</label>
+                <label className="block text-xs font-extrabold text-foreground mb-1.5">Bayi Adı *</label>
                 <input
                   type="text"
                   required
                   placeholder="Örn: Sakarya Ana Bayi, Hendek Şubesi, İzmit Bayi"
                   value={fName}
                   onChange={e => setFName(e.target.value)}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
+                  className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Şirket Resmi Ünvanı</label>
+                <label className="block text-xs font-extrabold text-foreground mb-1.5">Şirket Resmi Ünvanı</label>
                 <input
                   type="text"
                   placeholder="Örn: ABC Lojistik ve Dağıtım Ltd. Şti."
                   value={fCompanyTitle}
                   onChange={e => setFCompanyTitle(e.target.value)}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                  className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Yetkili Kişi</label>
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">Yetkili Kişi</label>
                   <input
                     type="text"
                     placeholder="Ad Soyad"
                     value={fAuthorizedPerson}
                     onChange={e => setFAuthorizedPerson(e.target.value)}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Telefon</label>
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">Telefon</label>
                   <input
                     type="tel"
                     placeholder="05XX XXX XX XX"
                     value={fPhone}
                     onChange={e => setFPhone(e.target.value)}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Bayi Giriş E-posta (Yetkili Hesabı)</label>
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">Bayi Giriş E-posta (Yetkili Hesabı)</label>
                   <input
                     type="email"
                     placeholder="kocaeli@ugra.app"
                     value={fEmail}
                     onChange={e => setFEmail(e.target.value)}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">
                     {editingFranchise ? 'Yeni Giriş Şifresi (Opsiyonel)' : 'Başlangıç Giriş Şifresi'}
                   </label>
                   <input
@@ -814,14 +814,14 @@ export function AdminFranchisesTab({
                     placeholder={editingFranchise ? 'Değiştirmek için giriniz' : 'En az 6 karakter'}
                     value={fPassword}
                     onChange={e => setFPassword(e.target.value)}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Gelir Paylaşım Oranı (%)</label>
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">Gelir Paylaşım Oranı (%)</label>
                   <input
                     type="number"
                     min={0}
@@ -829,15 +829,15 @@ export function AdminFranchisesTab({
                     placeholder="0"
                     value={fRevenueShare}
                     onChange={e => setFRevenueShare(Number(e.target.value))}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Durum</label>
+                  <label className="block text-xs font-extrabold text-foreground mb-1.5">Durum</label>
                   <select
                     value={fStatus}
                     onChange={e => setFStatus(e.target.value as any)}
-                    className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111] font-bold"
+                    className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground font-bold"
                   >
                     <option value="active">Aktif</option>
                     <option value="suspended">Askıya Alındı</option>
@@ -847,28 +847,28 @@ export function AdminFranchisesTab({
               </div>
 
               <div>
-                <label className="block text-xs font-extrabold text-[#111111] mb-1.5">Kapsanan İlçeler (Virgülle ayırarak yazınız)</label>
+                <label className="block text-xs font-extrabold text-foreground mb-1.5">Kapsanan İlçeler (Virgülle ayırarak yazınız)</label>
                 <textarea
                   rows={2}
                   placeholder="Adapazarı, Serdivan, Erenler, Hendek..."
                   value={fDistrictsText}
                   onChange={e => setFDistrictsText(e.target.value)}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-xs text-[#111111]"
+                  className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-xs text-foreground"
                 />
               </div>
 
-              <div className="flex items-center gap-3 pt-4 border-t border-[#E5E7EB]">
+              <div className="flex items-center gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setIsFranchiseModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-[#E5E7EB] text-xs font-extrabold text-[#666666] hover:bg-[#F7F7F8] transition-all cursor-pointer bg-transparent"
+                  className="flex-1 py-3 rounded-xl border border-border text-xs font-extrabold text-foreground hover:bg-accent/40 transition-all cursor-pointer bg-card"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-xs font-extrabold text-white transition-all cursor-pointer border-0 shadow-sm disabled:opacity-50"
+                  className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-xs font-extrabold text-primary-foreground transition-all cursor-pointer border-0 shadow-sm disabled:opacity-50"
                 >
                   {actionLoading ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>

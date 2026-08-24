@@ -394,10 +394,10 @@ export default function FranchiseDashboard() {
   // AUTH LOADING STATE
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#F7F7F8] text-[#111111] flex items-center justify-center p-4 font-sans">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 font-sans">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-[#111111] animate-spin" />
-          <p className="text-sm font-bold text-[#666666] animate-pulse">
+          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <p className="text-sm font-bold text-muted-foreground animate-pulse">
             Bayi oturumu doğrulanıyor...
           </p>
         </div>
@@ -408,29 +408,29 @@ export default function FranchiseDashboard() {
   // LOGIN SCREEN (If not authenticated as franchise_manager)
   if (!isFranchiseManager) {
     return (
-      <div className="min-h-screen bg-[#F7F7F8] text-[#111111] flex items-center justify-center p-4 font-sans">
-        <div className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm relative overflow-hidden">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 font-sans">
+        <div className="w-full max-w-md bg-card border border-border rounded-[1.65rem] sm:rounded-2xl p-6 sm:p-8 space-y-6 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] relative overflow-hidden">
           <Link href="/" className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20">
             <button
               type="button"
               aria-label="Kapat"
               title="Kapat"
-              className="w-9 h-9 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-sm"
+              className="w-9 h-9 rounded-xl bg-card hover:bg-accent/40 border border-border text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-sm"
             >
               <X className="w-5 h-5" />
             </button>
           </Link>
 
           <div className="text-center space-y-2 pt-2">
-            <div className="w-12 h-12 rounded-2xl bg-[#111111] text-white font-black text-xl flex items-center justify-center mx-auto shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground font-black text-xl flex items-center justify-center mx-auto shadow-sm">
               U
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-[#111111]">Bayi Yönetim Paneli</h1>
-            <p className="text-xs text-[#666666] font-medium">Bölgesel Bayilik Operasyon Girişi</p>
+            <h1 className="text-2xl font-black tracking-tight text-foreground">Bayi Yönetim Paneli</h1>
+            <p className="text-xs text-muted-foreground font-medium">Bölgesel Bayilik Operasyon Girişi</p>
           </div>
 
           {loginError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{loginError}</span>
             </div>
@@ -438,19 +438,19 @@ export default function FranchiseDashboard() {
 
           <form onSubmit={handleLogin} className="space-y-4 text-xs">
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Bayi E-Posta Adresi</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Bayi E-Posta Adresi</label>
               <input
                 type="email"
                 required
                 placeholder="istanbul@ugra.app"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-medium transition-all"
+                className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-xl p-3 text-foreground font-medium transition-all"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Şifre</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Şifre</label>
               <div className="relative">
                 <input
                   type={showLoginPassword ? 'text' : 'password'}
@@ -458,12 +458,12 @@ export default function FranchiseDashboard() {
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-medium pr-10 transition-all"
+                  className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-xl p-3 text-foreground font-medium pr-10 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowLoginPassword(!showLoginPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#111111] border-0 bg-transparent cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground border-0 bg-transparent cursor-pointer"
                 >
                   {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -473,25 +473,25 @@ export default function FranchiseDashboard() {
             <button
               type="submit"
               disabled={loginLoading}
-              className="w-full bg-[#111111] hover:bg-[#222222] active:scale-95 text-white font-extrabold py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border-0 shadow-sm"
+              className="w-full bg-primary hover:bg-primary/90 active:scale-95 text-primary-foreground font-extrabold py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border-0 shadow-sm"
             >
               {loginLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <Loader2 className="w-4 h-4 animate-spin text-primary-foreground" />
                   <span>Giriş Yapılıyor...</span>
                 </>
               ) : (
                 <>
-                  <Lock className="w-4 h-4 text-white" />
+                  <Lock className="w-4 h-4 text-primary-foreground" />
                   <span>Bayi Paneline Giriş Yap</span>
                 </>
               )}
             </button>
           </form>
 
-          <div className="p-3 bg-[#F7F7F8] border border-[#E5E7EB] rounded-xl text-[11px] text-[#666666] space-y-1 text-center">
+          <div className="p-3 bg-background border border-border rounded-xl text-[11px] text-muted-foreground space-y-1 text-center">
             <div>💡 Yetkili bayilik hesabınız ile oturum açınız.</div>
-            <div className="text-[10px] text-[#8A8A8A] font-mono">Yetki Rolü: franchise_manager</div>
+            <div className="text-[10px] text-muted-foreground/70 font-mono">Yetki Rolü: franchise_manager</div>
           </div>
         </div>
       </div>
@@ -538,28 +538,28 @@ export default function FranchiseDashboard() {
   const allNavItems = franchiseNavGroups.flatMap(g => g.items);
 
   return (
-    <div className="min-h-screen bg-[#F7F7F8] text-[#111111] flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row font-sans">
       
       {/* Toast Notification */}
       {actionSuccessMsg && (
-        <div className="fixed top-4 right-4 z-50 p-3.5 rounded-xl bg-[#111111] text-white font-bold text-xs shadow-2xl flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="fixed top-4 right-4 z-50 p-3.5 rounded-xl bg-card border border-border text-foreground font-bold text-xs shadow-2xl flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
           <span>{actionSuccessMsg}</span>
         </div>
       )}
 
       {/* MOBILE TOP BAR (Screens < md) */}
-      <div className="md:hidden sticky top-0 z-40 bg-white border-b border-[#E5E7EB] p-4 space-y-3 shadow-sm">
+      <div className="md:hidden sticky top-0 z-40 bg-card border-b border-border p-4 space-y-3 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#111111] text-white font-black text-sm flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 rounded-xl bg-primary text-primary-foreground font-black text-sm flex items-center justify-center shadow-sm">
               U
             </div>
             <div>
-              <div className="font-extrabold text-sm text-[#111111] flex items-center gap-1">
-                {cityNameDisplay} <span className="text-[#666666] text-[11px] font-medium">Bayi</span>
+              <div className="font-extrabold text-sm text-foreground flex items-center gap-1">
+                {cityNameDisplay} <span className="text-muted-foreground text-[11px] font-medium">Bayi</span>
               </div>
-              <div className="text-[10px] text-[#666666] flex items-center gap-1">
+              <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 Aktif Lisans
               </div>
@@ -573,14 +573,14 @@ export default function FranchiseDashboard() {
                 refreshFranchiseData();
               }}
               disabled={dataLoading}
-              className="p-2 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] border border-[#E5E7EB] cursor-pointer"
+              className="p-2 rounded-xl bg-card hover:bg-accent/40 text-foreground border border-border cursor-pointer"
               title="Yenile"
             >
-              <RefreshCw className={`w-4 h-4 ${dataLoading ? 'animate-spin text-[#111111]' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${dataLoading ? 'animate-spin text-primary' : ''}`} />
             </button>
             <button
               onClick={() => signOut()}
-              className="px-3 py-1.5 bg-[#F7F7F8] hover:bg-red-50 hover:text-red-600 text-[#111111] text-xs font-bold rounded-xl transition-all border border-[#E5E7EB] cursor-pointer"
+              className="px-3 py-1.5 bg-card hover:bg-red-500/10 hover:text-red-600 text-foreground text-xs font-bold rounded-xl transition-all border border-border cursor-pointer"
             >
               Çıkış
             </button>
@@ -589,7 +589,7 @@ export default function FranchiseDashboard() {
                 type="button"
                 aria-label="Kapat"
                 title="Kapat"
-                className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-sm"
+                className="w-8 h-8 rounded-xl bg-card hover:bg-accent/40 border border-border text-foreground flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-sm"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -608,14 +608,14 @@ export default function FranchiseDashboard() {
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   isActive 
-                    ? 'bg-[#111111] text-white shadow-sm' 
-                    : 'bg-white text-[#666666] hover:text-[#111111] border border-[#E5E7EB]'
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'bg-card text-muted-foreground hover:text-foreground hover:bg-accent/40 border border-border'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span>{item.label}</span>
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-white text-[#111111]' : 'bg-gray-100 text-[#111111]'}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-primary-foreground text-primary' : 'bg-accent text-foreground'}`}>
                     {item.badge}
                   </span>
                 )}
@@ -626,17 +626,17 @@ export default function FranchiseDashboard() {
       </div>
 
       {/* DESKTOP SIDEBAR NAVIGATION */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-[#E5E7EB] flex-col shrink-0 min-h-screen shadow-sm">
-        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
+      <aside className="hidden md:flex w-64 bg-card border-r border-border flex-col shrink-0 min-h-screen shadow-sm">
+        <div className="p-5 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#111111] text-white font-black text-lg flex items-center justify-center shadow-sm">
+            <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground font-black text-lg flex items-center justify-center shadow-sm">
               U
             </div>
             <div>
-              <div className="font-extrabold text-sm text-[#111111] flex items-center gap-1">
-                {cityNameDisplay} <span className="text-[#666666] text-xs font-normal">Bayi</span>
+              <div className="font-extrabold text-sm text-foreground flex items-center gap-1">
+                {cityNameDisplay} <span className="text-muted-foreground text-xs font-normal">Bayi</span>
               </div>
-              <div className="text-[10px] text-[#666666] font-medium flex items-center gap-1.5">
+              <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
                 Plaka: {city?.plate_code || '54'} • Lisans Aktif
               </div>
@@ -647,7 +647,7 @@ export default function FranchiseDashboard() {
               type="button"
               aria-label="Kapat"
               title="Kapat"
-              className="w-9 h-9 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-sm"
+              className="w-9 h-9 rounded-xl bg-card hover:bg-accent/40 border border-border text-foreground flex items-center justify-center transition-all active:scale-95 cursor-pointer shrink-0 shadow-sm"
             >
               <X className="w-4 h-4" />
             </button>
@@ -658,7 +658,7 @@ export default function FranchiseDashboard() {
         <nav className="p-3 space-y-4 overflow-y-auto flex-1">
           {franchiseNavGroups.map((group, gIdx) => (
             <div key={gIdx} className="space-y-1">
-              <div className="px-3 text-[10px] font-extrabold tracking-wider text-[#8A8A8A] uppercase">
+              <div className="px-3 text-[10px] font-extrabold tracking-wider text-muted-foreground/70 uppercase">
                 {group.group}
               </div>
               <div className="space-y-0.5">
@@ -671,16 +671,16 @@ export default function FranchiseDashboard() {
                       onClick={() => setActiveTab(item.id)}
                       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         isActive 
-                          ? 'bg-[#111111] text-white shadow-sm' 
-                          : 'text-[#666666] hover:text-[#111111] hover:bg-[#F7F7F8] border border-transparent'
+                          ? 'bg-primary text-primary-foreground shadow-sm' 
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent/40 border border-transparent'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#666666]'}`} />
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                         <span>{item.label}</span>
                       </div>
                       {item.badge !== undefined && item.badge > 0 && (
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-white text-[#111111]' : 'bg-gray-100 text-[#111111]'}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isActive ? 'bg-primary-foreground text-primary' : 'bg-accent text-foreground'}`}>
                           {item.badge}
                         </span>
                       )}
@@ -693,7 +693,7 @@ export default function FranchiseDashboard() {
         </nav>
 
         {/* FOOTER INFO & LOGOUT */}
-        <div className="p-4 border-t border-[#E5E7EB] bg-white space-y-3">
+        <div className="p-4 border-t border-border bg-card space-y-3">
           <div className="flex items-center justify-between">
             <button
               onClick={() => {
@@ -701,9 +701,9 @@ export default function FranchiseDashboard() {
                 refreshFranchiseData();
               }}
               disabled={dataLoading}
-              className="flex items-center gap-1.5 text-xs font-bold text-[#666666] hover:text-[#111111] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${dataLoading ? 'animate-spin text-[#111111]' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${dataLoading ? 'animate-spin text-primary' : ''}`} />
               <span>Yenile</span>
             </button>
 
@@ -716,7 +716,7 @@ export default function FranchiseDashboard() {
             </button>
           </div>
 
-          <div className="text-[10px] text-[#8A8A8A] text-center font-mono">
+          <div className="text-[10px] text-muted-foreground/70 text-center font-mono">
             {franchiseManager?.name || 'Bayi Yöneticisi'} • %{kpis.revenueSharePct} Pay
           </div>
         </div>

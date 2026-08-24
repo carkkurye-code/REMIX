@@ -111,7 +111,7 @@ export function getOrderCategoryBadge(order: any): { label: string; className: s
   if (isStoreTask) {
     return {
       label: 'MAĞAZA',
-      className: 'bg-purple-50 text-[#7C3AED] border-purple-200'
+      className: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20'
     };
   }
 
@@ -119,13 +119,13 @@ export function getOrderCategoryBadge(order: any): { label: string; className: s
   if (rawService === 'gecerken' || rawService === 'gecerken_ugra') {
     return {
       label: 'GEÇERKEN UĞRA',
-      className: 'bg-blue-50 text-[#2563EB] border-blue-200'
+      className: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20'
     };
   }
 
   return {
     label: 'HEMEN UĞRA',
-    className: 'bg-emerald-50 text-[#10B981] border-emerald-200'
+    className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
   };
 }
 
@@ -760,18 +760,18 @@ const TaskDescriptionCard = React.memo(function TaskDescriptionCard({ descriptio
   const isLong = cleanDesc.length > 110 || cleanDesc.split('\n').length > 4;
 
   return (
-    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] space-y-1">
-      <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider block">
+    <div className="bg-background p-3.5 rounded-xl border border-border space-y-1">
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
         YAPILACAK İŞ
       </span>
-      <div className={`text-[#1F2937] font-medium text-xs leading-relaxed ${isExpanded ? 'max-h-[250px] overflow-y-auto pr-1' : 'line-clamp-4'}`}>
+      <div className={`text-foreground font-medium text-xs leading-relaxed ${isExpanded ? 'max-h-[250px] overflow-y-auto pr-1' : 'line-clamp-4'}`}>
         <p className="whitespace-pre-wrap">{cleanDesc}</p>
       </div>
       {isLong && (
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-[#2563EB] font-bold text-xs pt-0.5 transition-colors cursor-pointer"
+          className="text-primary font-bold text-xs pt-0.5 transition-colors cursor-pointer"
         >
           {isExpanded ? 'Daha Az Göster' : 'Devamını Gör'}
         </button>
@@ -797,16 +797,16 @@ const CustomerOfferCard = React.memo(function CustomerOfferCard({
   const earning = cNet > 0 ? cNet : (cTotal > 0 ? cTotal : (pTotal > 0 ? pTotal : 0));
 
   return (
-    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] space-y-2 text-xs">
+    <div className="bg-background p-3.5 rounded-xl border border-border space-y-2 text-xs">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] text-[#6B7280] font-bold uppercase tracking-wider">
+        <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
           MÜŞTERİ TEKLİFİ
         </span>
       </div>
 
       <div className="flex items-center justify-between pt-0.5">
-        <span className="text-[#4B5563] font-medium text-xs">Asistan Kazancı</span>
-        <span className="font-bold text-[#10B981] font-mono text-base">
+        <span className="text-foreground/80 font-medium text-xs">Asistan Kazancı</span>
+        <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-base">
           {earning} TL
         </span>
       </div>
@@ -836,27 +836,27 @@ const CustomerLocationCard = React.memo(function CustomerLocationCard({
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`;
 
   return (
-    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] text-xs space-y-1.5 w-full min-w-0">
+    <div className="bg-background p-3.5 rounded-xl border border-border text-xs space-y-1.5 w-full min-w-0">
       <div className="flex items-center justify-between gap-2 min-w-0">
-        <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider flex items-center gap-1 shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shrink-0" />
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
           MÜŞTERİ KONUMU
         </span>
         <a
           href={mapHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-2.5 py-1 bg-white hover:bg-gray-50 text-[#1F2937] border border-[#E5E7EB] font-bold text-[10px] rounded-lg shadow-sm cursor-pointer transition-all shrink-0 ml-auto flex items-center gap-1"
+          className="px-2.5 py-1 bg-card hover:bg-accent/40 text-foreground border border-border font-bold text-[10px] rounded-lg shadow-xs cursor-pointer transition-all shrink-0 ml-auto flex items-center gap-1"
         >
-          <ExternalLink className="w-3 h-3 text-[#6B7280]" />
+          <ExternalLink className="w-3 h-3 text-muted-foreground" />
           <span>Haritada Aç</span>
         </a>
       </div>
-      <p className="text-[#1F2937] text-xs font-medium leading-relaxed break-words whitespace-pre-wrap min-w-0 w-full text-left">
+      <p className="text-foreground text-xs font-medium leading-relaxed break-words whitespace-pre-wrap min-w-0 w-full text-left">
         {displayAddress}
       </p>
       {addressDetail && addressDetail.trim() !== '' && (
-        <p className="text-[#6B7280] text-[11px] pt-1 border-t border-[#E5E7EB]/60 leading-normal break-words whitespace-pre-wrap min-w-0 w-full text-left">
+        <p className="text-muted-foreground text-[11px] pt-1 border-t border-border/60 leading-normal break-words whitespace-pre-wrap min-w-0 w-full text-left">
           Adres Detayı: {addressDetail.trim()}
         </p>
       )}
@@ -869,31 +869,31 @@ const CustomerInfoCard = React.memo(function CustomerInfoCard({ name, phone }: {
   const cleanPhone = phone && phone.trim() !== '' ? phone.trim() : null;
 
   return (
-    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB] space-y-1.5 text-xs w-full min-w-0">
+    <div className="bg-background p-3.5 rounded-xl border border-border space-y-1.5 text-xs w-full min-w-0">
       <div className="flex items-center justify-between gap-2 min-w-0">
-        <span className="text-[10px] font-semibold text-[#6B7280] uppercase tracking-wider block shrink-0">MÜŞTERİ BİLGİLERİ</span>
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block shrink-0">MÜŞTERİ BİLGİLERİ</span>
         {cleanPhone ? (
           <a
             href={`tel:${cleanPhone}`}
-            className="px-2.5 py-1 bg-white hover:bg-gray-50 text-[#1F2937] border border-[#E5E7EB] font-bold text-[10px] rounded-lg shadow-sm cursor-pointer transition-all shrink-0 ml-auto flex items-center gap-1"
+            className="px-2.5 py-1 bg-card hover:bg-accent/40 text-foreground border border-border font-bold text-[10px] rounded-lg shadow-xs cursor-pointer transition-all shrink-0 ml-auto flex items-center gap-1"
           >
-            <Phone className="w-3 h-3 text-[#6B7280]" />
+            <Phone className="w-3 h-3 text-muted-foreground" />
             <span>Müşteriyi Ara</span>
           </a>
         ) : (
-          <span className="px-2.5 py-1 bg-white opacity-50 text-[#6B7280] border border-[#E5E7EB] font-bold text-[10px] rounded-lg shadow-sm shrink-0 ml-auto flex items-center gap-1 cursor-not-allowed">
-            <Phone className="w-3 h-3 text-[#6B7280]" />
+          <span className="px-2.5 py-1 bg-card opacity-50 text-muted-foreground border border-border font-bold text-[10px] rounded-lg shadow-xs shrink-0 ml-auto flex items-center gap-1 cursor-not-allowed">
+            <Phone className="w-3 h-3 text-muted-foreground" />
             <span>Müşteriyi Ara</span>
           </span>
         )}
       </div>
       <div className="space-y-0.5 min-w-0">
         {cleanName && (
-          <div className="text-[#1F2937] font-semibold text-xs truncate">
+          <div className="text-foreground font-semibold text-xs truncate">
             <span>{cleanName}</span>
           </div>
         )}
-        <div className="text-[#6B7280] font-mono text-xs">
+        <div className="text-muted-foreground font-mono text-xs">
           <span>Telefon: {cleanPhone || 'Belirtilmemiş'}</span>
         </div>
       </div>
@@ -907,15 +907,15 @@ const DistanceDurationCard = React.memo(function DistanceDurationCard({ distance
   return (
     <div className="grid grid-cols-2 gap-2 text-xs">
       {distance && (
-        <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-          <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">Tahmini Mesafe</span>
-          <span className="text-[#1F2937] font-medium text-xs font-mono block">{distance}</span>
+        <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+          <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Tahmini Mesafe</span>
+          <span className="text-foreground font-medium text-xs font-mono block">{distance}</span>
         </div>
       )}
       {duration && (
-        <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-          <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">Tahmini Süre</span>
-          <span className="text-[#1F2937] font-medium text-xs font-mono block">{duration}</span>
+        <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+          <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Tahmini Süre</span>
+          <span className="text-foreground font-medium text-xs font-mono block">{duration}</span>
         </div>
       )}
     </div>
@@ -2752,9 +2752,9 @@ export function AsistanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8] text-[#1F2937] relative overflow-hidden flex flex-col justify-between">
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col justify-between">
       {/* Header */}
-      <header className="border-b border-[#E5E7EB] bg-white sticky top-0 z-30 py-3.5 shadow-sm">
+      <header className="border-b border-border bg-card sticky top-0 z-30 py-3.5 shadow-xs">
         <div className="container mx-auto px-4 sm:px-6 md:px-12 flex justify-between items-center relative min-h-[44px]">
           {/* Sol: Menü Butonu */}
           <div className="flex items-center z-10">
@@ -2762,11 +2762,11 @@ export function AsistanPage() {
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(true)}
-                className="px-3.5 py-2 rounded-xl bg-white hover:bg-gray-50 border border-[#E5E7EB] text-[#1F2937] text-xs font-bold transition-all cursor-pointer shrink-0 shadow-sm flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-card hover:bg-accent/50 border border-border text-foreground text-xs font-bold transition-all cursor-pointer shrink-0 shadow-xs flex items-center gap-1.5"
                 aria-label="Asistan Menüsü"
                 title="Asistan Menüsü"
               >
-                <Menu className="w-4 h-4 text-[#1F2937]" />
+                <Menu className="w-4 h-4 text-foreground" />
                 <span>Menü</span>
               </button>
             ) : (
@@ -2780,15 +2780,15 @@ export function AsistanPage() {
               <button
                 type="button"
                 onClick={handleToggleOnline}
-                className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer shadow-sm border active:scale-95 ${
+                className={`px-4 sm:px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all duration-200 cursor-pointer shadow-xs border active:scale-95 ${
                   isOnline
-                    ? 'bg-emerald-50 text-[#10B981] border-emerald-300'
-                    : 'bg-white text-[#6B7280] border-[#E5E7EB] hover:bg-gray-50'
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                    : 'bg-card text-muted-foreground border-border hover:bg-accent/40'
                 }`}
                 title={isOnline ? 'Çevrimdışı olmak için dokunun' : 'Çevrimiçi olmak için dokunun'}
               >
                 <div className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
-                  isOnline ? 'bg-[#10B981]' : 'bg-gray-400'
+                  isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50'
                 }`} />
                 <span className="tracking-wider uppercase">{isOnline ? 'ÇEVRİMİÇİ' : 'ÇEVRİMDIŞI'}</span>
               </button>
@@ -2801,11 +2801,11 @@ export function AsistanPage() {
               type="button"
               disabled={isRefreshing || ordersLoading}
               onClick={handleManualRefresh}
-              className="min-h-[44px] min-w-[44px] px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 active:scale-95 border border-[#E5E7EB] text-[#1F2937] text-xs font-bold transition-all cursor-pointer shrink-0 shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
+              className="min-h-[44px] min-w-[44px] px-3.5 py-2 rounded-xl bg-card hover:bg-accent/50 active:scale-95 border border-border text-foreground text-xs font-bold transition-all cursor-pointer shrink-0 shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
               title="Görevleri Yenile"
               aria-label="Görevleri Yenile"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-[#1F2937] transition-transform duration-300 ${isRefreshing || ordersLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-foreground transition-transform duration-300 ${isRefreshing || ordersLoading ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Yenile</span>
             </button>
           </div>
@@ -2816,27 +2816,27 @@ export function AsistanPage() {
       <main className="container mx-auto px-4 sm:px-6 md:px-12 py-4 sm:py-6 flex-grow flex flex-col items-center justify-start relative z-10 max-w-4xl">
         {authLoading ? (
           <div className="w-full py-20 flex flex-col items-center justify-center gap-4 text-center">
-            <Loader2 className="w-8 h-8 text-[#2563EB] animate-spin" />
-            <p className="text-xs text-[#6B7280]">Asistan oturum bilgileri kontrol ediliyor...</p>
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            <p className="text-xs text-muted-foreground">Asistan oturum bilgileri kontrol ediliyor...</p>
           </div>
         ) : currentAssistant && currentAssistant.active !== false ? (
           /* ONAYLI VE AKTİF ASİSTAN EKRANI */
           <div className="w-full space-y-4">
             {/* Talep Odaklı Tab Barı (Bekleyen Talep, Aktif Talep) */}
-            <div className="grid grid-cols-2 gap-2 bg-white p-1.5 rounded-2xl border border-[#E5E7EB] w-full shadow-sm">
+            <div className="grid grid-cols-2 gap-2 bg-card p-1.5 rounded-2xl border border-border w-full shadow-xs">
               <button
                 type="button"
                 onClick={() => setPanelTab('pending')}
                 className={`py-2.5 px-2 sm:px-3 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
                   panelTab === 'pending'
-                    ? 'bg-[#2563EB] text-white font-bold shadow-sm'
-                    : 'text-[#6B7280] hover:text-[#1F2937] hover:bg-[#F8FAFC]'
+                    ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                 }`}
               >
                 <span>Bekleyen Talep</span>
                 {pendingOrders.length > 0 && (
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    panelTab === 'pending' ? 'bg-white text-[#2563EB]' : 'bg-[#E5E7EB] text-[#374151]'
+                    panelTab === 'pending' ? 'bg-primary-foreground text-primary' : 'bg-muted text-muted-foreground'
                   }`}>
                     {pendingOrders.length}
                   </span>
@@ -2848,13 +2848,13 @@ export function AsistanPage() {
                 onClick={() => setPanelTab('active')}
                 className={`py-2.5 px-2 sm:px-3 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
                   panelTab === 'active'
-                    ? 'bg-[#2563EB] text-white font-bold shadow-sm'
-                    : 'text-[#6B7280] hover:text-[#1F2937] hover:bg-[#F8FAFC]'
+                    ? 'bg-primary text-primary-foreground font-bold shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
                 }`}
               >
                 <span>Aktif Talep</span>
                 {activeOrders.length > 0 && (
-                  <span className={`w-2 h-2 rounded-full ${panelTab === 'active' ? 'bg-white' : 'bg-[#10B981]'}`} />
+                  <span className={`w-2 h-2 rounded-full ${panelTab === 'active' ? 'bg-primary-foreground' : 'bg-emerald-500'}`} />
                 )}
               </button>
             </div>
@@ -2865,9 +2865,9 @@ export function AsistanPage() {
               {panelTab === 'pending' && (
                 <div className="space-y-3">
                   {pendingOrders.length === 0 ? (
-                    <div className="bg-white border border-[#E5E7EB] rounded-2xl p-10 text-center shadow-sm space-y-2">
-                      <h3 className="text-base font-bold text-[#1F2937]">Bekleyen görev bulunmuyor.</h3>
-                      <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+                    <div className="bg-card border border-border rounded-2xl p-10 text-center shadow-xs space-y-2">
+                      <h3 className="text-base font-bold text-foreground">Bekleyen görev bulunmuyor.</h3>
+                      <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                         Yeni gelen saha siparişleri burada listelenecektir. Çevrimiçi kaldığınızdan emin olun.
                       </p>
                     </div>
@@ -2880,10 +2880,10 @@ export function AsistanPage() {
                           key={order.id}
                           initial={{ opacity: 0, scale: 0.99 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="bg-white border border-[#E5E7EB] p-4 sm:p-5 rounded-2xl space-y-3 shadow-sm relative"
+                          className="bg-card border border-border p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs relative"
                         >
                           {/* 1. Sipariş No & Service Badge Header */}
-                          <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-2.5">
+                          <div className="flex items-center justify-between border-b border-border pb-2.5">
                             <div className="flex items-center gap-2">
                               {(() => {
                                 const catBadge = getOrderCategoryBadge(order);
@@ -2893,11 +2893,11 @@ export function AsistanPage() {
                                   </span>
                                 );
                               })()}
-                              <span className="font-mono text-xs text-[#6B7280]">
+                              <span className="font-mono text-xs text-muted-foreground">
                                 #{r.order_number}
                               </span>
                             </div>
-                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 uppercase tracking-wider">
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20 uppercase tracking-wider">
                               Bekleyen
                             </span>
                           </div>
@@ -2928,9 +2928,9 @@ export function AsistanPage() {
 
                           {/* Geçerken UĞRA - Zaman Tercihi */}
                           {r.service_type === 'gecerken' && (
-                            <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200/70 text-xs space-y-0.5">
-                              <span className="text-[10px] font-bold text-blue-700 uppercase block">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
-                              <p className="text-xs text-blue-900 font-semibold">
+                            <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-xs space-y-0.5">
+                              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase block">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
+                              <p className="text-xs text-foreground font-semibold">
                                 {r.preferred_time || (r.notes?.match(/• Ne Zaman:\s*(.+)/)?.[1]?.trim()) || 'Gün içinde fark etmez'}
                               </p>
                             </div>
@@ -2938,19 +2938,19 @@ export function AsistanPage() {
 
                           {/* Sipariş Notu */}
                           {r.notes && r.notes.trim() !== '' && (
-                            <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] text-xs space-y-0.5">
-                              <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Sipariş Notu</span>
-                              <p className="text-xs text-[#1F2937] font-normal leading-normal">{r.notes}</p>
+                            <div className="bg-background p-3 rounded-xl border border-border text-xs space-y-0.5">
+                              <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Sipariş Notu</span>
+                              <p className="text-xs text-foreground font-normal leading-normal">{r.notes}</p>
                             </div>
                           )}
 
                           {/* Sipariş kabul et & Reddet Butonları */}
-                          <div className="pt-1.5 border-t border-[#E5E7EB] grid grid-cols-2 gap-2.5">
+                          <div className="pt-1.5 border-t border-border grid grid-cols-2 gap-2.5">
                             <button
                               type="button"
                               disabled={actionLoading === order.id || activeOrders.length > 0}
                               onClick={() => handleAcceptOrder(order.id)}
-                              className="py-3 rounded-xl bg-[#10B981] hover:bg-emerald-600 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                              className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                             >
                               {actionLoading === order.id ? (
                                 <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -2962,7 +2962,7 @@ export function AsistanPage() {
                               type="button"
                               disabled={actionLoading === order.id}
                               onClick={() => handleRejectOrder(order.id, (order as any).offer_id)}
-                              className="py-3 rounded-xl bg-white hover:bg-red-50 text-[#EF4444] border border-[#EF4444] font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                              className="py-3 rounded-xl bg-card hover:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30 font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                             >
                               <span>Reddet</span>
                             </button>
@@ -2978,9 +2978,9 @@ export function AsistanPage() {
               {panelTab === 'active' && (
                 <div className="space-y-3">
                   {activeOrders.length === 0 ? (
-                    <div className="bg-white border border-[#E5E7EB] rounded-2xl p-10 text-center shadow-sm space-y-2">
-                      <h3 className="text-base font-bold text-[#1F2937]">Aktif Saha Görevi Bulunmuyor</h3>
-                      <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+                    <div className="bg-card border border-border rounded-2xl p-10 text-center shadow-xs space-y-2">
+                      <h3 className="text-base font-bold text-foreground">Aktif Saha Görevi Bulunmuyor</h3>
+                      <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                         Bekleyen görevler sekmesinden yeni bir sipariş kabul ettiğinizde aktif görev detayları burada görüntülenecektir.
                       </p>
                     </div>
@@ -2994,10 +2994,10 @@ export function AsistanPage() {
                           key={order.id}
                           initial={{ opacity: 0, scale: 0.99 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="bg-white border border-[#E5E7EB] p-4 sm:p-5 rounded-2xl space-y-3 shadow-sm relative"
+                          className="bg-card border border-border p-4 sm:p-5 rounded-2xl space-y-3 shadow-xs relative"
                         >
                           {/* 1. Sipariş No & Service Badge Header */}
-                          <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-2.5">
+                          <div className="flex items-center justify-between border-b border-border pb-2.5">
                             <div className="flex items-center gap-2">
                               {(() => {
                                 const catBadge = getOrderCategoryBadge(order);
@@ -3007,11 +3007,11 @@ export function AsistanPage() {
                                   </span>
                                 );
                               })()}
-                              <span className="font-mono text-xs text-[#6B7280]">
+                              <span className="font-mono text-xs text-muted-foreground">
                                 #{r.order_number}
                               </span>
                             </div>
-                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-[#F3F4F6] text-[#374151] border border-[#E5E7EB] uppercase tracking-wider">
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-muted text-muted-foreground border border-border uppercase tracking-wider">
                               {currentStatus === 'rezerve' || currentStatus === 'accepted' ? 'Rezerve' :
                                currentStatus === 'dogrulandi' ? 'Doğrulandı' :
                                currentStatus === 'yolda' || currentStatus === 'kuryede' || currentStatus === 'teslimatta' ? 'Yolda' :
@@ -3045,9 +3045,9 @@ export function AsistanPage() {
 
                           {/* Geçerken UĞRA - Zaman Tercihi */}
                           {r.service_type === 'gecerken' && (
-                            <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200/70 text-xs space-y-0.5">
-                              <span className="text-[10px] font-bold text-blue-700 uppercase block">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
-                              <p className="text-xs text-blue-900 font-semibold">
+                            <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-xs space-y-0.5">
+                              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase block">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
+                              <p className="text-xs text-foreground font-semibold">
                                 {r.preferred_time || (r.notes?.match(/• Ne Zaman:\s*(.+)/)?.[1]?.trim()) || 'Gün içinde fark etmez'}
                               </p>
                             </div>
@@ -3055,21 +3055,21 @@ export function AsistanPage() {
 
                           {/* Sipariş Notu */}
                           {r.notes && r.notes.trim() !== '' && (
-                            <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] text-xs space-y-0.5">
-                              <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Sipariş Notu</span>
-                              <p className="text-xs text-[#1F2937] font-normal leading-normal">{r.notes}</p>
+                            <div className="bg-background p-3 rounded-xl border border-border text-xs space-y-0.5">
+                              <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Sipariş Notu</span>
+                              <p className="text-xs text-foreground font-normal leading-normal">{r.notes}</p>
                             </div>
                           )}
 
                           {/* İş Akışı Butonları */}
-                          <div className="pt-1.5 border-t border-[#E5E7EB]">
+                          <div className="pt-1.5 border-t border-border">
                             {(currentStatus === 'rezerve' || currentStatus === 'accepted') && (
                               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                                 <button
                                   type="button"
                                   disabled={actionLoading === order.id}
                                   onClick={() => handleVerifyOrder(order.id)}
-                                  className="py-2.5 px-2 bg-[#10B981] hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm cursor-pointer flex items-center justify-center transition-all"
+                                  className="py-2.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs cursor-pointer flex items-center justify-center transition-all"
                                 >
                                   {actionLoading === order.id ? (
                                     <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -3085,7 +3085,7 @@ export function AsistanPage() {
                                     setCancelModalOrder(order);
                                     setCancelReasonText('');
                                   }}
-                                  className="py-2.5 px-2 bg-[#EF4444] hover:bg-red-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm cursor-pointer flex items-center justify-center transition-all"
+                                  className="py-2.5 px-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs cursor-pointer flex items-center justify-center transition-all"
                                 >
                                   <span>Ulaşılamadı</span>
                                 </button>
@@ -3098,7 +3098,7 @@ export function AsistanPage() {
                                   type="button"
                                   disabled={actionLoading === order.id || actionLoading === `iban_${order.id}`}
                                   onClick={() => handleSendIban(order)}
-                                  className="py-2.5 px-2 bg-[#2563EB] hover:bg-blue-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                  className="py-2.5 px-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                   {actionLoading === `iban_${order.id}` ? (
                                     <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -3111,7 +3111,7 @@ export function AsistanPage() {
                                   type="button"
                                   disabled={actionLoading === order.id || actionLoading === `iban_${order.id}`}
                                   onClick={() => handlePickupOrder(order.id)}
-                                  className="py-2.5 px-2 bg-[#2563EB] hover:bg-blue-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                  className="py-2.5 px-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                   {actionLoading === order.id ? (
                                     <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -3128,8 +3128,8 @@ export function AsistanPage() {
 
                               if (requiresCode && !isCodeVerified) {
                                 return (
-                                  <div className="space-y-2 border-t border-gray-100 pt-3 mt-2">
-                                    <label className="block text-xs font-bold text-[#1F2937]">
+                                  <div className="space-y-2 border-t border-border pt-3 mt-2">
+                                    <label className="block text-xs font-bold text-foreground">
                                       Teslim Kodunu Doğrula
                                     </label>
                                     <div className="flex items-center gap-2">
@@ -3147,13 +3147,13 @@ export function AsistanPage() {
                                             setVerificationErrors(prev => ({ ...prev, [order.id]: '' }));
                                           }
                                         }}
-                                        className="flex-1 bg-gray-50 border border-gray-200 focus:border-[#2563EB] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#1F2937] outline-none text-center tracking-widest transition-all"
+                                        className="flex-1 bg-background border border-border focus:border-primary rounded-xl px-3 py-2 text-xs font-mono font-bold text-foreground outline-none text-center tracking-widest transition-all"
                                       />
                                       <button
                                         type="button"
                                         disabled={verifyingOrder === order.id || !(verificationCodes[order.id] || '').trim()}
                                         onClick={() => handleVerifyDeliveryCode(order)}
-                                        className="py-2 px-3.5 bg-[#2563EB] hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all cursor-pointer shrink-0 flex items-center justify-center"
+                                        className="py-2 px-3.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center justify-center"
                                       >
                                         {verifyingOrder === order.id ? (
                                           <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
@@ -3163,7 +3163,7 @@ export function AsistanPage() {
                                       </button>
                                     </div>
                                     {verificationErrors[order.id] && (
-                                      <p className="text-[11px] font-bold text-[#EF4444] mt-1">
+                                      <p className="text-[11px] font-bold text-destructive mt-1">
                                         {verificationErrors[order.id]}
                                       </p>
                                     )}
@@ -3176,7 +3176,7 @@ export function AsistanPage() {
                                   type="button"
                                   disabled={actionLoading === order.id}
                                   onClick={() => handleCompleteOrder(order.id)}
-                                  className="w-full py-2.5 bg-[#10B981] hover:bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
                                 >
                                   {actionLoading === order.id ? (
                                     <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -3200,9 +3200,9 @@ export function AsistanPage() {
               {panelTab === 'completed' && (
                 <div className="space-y-3">
                   {completedOrders.length === 0 ? (
-                    <div className="bg-white border border-[#E5E7EB] rounded-2xl p-10 text-center shadow-sm space-y-2">
-                      <h3 className="text-base font-bold text-[#1F2937]">Teslim Edilen Sipariş Bulunmuyor</h3>
-                      <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+                    <div className="bg-card border border-border rounded-2xl p-10 text-center shadow-xs space-y-2">
+                      <h3 className="text-base font-bold text-foreground">Teslim Edilen Sipariş Bulunmuyor</h3>
+                      <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                         Tamamladığınız saha görevleri burada listelenecektir.
                       </p>
                     </div>
@@ -3221,61 +3221,61 @@ export function AsistanPage() {
                       return (
                         <div
                           key={order.id}
-                          className="bg-white border border-[#E5E7EB] p-4 rounded-2xl shadow-sm space-y-3"
+                          className="bg-card border border-border p-4 rounded-2xl shadow-xs space-y-3"
                         >
                           {/* Header: Status badge & Date */}
-                          <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-2.5">
+                          <div className="flex items-center justify-between border-b border-border pb-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-[#10B981] border border-emerald-200 uppercase tracking-wider">
+                              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 uppercase tracking-wider">
                                 TESLİM EDİLDİ
                               </span>
-                              <span className="font-mono text-xs text-[#6B7280]">#{r.order_number}</span>
+                              <span className="font-mono text-xs text-muted-foreground">#{r.order_number}</span>
                             </div>
-                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-[#F3F4F6] text-[#6B7280] border border-[#E5E7EB]">
+                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-muted text-muted-foreground border border-border">
                               {formattedDate}
                             </span>
                           </div>
 
                           {/* Info Grid */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                            <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-                              <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Müşteri</span>
-                              <p className="font-medium text-[#1F2937] text-xs">{r.customer_name || 'Müşteri'}</p>
-                              {r.customer_phone && <p className="text-[#6B7280] text-[11px] font-mono">{r.customer_phone}</p>}
+                            <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+                              <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Müşteri</span>
+                              <p className="font-medium text-foreground text-xs">{r.customer_name || 'Müşteri'}</p>
+                              {r.customer_phone && <p className="text-muted-foreground text-[11px] font-mono">{r.customer_phone}</p>}
                             </div>
 
-                            <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-                              <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Müşteri Konumu</span>
-                              <p className="text-[#1F2937] text-xs font-medium line-clamp-2">{r.customer_address || r.delivery_address || r.pickup_address || 'Müşteri Konumu'}</p>
+                            <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+                              <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Müşteri Konumu</span>
+                              <p className="text-foreground text-xs font-medium line-clamp-2">{r.customer_address || r.delivery_address || r.pickup_address || 'Müşteri Konumu'}</p>
                             </div>
                           </div>
 
                           {/* Task summary if available */}
                           {r.task_description && (
-                            <div className="bg-[#F8FAFC] px-3 py-2 rounded-xl border border-[#E5E7EB] text-xs">
-                              <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Yapılan İş</span>
-                              <p className="text-[#1F2937] font-medium text-xs line-clamp-1">{r.task_description}</p>
+                            <div className="bg-background px-3 py-2 rounded-xl border border-border text-xs">
+                              <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Yapılan İş</span>
+                              <p className="text-foreground font-medium text-xs line-clamp-1">{r.task_description}</p>
                             </div>
                           )}
 
                           {/* Geçerken UĞRA - Zaman Tercihi */}
                           {r.service_type === 'gecerken' && (
-                            <div className="bg-blue-50/70 p-3 rounded-xl border border-blue-200/70 text-xs space-y-0.5">
-                              <span className="text-[10px] font-bold text-blue-700 uppercase block">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
-                              <p className="text-xs text-blue-900 font-semibold">
+                            <div className="bg-blue-500/10 p-3 rounded-xl border border-blue-500/20 text-xs space-y-0.5">
+                              <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase block">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
+                              <p className="text-xs text-foreground font-semibold">
                                 {r.preferred_time || 'Gün içinde fark etmez'}
                               </p>
                             </div>
                           )}
 
                           {/* Footer: Earnings & Price */}
-                          <div className="flex items-center justify-between pt-1 border-t border-[#E5E7EB] text-xs">
-                            <span className="text-[#6B7280] font-medium">
-                              Müşteri Fiyatı: <strong className="text-[#1F2937] font-mono">{r.customer_price || order.total_price} ₺</strong>
+                          <div className="flex items-center justify-between pt-1 border-t border-border text-xs">
+                            <span className="text-muted-foreground font-medium">
+                              Müşteri Fiyatı: <strong className="text-foreground font-mono">{r.customer_price || order.total_price} ₺</strong>
                             </span>
                             <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-[#6B7280] font-semibold uppercase">Kazanç:</span>
-                              <span className="text-base font-bold text-[#10B981] font-mono">
+                              <span className="text-[10px] text-muted-foreground font-semibold uppercase">Kazanç:</span>
+                              <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                                 +{r.courier_net || order.courier_net || 0} ₺
                               </span>
                             </div>
@@ -3289,16 +3289,16 @@ export function AsistanPage() {
 
               {/* TAB 4: PROFİL */}
               {panelTab === 'profile' && (
-                <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 md:p-6 shadow-sm space-y-5">
-                  <div className="flex items-center gap-4 border-b border-[#E5E7EB] pb-5">
-                    <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] border border-[#E5E7EB] flex items-center justify-center text-[#1F2937] text-xl font-bold">
+                <div className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-xs space-y-5">
+                  <div className="flex items-center gap-4 border-b border-border pb-5">
+                    <div className="w-14 h-14 rounded-2xl bg-muted border border-border flex items-center justify-center text-foreground text-xl font-bold">
                       {currentAssistant.full_name?.charAt(0) || 'A'}
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-[#1F2937]">
+                      <h3 className="text-lg font-bold text-foreground">
                         {currentAssistant.full_name || 'Saha Asistanı'}
                       </h3>
-                      <p className="text-xs text-[#6B7280] font-semibold mt-0.5">
+                      <p className="text-xs text-muted-foreground font-semibold mt-0.5">
                         {connectedPartner
                           ? `Bağlı İş Ortağı: ${connectedPartner.business_name}`
                           : 'Bağımsız Saha Asistanı'}
@@ -3307,69 +3307,69 @@ export function AsistanPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB]">
-                      <span className="text-[10px] font-semibold text-[#6B7280] uppercase block mb-0.5">
+                    <div className="bg-background p-3.5 rounded-xl border border-border">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase block mb-0.5">
                         İsim Soyisim
                       </span>
-                      <p className="font-medium text-[#1F2937] text-sm">{currentAssistant.full_name || '-'}</p>
+                      <p className="font-medium text-foreground text-sm">{currentAssistant.full_name || '-'}</p>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB]">
-                      <span className="text-[10px] font-semibold text-[#6B7280] uppercase block mb-0.5">
+                    <div className="bg-background p-3.5 rounded-xl border border-border">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase block mb-0.5">
                         Telefon Numarası
                       </span>
-                      <p className="font-medium text-[#1F2937] text-sm">{currentAssistant.phone || '-'}</p>
+                      <p className="font-medium text-foreground text-sm">{currentAssistant.phone || '-'}</p>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB]">
-                      <span className="text-[10px] font-semibold text-[#6B7280] uppercase block mb-0.5">
+                    <div className="bg-background p-3.5 rounded-xl border border-border">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase block mb-0.5">
                         Aktiflik Durumu
                       </span>
                       <p className="font-medium text-sm flex items-center gap-2">
-                        <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-[#10B981]' : 'bg-gray-400'}`} />
-                        <span className="text-[#1F2937]">
+                        <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50'}`} />
+                        <span className="text-foreground">
                           {isOnline ? 'Çevrimiçi (Saha Aktif)' : 'Çevrimdışı'}
                         </span>
                       </p>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB]">
-                      <span className="text-[10px] font-semibold text-[#6B7280] uppercase block mb-0.5">
+                    <div className="bg-background p-3.5 rounded-xl border border-border">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase block mb-0.5">
                         Bağlı Olduğu Partner
                       </span>
-                      <p className="font-medium text-[#1F2937] text-sm">
+                      <p className="font-medium text-foreground text-sm">
                         {connectedPartner?.business_name || currentAssistant.partner_id || 'Bağımsız'}
                       </p>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB]">
-                      <span className="text-[10px] font-semibold text-[#6B7280] uppercase block mb-0.5">
+                    <div className="bg-background p-3.5 rounded-xl border border-border">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase block mb-0.5">
                         Görev Durumu
                       </span>
-                      <p className="font-medium text-[#1F2937] text-sm">
+                      <p className="font-medium text-foreground text-sm">
                         {activeOrders.length > 0 ? 'Görevde (Sipariş Teslimatında)' : 'Müsait (Görev Bekliyor)'}
                       </p>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3.5 rounded-xl border border-[#E5E7EB]">
-                      <span className="text-[10px] font-semibold text-[#6B7280] uppercase block mb-0.5">
+                    <div className="bg-background p-3.5 rounded-xl border border-border">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase block mb-0.5">
                         Araç Tipi / Şehir
                       </span>
-                      <p className="font-medium text-[#1F2937] text-sm capitalize">
+                      <p className="font-medium text-foreground text-sm capitalize">
                         {currentAssistant.vehicle_type || 'Motosiklet'} • {currentAssistant.city || 'İstanbul'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-[#E5E7EB] flex justify-between items-center">
-                    <span className="text-xs text-[#6B7280]">
-                      Tamamlanan Sipariş Sayısı: <strong className="text-[#1F2937]">{completedOrders.length}</strong>
+                  <div className="pt-3 border-t border-border flex justify-between items-center">
+                    <span className="text-xs text-muted-foreground">
+                      Tamamlanan Sipariş Sayısı: <strong className="text-foreground">{completedOrders.length}</strong>
                     </span>
 
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="px-4 py-2 rounded-xl bg-white hover:bg-red-50 border border-red-200 text-[#EF4444] text-xs font-bold transition-all cursor-pointer shadow-sm"
+                      className="px-4 py-2 rounded-xl bg-card hover:bg-destructive/10 border border-destructive/30 text-destructive text-xs font-bold transition-all cursor-pointer shadow-xs"
                     >
                       <span>Çıkış Yap</span>
                     </button>
@@ -3379,10 +3379,10 @@ export function AsistanPage() {
 
               {/* TAB 5: IBAN BİLGİLERİM */}
               {panelTab === 'iban' && (
-                <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 md:p-6 shadow-sm space-y-6">
-                  <div className="border-b border-[#E5E7EB] pb-4">
-                    <h3 className="text-lg font-bold text-[#1F2937]">IBAN Bilgilerim</h3>
-                    <p className="text-xs text-[#6B7280] mt-1">
+                <div className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-xs space-y-6">
+                  <div className="border-b border-border pb-4">
+                    <h3 className="text-lg font-bold text-foreground">IBAN Bilgilerim</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Ödemelerinizin aktarılacağı banka hesap bilgilerinizi düzenleyebilirsiniz.
                     </p>
                   </div>
@@ -3390,7 +3390,7 @@ export function AsistanPage() {
                   <form onSubmit={handleIbanSubmit} className="space-y-4">
                     {/* 1. Hesap Sahibi / Ad Soyad */}
                     <div>
-                      <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                         Hesap Sahibi (Ad Soyad)
                       </label>
                       <div className="relative">
@@ -3400,13 +3400,13 @@ export function AsistanPage() {
                           value={ibanAccountHolder}
                           onChange={(e) => setIbanAccountHolder(e.target.value)}
                           placeholder="Ad Soyad"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 pr-20 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB] transition-all"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 pr-20 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-all"
                         />
                         {ibanAccountHolder && (
                           <button
                             type="button"
                             onClick={() => handleCopyText(ibanAccountHolder, 'Ad Soyad')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-card hover:bg-accent/50 text-foreground border border-border rounded-lg text-xs font-medium cursor-pointer transition-colors"
                           >
                             Kopyala
                           </button>
@@ -3416,7 +3416,7 @@ export function AsistanPage() {
 
                     {/* 2. Banka Adı */}
                     <div>
-                      <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                         Banka Adı
                       </label>
                       <div className="relative">
@@ -3426,13 +3426,13 @@ export function AsistanPage() {
                           value={ibanBankName}
                           onChange={(e) => setIbanBankName(e.target.value)}
                           placeholder="Örn: Garanti BBVA, İş Bankası, Ziraat Bankası"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 pr-20 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB] transition-all"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 pr-20 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-all"
                         />
                         {ibanBankName && (
                           <button
                             type="button"
                             onClick={() => handleCopyText(ibanBankName, 'Banka Adı')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-card hover:bg-accent/50 text-foreground border border-border rounded-lg text-xs font-medium cursor-pointer transition-colors"
                           >
                             Kopyala
                           </button>
@@ -3442,7 +3442,7 @@ export function AsistanPage() {
 
                     {/* 3. IBAN */}
                     <div>
-                      <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                         IBAN
                       </label>
                       <div className="relative">
@@ -3453,13 +3453,13 @@ export function AsistanPage() {
                           value={ibanValue}
                           onChange={handleIbanInputChange}
                           placeholder="TR00 0000 0000 0000 0000 0000 00"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 pr-20 text-sm font-mono text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB] transition-all"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 pr-20 text-sm font-mono text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-all"
                         />
                         {ibanValue && (
                           <button
                             type="button"
                             onClick={() => handleCopyText(ibanValue, 'IBAN')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-medium cursor-pointer transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-card hover:bg-accent/50 text-foreground border border-border rounded-lg text-xs font-medium cursor-pointer transition-colors"
                           >
                             Kopyala
                           </button>
@@ -3472,7 +3472,7 @@ export function AsistanPage() {
                       <button
                         type="submit"
                         disabled={isSavingIban}
-                        className="w-full py-3.5 bg-[#2563EB] hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isSavingIban ? (
                           <>
@@ -3492,14 +3492,14 @@ export function AsistanPage() {
           /* ADAY / GİRİŞ EKRANI */
           <>
             {/* Mode Switcher Header - Aday / Giriş Sekmeleri */}
-            <div className="w-full bg-[#E5E7EB]/70 border border-[#E5E7EB] p-1.5 rounded-2xl flex gap-2 mb-8 shadow-sm">
+            <div className="w-full bg-muted/60 border border-border p-1.5 rounded-2xl flex gap-2 mb-8 shadow-xs">
               <button
                 type="button"
                 onClick={() => setActiveTabMode('application')}
                 className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeTabMode === 'application'
-                    ? 'bg-white text-[#111827] font-extrabold shadow-sm'
-                    : 'text-[#6B7280] hover:text-[#111827]'
+                    ? 'bg-card text-foreground font-extrabold shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <span>Asistan Aday Başvurusu</span>
@@ -3509,8 +3509,8 @@ export function AsistanPage() {
                 onClick={() => setActiveTabMode('panel')}
                 className={`flex-1 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   activeTabMode === 'panel'
-                    ? 'bg-white text-[#111827] font-extrabold shadow-sm'
-                    : 'text-[#6B7280] hover:text-[#111827]'
+                    ? 'bg-card text-foreground font-extrabold shadow-xs'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <span>Asistan Girişi</span>
@@ -3522,26 +3522,26 @@ export function AsistanPage() {
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-8 shadow-sm space-y-6 mx-auto"
+                className="w-full max-w-md bg-card border border-border rounded-2xl p-8 shadow-xs space-y-6 mx-auto"
               >
                 <div className="text-center space-y-2">
-                  <h1 className="text-2xl font-bold text-[#111827] tracking-tight">
+                  <h1 className="text-2xl font-bold text-foreground tracking-tight">
                     Asistan Girişi
                   </h1>
-                  <p className="text-xs text-[#6B7280]">
+                  <p className="text-xs text-muted-foreground">
                     Saha görevlerinizi yönetmek ve siparişleri takip etmek için giriş yapın.
                   </p>
                 </div>
 
                 {loginError && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-[#EF4444] text-xs">
+                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-xs">
                     <span>{loginError}</span>
                   </div>
                 )}
 
                 <form onSubmit={handleAuthSubmit} className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                       E-Posta
                     </label>
                     <input
@@ -3550,12 +3550,12 @@ export function AsistanPage() {
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       placeholder="asistan@ugra.app"
-                      className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB] transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                       Şifre
                     </label>
                     <input
@@ -3564,14 +3564,14 @@ export function AsistanPage() {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB] transition-all"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-all"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={loginSubmitting}
-                    className="w-full py-3.5 bg-[#2563EB] hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {loginSubmitting ? (
                       <>
@@ -3584,13 +3584,13 @@ export function AsistanPage() {
                   </button>
                 </form>
 
-                <div className="text-center pt-2 border-t border-[#E5E7EB]">
-                  <p className="text-xs text-[#6B7280]">
+                <div className="text-center pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground">
                     Henüz asistan hesabınız yok mu?{' '}
                     <button
                       type="button"
                       onClick={() => setActiveTabMode('application')}
-                      className="text-[#2563EB] underline font-bold cursor-pointer"
+                      className="text-primary underline font-bold cursor-pointer"
                     >
                       Başvuru Yapın
                     </button>
@@ -3608,17 +3608,17 @@ export function AsistanPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="bg-white border border-[#E5E7EB] rounded-2xl p-6 md:p-10 shadow-sm relative overflow-hidden"
+                  className="bg-card border border-border rounded-2xl p-6 md:p-10 shadow-xs relative overflow-hidden"
                 >
                   <div className="flex items-center justify-center mb-8">
-                    <div className="bg-[#F5F7FA] p-1.5 rounded-2xl border border-[#E5E7EB] flex gap-2">
+                    <div className="bg-muted p-1.5 rounded-2xl border border-border flex gap-2">
                       <button
                         type="button"
                         onClick={() => setVehicleType('motosiklet')}
                         className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                           vehicleType === 'motosiklet'
-                            ? 'bg-white text-[#111827] font-extrabold shadow-sm'
-                            : 'text-[#6B7280] hover:text-[#111827]'
+                            ? 'bg-card text-foreground font-extrabold shadow-xs'
+                            : 'text-muted-foreground hover:text-foreground'
                         }`}
                       >
                         Motosiklet
@@ -3628,8 +3628,8 @@ export function AsistanPage() {
                         onClick={() => setVehicleType('bisiklet')}
                         className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                           vehicleType === 'bisiklet'
-                            ? 'bg-white text-[#111827] font-extrabold shadow-sm'
-                            : 'text-[#6B7280] hover:text-[#111827]'
+                            ? 'bg-card text-foreground font-extrabold shadow-xs'
+                            : 'text-muted-foreground hover:text-foreground'
                         }`}
                       >
                         Bisiklet
@@ -3638,10 +3638,10 @@ export function AsistanPage() {
                   </div>
 
                   <div className="mb-10 text-center md:text-left">
-                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#111827] mt-1">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mt-1">
                       {vehicleType === 'bisiklet' ? 'Bisikletli Asistan Başvurusu' : 'Motosikletli Asistan Başvurusu'}
                     </h1>
-                    <p className="text-xs text-[#6B7280] mt-3 leading-relaxed max-w-xl">
+                    <p className="text-xs text-muted-foreground mt-3 leading-relaxed max-w-xl">
                       {vehicleType === 'bisiklet' 
                         ? 'Bisikletinizle ekibimize katılın, şehir içi çevre dostu teslimatlar yaparak esnek saatlerle kazanç elde edin.' 
                         : 'Motosikletinizle ekibimize katılın, esnek saatlerle yüksek kazanç elde edin. Başvuru formunu doldurarak ilk adımı atın.'}
@@ -3651,7 +3651,7 @@ export function AsistanPage() {
                   <form onSubmit={handleAppSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
-                        <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                           Ad Soyad
                         </label>
                         <input
@@ -3661,11 +3661,11 @@ export function AsistanPage() {
                           value={formData.fullName}
                           onChange={handleAppInputChange}
                           placeholder="Adınız Soyadınız"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                           Telefon Numarası
                         </label>
                         <input
@@ -3675,15 +3675,15 @@ export function AsistanPage() {
                           value={formData.phone}
                           onChange={handleAppInputChange}
                           placeholder="05xx xxx xx xx"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
-                        <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
-                          E-Posta Adresi <span className="text-[#EF4444]">*</span>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+                          E-Posta Adresi <span className="text-destructive">*</span>
                         </label>
                         <input
                           type="email"
@@ -3692,12 +3692,12 @@ export function AsistanPage() {
                           value={formData.email}
                           onChange={handleAppInputChange}
                           placeholder="ornek@email.com"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
-                          Giriş Şifresi <span className="text-[#EF4444]">*</span>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+                          Giriş Şifresi <span className="text-destructive">*</span>
                         </label>
                         <input
                           type="password"
@@ -3707,22 +3707,22 @@ export function AsistanPage() {
                           value={formData.password}
                           onChange={handleAppInputChange}
                           placeholder="Giriş için kullanacağınız şifreniz"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div>
-                        <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
-                          Çalışmak İstediğiniz Şehir <span className="text-[#EF4444]">*</span>
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+                          Çalışmak İstediğiniz Şehir <span className="text-destructive">*</span>
                         </label>
                         <select
                           name="cityId"
                           required
                           value={formData.cityId || formData.city}
                           onChange={(e) => handleCityChange(e.target.value)}
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] focus:outline-none focus:border-[#2563EB]"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary"
                         >
                           <option value="">Şehir Seçiniz</option>
                           {cityOptions.map((c) => (
@@ -3732,7 +3732,7 @@ export function AsistanPage() {
                           ))}
                         </select>
                         {formData.city && !cityResolving && cityResolution.count === 1 && (
-                          <p className="text-xs text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1.5 flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Bayi: {cityResolution.franchises[0]?.name} (Otomatik Eşleşti)
                           </p>
                         )}
@@ -3740,15 +3740,15 @@ export function AsistanPage() {
 
                       {formData.city && cityResolution.count > 1 ? (
                         <div>
-                          <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
-                            Çalışmak İstediğiniz Bayi / Bölge <span className="text-[#EF4444]">*</span>
+                          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+                            Çalışmak İstediğiniz Bayi / Bölge <span className="text-destructive">*</span>
                           </label>
                           <select
                             name="franchiseId"
                             required
                             value={formData.franchiseId}
                             onChange={(e) => setFormData((prev) => ({ ...prev, franchiseId: e.target.value }))}
-                            className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] focus:outline-none focus:border-[#2563EB]"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary"
                           >
                             <option value="">Bayi Seçiniz</option>
                             {cityResolution.franchises.map((f) => (
@@ -3760,7 +3760,7 @@ export function AsistanPage() {
                         </div>
                       ) : (
                         <div>
-                          <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                             {vehicleType === 'bisiklet' ? 'Bisiklet Marka / Model' : 'Motosiklet Marka / Model'}
                           </label>
                           <input
@@ -3770,7 +3770,7 @@ export function AsistanPage() {
                             value={formData.motorInfo}
                             onChange={handleAppInputChange}
                             placeholder={vehicleType === 'bisiklet' ? 'Örn: Trek FX 3' : 'Örn: Honda Forza 250'}
-                            className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                           />
                         </div>
                       )}
@@ -3779,7 +3779,7 @@ export function AsistanPage() {
                     {formData.city && cityResolution.count > 1 && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                          <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                             {vehicleType === 'bisiklet' ? 'Bisiklet Marka / Model' : 'Motosiklet Marka / Model'}
                           </label>
                           <input
@@ -3789,7 +3789,7 @@ export function AsistanPage() {
                             value={formData.motorInfo}
                             onChange={handleAppInputChange}
                             placeholder={vehicleType === 'bisiklet' ? 'Örn: Trek FX 3' : 'Örn: Honda Forza 250'}
-                            className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                           />
                         </div>
                       </div>
@@ -3798,7 +3798,7 @@ export function AsistanPage() {
                     <div className={`grid grid-cols-1 ${vehicleType === 'motosiklet' ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-5`}>
                       {vehicleType === 'motosiklet' && (
                         <div>
-                          <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                             Ehliyet Sınıfı
                           </label>
                           <input
@@ -3808,12 +3808,12 @@ export function AsistanPage() {
                             value={formData.licenseInfo}
                             onChange={handleAppInputChange}
                             placeholder="Örn: A, A2, A1"
-                            className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                           />
                         </div>
                       )}
                       <div>
-                        <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                           Saha / Teslimat Deneyimi
                         </label>
                         <input
@@ -3823,15 +3823,15 @@ export function AsistanPage() {
                           value={formData.experience}
                           onChange={handleAppInputChange}
                           placeholder="Örn: 2 Yıl Kurye Deneyimi"
-                          className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-4 py-3 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB]"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary"
                         />
                       </div>
                     </div>
 
                     {/* Asistan Paneli Kullanım Paketi */}
                     <div>
-                      <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
-                        Asistan Paneli Kullanım Paketi <span className="text-[#EF4444]">*</span>
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
+                        Asistan Paneli Kullanım Paketi <span className="text-destructive">*</span>
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {ASSISTANT_SUBSCRIPTION_PACKAGES.map((pkg) => {
@@ -3843,20 +3843,20 @@ export function AsistanPage() {
                               onClick={() => setFormData(prev => ({ ...prev, subscriptionPackage: pkg.id as any }))}
                               className={`p-4 rounded-xl border text-left transition-all relative cursor-pointer ${
                                 isSelected
-                                  ? 'border-[#2563EB] bg-blue-50/70 ring-1 ring-[#2563EB]'
-                                  : 'border-[#E5E7EB] bg-[#F9FAFB] hover:border-gray-300'
+                                  ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                                  : 'border-border bg-card hover:bg-accent/40'
                               }`}
                             >
                               {pkg.badge && (
-                                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded bg-[#2563EB] text-white">
+                                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded bg-primary text-primary-foreground">
                                   {pkg.badge}
                                 </span>
                               )}
-                              <div className="font-bold text-sm text-[#111827]">{pkg.title}</div>
-                              <div className="text-base font-extrabold text-[#111827] mt-1">
+                              <div className="font-bold text-sm text-foreground">{pkg.title}</div>
+                              <div className="text-base font-extrabold text-foreground mt-1">
                                 {pkg.total_price.toLocaleString('tr-TR')} TL
                               </div>
-                              <div className="text-xs text-[#6B7280] mt-0.5">
+                              <div className="text-xs text-muted-foreground mt-0.5">
                                 Aylık {pkg.monthly_price.toLocaleString('tr-TR')} TL
                               </div>
                             </button>
@@ -3866,7 +3866,7 @@ export function AsistanPage() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-[#6B7280] uppercase tracking-wider block mb-2">
+                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block mb-2">
                         Ek Not / Açıklama
                       </label>
                       <textarea
@@ -3875,14 +3875,14 @@ export function AsistanPage() {
                         onChange={handleAppInputChange}
                         placeholder="Eklemek istediğiniz notlar..."
                         rows={3}
-                        className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-4 text-sm text-[#111827] placeholder:text-gray-400 focus:outline-none focus:border-[#2563EB] resize-none"
+                        className="w-full bg-background border border-border rounded-xl p-4 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary resize-none"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={isSubmittingApp}
-                      className="w-full bg-[#2563EB] hover:bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3.5 rounded-xl transition-all cursor-pointer text-xs uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 shadow-xs"
                     >
                       {isSubmittingApp ? (
                         <>
@@ -3903,27 +3903,27 @@ export function AsistanPage() {
                   key="success-card"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-[#2A2B31] border border-[#3F414A] rounded-[2rem] p-8 md:p-16 text-center shadow-2xl relative overflow-hidden"
+                  className="bg-card border border-border rounded-2xl p-8 md:p-16 text-center shadow-xs relative overflow-hidden"
                 >
                   <div className="flex flex-col items-center max-w-lg mx-auto">
                     <div className="mb-8 select-none">
-                      <span className="text-4xl md:text-[40px] font-extrabold tracking-wider text-white">
-                        UĞRA<span className="text-[#FF7A00]">.</span>
+                      <span className="text-4xl md:text-[40px] font-extrabold tracking-wider text-foreground">
+                        UĞRA<span className="text-primary">.</span>
                       </span>
                     </div>
 
-                    <h2 className="text-3xl font-extrabold text-white mb-4">
+                    <h2 className="text-3xl font-extrabold text-foreground mb-4">
                       Başvurunuz Başarıyla Alındı!
                     </h2>
                     
-                    <p className="text-sm text-[#A7AFBA] leading-relaxed mb-8">
-                      UĞRA<span className="text-[#FF7A00]">.</span> asistan adaylığınız sistemimize kaydedildi. Ekibimiz başvurunuzu inceledikten sonra onay sürecinde tarafınıza bilgi verilecektir.
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+                      UĞRA<span className="text-primary">.</span> asistan adaylığınız sistemimize kaydedildi. Ekibimiz başvurunuzu inceledikten sonra onay sürecinde tarafınıza bilgi verilecektir.
                     </p>
 
                     <button
                       type="button"
                       onClick={() => setStage('form')}
-                      className="bg-white text-black font-extrabold px-8 py-3.5 rounded-xl hover:bg-zinc-200 transition-all cursor-pointer text-sm"
+                      className="bg-primary text-primary-foreground font-extrabold px-8 py-3.5 rounded-xl hover:bg-primary/90 transition-all cursor-pointer text-sm"
                     >
                       Yeni Başvuru Yap
                     </button>
@@ -3957,22 +3957,22 @@ export function AsistanPage() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="fixed top-0 left-0 bottom-0 w-[82vw] max-w-[340px] bg-white border-r border-[#E5E7EB] z-50 p-5 flex flex-col justify-between overflow-y-auto shadow-2xl text-[#1F2937]"
+              className="fixed top-0 left-0 bottom-0 w-[82vw] max-w-[340px] bg-card border-r border-border z-50 p-5 flex flex-col justify-between overflow-y-auto shadow-2xl text-foreground"
             >
               <div>
                 {/* Header of Drawer */}
-                <div className="pb-4 border-b border-gray-100 space-y-3 relative">
+                <div className="pb-4 border-b border-border space-y-3 relative">
                   <button
                     type="button"
                     onClick={() => setIsDrawerOpen(false)}
-                    className="absolute -top-1 -right-1 p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+                    className="absolute -top-1 -right-1 p-1.5 rounded-full bg-muted hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     aria-label="Kapat"
                   >
                     <X className="w-4 h-4" />
                   </button>
 
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0 flex items-center justify-center font-bold text-gray-700 text-lg">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-muted border border-border shrink-0 flex items-center justify-center font-bold text-foreground text-lg">
                       {currentAssistant?.avatar_url ? (
                         <img src={currentAssistant.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
@@ -3980,8 +3980,8 @@ export function AsistanPage() {
                       )}
                     </div>
                     <div className="min-w-0 pr-6">
-                      <p className="text-xs text-gray-500 font-medium">Hoş Geldin</p>
-                      <h3 className="text-sm font-bold text-gray-900 truncate uppercase tracking-tight">
+                      <p className="text-xs text-muted-foreground font-medium">Hoş Geldin</p>
+                      <h3 className="text-sm font-bold text-foreground truncate uppercase tracking-tight">
                         {currentAssistant?.full_name || 'GÖKHAN GÖKALP'}
                       </h3>
                     </div>
@@ -3992,17 +3992,17 @@ export function AsistanPage() {
                     className="flex items-center gap-2 pt-1 hover:opacity-80 transition-opacity cursor-pointer inline-flex"
                   >
                     <div className="w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                      <Phone className="w-3.5 h-3.5 text-amber-600" />
+                      <Phone className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     </div>
-                    <span className="text-xs font-semibold text-gray-800">Asistan Temsilcisi</span>
+                    <span className="text-xs font-semibold text-foreground">Asistan Temsilcisi</span>
                   </a>
                 </div>
 
                 {/* Drawer Menu Options */}
-                <div className="py-3 space-y-4 text-gray-800">
+                <div className="py-3 space-y-4 text-foreground">
                   {/* SECTION 1: Profil */}
                   <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
                       Profil
                     </h4>
                     <button
@@ -4011,7 +4011,7 @@ export function AsistanPage() {
                         setPanelTab('profile');
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Şifre Değiştir
                     </button>
@@ -4021,17 +4021,17 @@ export function AsistanPage() {
                         setPanelTab('iban');
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       IBAN Bilgilerim
                     </button>
                   </div>
 
-                  <div className="border-b border-gray-100" />
+                  <div className="border-b border-border" />
 
                   {/* SECTION 2: İşlemler */}
                   <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
                       İşlemler
                     </h4>
                     <button
@@ -4040,7 +4040,7 @@ export function AsistanPage() {
                         setActiveModal('wallet');
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Ödemeler
                     </button>
@@ -4050,17 +4050,17 @@ export function AsistanPage() {
                         setActiveModal('subscription');
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Aboneliğim
                     </button>
                   </div>
 
-                  <div className="border-b border-gray-100" />
+                  <div className="border-b border-border" />
 
                   {/* SECTION 3: Davet Listesi */}
                   <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
                       Davet Listesi
                     </h4>
                     <button
@@ -4068,17 +4068,17 @@ export function AsistanPage() {
                       onClick={() => {
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Arkadaşlarını Davet Et
                     </button>
                   </div>
 
-                  <div className="border-b border-gray-100" />
+                  <div className="border-b border-border" />
 
                   {/* SECTION 4: Ayarlar */}
                   <div className="space-y-1">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                    <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1 mb-1">
                       Ayarlar
                     </h4>
                     <button
@@ -4087,7 +4087,7 @@ export function AsistanPage() {
                         setActiveModal('settings');
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Sıkça Sorulan Sorular
                     </button>
@@ -4096,7 +4096,7 @@ export function AsistanPage() {
                       onClick={() => {
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Kullanıcı Sözleşmesi
                     </button>
@@ -4105,7 +4105,7 @@ export function AsistanPage() {
                       onClick={() => {
                         setIsDrawerOpen(false);
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-accent/50 text-foreground font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Gizlilik Sözleşmesi
                     </button>
@@ -4115,7 +4115,7 @@ export function AsistanPage() {
                         setIsDrawerOpen(false);
                         handleLogout();
                       }}
-                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-gray-50 text-gray-700 font-medium text-sm transition-colors cursor-pointer block"
+                      className="w-full text-left py-2 px-2 rounded-lg hover:bg-destructive/10 text-destructive font-medium text-sm transition-colors cursor-pointer block"
                     >
                       Çıkış Yap
                     </button>
@@ -4124,12 +4124,12 @@ export function AsistanPage() {
               </div>
 
               {/* Footer of Drawer */}
-              <div className="pt-4 border-t border-gray-100 mt-4">
+              <div className="pt-4 border-t border-border mt-4">
                 <a
                   href="https://instagram.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-[#1E293B] text-white flex items-center justify-center hover:bg-slate-700 transition-colors inline-flex"
+                  className="w-9 h-9 rounded-full bg-muted text-foreground flex items-center justify-center hover:bg-accent transition-colors inline-flex"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-4.5 h-4.5" />
@@ -4143,28 +4143,28 @@ export function AsistanPage() {
       {/* Aboneliğim Modal */}
       <AnimatePresence>
         {activeModal === 'subscription' && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-xl space-y-5 text-[#1F2937]"
+              className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-xl space-y-5 text-foreground"
             >
               {/* Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 border border-[#E5E7EB] flex items-center justify-center text-[#1F2937]">
-                    <Clock className="w-5 h-5 text-[#1F2937]" />
+                  <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground">
+                    <Clock className="w-5 h-5 text-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[#1F2937]">Aboneliğim</h3>
-                    <p className="text-xs text-[#6B7280]">Abonelik durumunuz ve süre takibiniz</p>
+                    <h3 className="text-base font-bold text-foreground">Aboneliğim</h3>
+                    <p className="text-xs text-muted-foreground">Abonelik durumunuz ve süre takibiniz</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="p-2 rounded-xl bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#6B7280] hover:text-[#1F2937] transition-colors cursor-pointer"
+                  className="p-2 rounded-xl bg-muted hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -4173,17 +4173,17 @@ export function AsistanPage() {
               {/* Content */}
               {subLoading ? (
                 <div className="py-8 flex flex-col items-center justify-center gap-2 text-center">
-                  <Loader2 className="w-6 h-6 text-[#1F2937] animate-spin" />
-                  <p className="text-xs text-[#6B7280]">Abonelik bilgileri yükleniyor...</p>
+                  <Loader2 className="w-6 h-6 text-foreground animate-spin" />
+                  <p className="text-xs text-muted-foreground">Abonelik bilgileri yükleniyor...</p>
                 </div>
               ) : !subscription ? (
-                <div className="py-6 px-4 text-center space-y-4 bg-[#F8FAFC] rounded-xl border border-[#E5E7EB]">
-                  <AlertCircle className="w-8 h-8 text-[#6B7280] mx-auto" />
+                <div className="py-6 px-4 text-center space-y-4 bg-background rounded-xl border border-border">
+                  <AlertCircle className="w-8 h-8 text-muted-foreground mx-auto" />
                   <div className="space-y-1">
-                    <p className="text-sm font-bold text-[#1F2937]">
+                    <p className="text-sm font-bold text-foreground">
                       Aktif aboneliğiniz bulunmuyor.
                     </p>
-                    <p className="text-xs text-[#6B7280]">
+                    <p className="text-xs text-muted-foreground">
                       Abonelik talebi göndererek yönetici onayına sunabilirsiniz.
                     </p>
                   </div>
@@ -4191,7 +4191,7 @@ export function AsistanPage() {
                     type="button"
                     disabled={renewalSubmitting}
                     onClick={handleRenewalRequest}
-                    className="w-full py-2.5 bg-[#1F2937] hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                    className="w-full py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
                   >
                     {renewalSubmitting ? (
                       <>
@@ -4206,12 +4206,12 @@ export function AsistanPage() {
               ) : (
                 <div className="space-y-4">
                   {/* Status Banner */}
-                  <div className="flex items-center justify-between bg-[#F8FAFC] border border-[#E5E7EB] p-3.5 rounded-xl">
+                  <div className="flex items-center justify-between bg-background border border-border p-3.5 rounded-xl">
                     <div className="space-y-0.5">
-                      <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">
                         Abonelik Durumu
                       </span>
-                      <span className="text-sm font-bold text-[#1F2937] block">
+                      <span className="text-sm font-bold text-foreground block">
                         {(() => {
                           if (subscription.renewal_requested && subscription.renewal_decision === 'pending') {
                             return 'Bekleyen Abonelik Talebi';
@@ -4229,7 +4229,7 @@ export function AsistanPage() {
                     {(() => {
                       if (subscription.renewal_requested && subscription.renewal_decision === 'pending') {
                         return (
-                          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
                             ● Talep İncelemede
                           </span>
                         );
@@ -4240,20 +4240,20 @@ export function AsistanPage() {
 
                       if (isExpired) {
                         return (
-                          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-gray-200 text-gray-800 border border-gray-300">
+                          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-muted text-muted-foreground border border-border">
                             ● Pasif / Süresi Doldu
                           </span>
                         );
                       }
                       if (isNearExpiry) {
                         return (
-                          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-zinc-200 text-zinc-900 border border-zinc-300">
+                          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/20">
                             ● Yakında Bitiyor
                           </span>
                         );
                       }
                       return (
-                        <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
                           ● Aktif
                         </span>
                       );
@@ -4262,39 +4262,39 @@ export function AsistanPage() {
 
                   {/* Details Grid */}
                   <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-                      <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">Başlangıç</span>
-                      <span className="text-[#1F2937] font-medium text-xs block">
+                    <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Başlangıç</span>
+                      <span className="text-foreground font-medium text-xs block">
                         {formatTurkishDateStr(subscription.start_date)}
                       </span>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-                      <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">Bitiş</span>
-                      <span className="text-[#1F2937] font-medium text-xs block">
+                    <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Bitiş</span>
+                      <span className="text-foreground font-medium text-xs block">
                         {formatTurkishDateStr(subscription.expires_at)}
                       </span>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-                      <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">Aylık Ücret</span>
-                      <span className="text-[#1F2937] font-bold text-xs font-mono block">
+                    <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Aylık Ücret</span>
+                      <span className="text-foreground font-bold text-xs font-mono block">
                         {subscription.monthly_price && subscription.monthly_price > 0 
                           ? `${subscription.monthly_price.toLocaleString('tr-TR')} TL` 
                           : 'Ücretsiz / Belirtilmemiş'}
                       </span>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5">
-                      <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">Ödeme Durumu</span>
-                      <span className="text-[#1F2937] font-medium text-xs block">
+                    <div className="bg-background p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Ödeme Durumu</span>
+                      <span className="text-foreground font-medium text-xs block">
                         {subscription.payment_status === 'paid' || subscription.payment_status === 'odendi' ? 'Ödendi' : subscription.payment_status === 'unpaid' ? 'Ödenmedi' : 'Beklemede'}
                       </span>
                     </div>
 
-                    <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-0.5 col-span-2">
-                      <span className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider block">Kalan Süre</span>
-                      <span className="text-[#1F2937] font-bold text-sm font-mono block">
+                    <div className="bg-background p-3 rounded-xl border border-border space-y-0.5 col-span-2">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Kalan Süre</span>
+                      <span className="text-foreground font-bold text-sm font-mono block">
                         {(() => {
                           const remainingDays = getSubscriptionDaysRemaining(subscription.expires_at);
                           if (remainingDays <= 0 || subscription.status === 'expired' || subscription.status === 'inactive') {
@@ -4313,22 +4313,22 @@ export function AsistanPage() {
 
                     if (isExpired) {
                       return (
-                        <div className="p-3 bg-zinc-100 border border-zinc-200 rounded-xl text-xs text-zinc-800 space-y-1">
+                        <div className="p-3 bg-muted border border-border rounded-xl text-xs text-foreground space-y-1">
                           <p className="font-semibold">Abonelik süresi doldu.</p>
-                          <p className="text-[11px] text-zinc-600">Yenileme talebi göndererek aboneliğinizi uzatabilirsiniz.</p>
+                          <p className="text-[11px] text-muted-foreground">Yenileme talebi göndererek aboneliğinizi uzatabilirsiniz.</p>
                         </div>
                       );
                     }
                     if (remainingDays <= 3) {
                       return (
-                        <div className="p-3 bg-zinc-100 border border-zinc-200 rounded-xl text-xs text-zinc-800 space-y-1">
+                        <div className="p-3 bg-muted border border-border rounded-xl text-xs text-foreground space-y-1">
                           <p className="font-semibold">Aboneliğiniz yakında sona erecek. Yenileme talebi gönderebilirsiniz.</p>
                         </div>
                       );
                     }
                     if (remainingDays <= 7) {
                       return (
-                        <div className="p-3 bg-zinc-100 border border-zinc-200 rounded-xl text-xs text-zinc-800">
+                        <div className="p-3 bg-muted border border-border rounded-xl text-xs text-foreground">
                           <p className="font-semibold">Aboneliğinizin süresi yakında sona erecek.</p>
                         </div>
                       );
@@ -4338,31 +4338,31 @@ export function AsistanPage() {
 
                   {/* Renewal Request Action */}
                   {subscription.renewal_requested && subscription.renewal_decision === 'pending' ? (
-                    <div className="p-3.5 bg-gray-50 border border-[#E5E7EB] rounded-xl text-xs space-y-1">
+                    <div className="p-3.5 bg-background border border-border rounded-xl text-xs space-y-1">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-[#1F2937]">Abonelik talebiniz yönetici tarafından inceleniyor.</span>
-                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                        <span className="font-semibold text-foreground">Abonelik talebiniz yönetici tarafından inceleniyor.</span>
+                        <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                           Beklemede
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#6B7280]">Abonelik / yenileme talebiniz yönetici incelemesindedir.</p>
+                      <p className="text-[11px] text-muted-foreground">Abonelik / yenileme talebiniz yönetici incelemesindedir.</p>
                     </div>
                   ) : subscription.renewal_decision === 'rejected' && !subscription.renewal_requested ? (
                     <div className="space-y-3">
-                      <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs space-y-1">
+                      <div className="p-3.5 bg-destructive/10 border border-destructive/20 rounded-xl text-xs space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-red-800">Abonelik talebiniz reddedildi.</span>
-                          <span className="text-[10px] font-bold text-red-700 bg-white px-2 py-0.5 rounded border border-red-200">
+                          <span className="font-semibold text-destructive">Abonelik talebiniz reddedildi.</span>
+                          <span className="text-[10px] font-bold text-destructive bg-card px-2 py-0.5 rounded border border-destructive/20">
                             Reddedildi
                           </span>
                         </div>
-                        <p className="text-[11px] text-red-600">Tekrar talep gönderebilirsiniz.</p>
+                        <p className="text-[11px] text-destructive">Tekrar talep gönderebilirsiniz.</p>
                       </div>
                       <button
                         type="button"
                         disabled={renewalSubmitting}
                         onClick={handleRenewalRequest}
-                        className="w-full py-2.5 bg-[#1F2937] hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                        className="w-full py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
                       >
                         {renewalSubmitting ? (
                           <>
@@ -4379,7 +4379,7 @@ export function AsistanPage() {
                       type="button"
                       disabled={renewalSubmitting}
                       onClick={handleRenewalRequest}
-                      className="w-full py-2.5 bg-[#1F2937] hover:bg-black text-white font-bold rounded-xl text-xs uppercase transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                      className="w-full py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
                     >
                       {renewalSubmitting ? (
                         <>
@@ -4397,7 +4397,7 @@ export function AsistanPage() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-full py-2.5 bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#1F2937] font-bold rounded-xl text-xs uppercase transition-all cursor-pointer"
+                className="w-full py-2.5 bg-muted hover:bg-accent text-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer"
               >
                 Kapat
               </button>
@@ -4409,57 +4409,57 @@ export function AsistanPage() {
       {/* Cüzdan Modal */}
       <AnimatePresence>
         {activeModal === 'wallet' && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-xl space-y-5 text-[#1F2937]"
+              className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-xl space-y-5 text-foreground"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#10B981]">
-                    <Wallet className="w-5 h-5 text-[#10B981]" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[#1F2937]">Cüzdanım & Hak Ediş</h3>
-                    <p className="text-xs text-[#6B7280]">Kazançlarınız ve teslimat bakiye özetiniz</p>
+                    <h3 className="text-base font-bold text-foreground">Cüzdanım & Hak Ediş</h3>
+                    <p className="text-xs text-muted-foreground">Kazançlarınız ve teslimat bakiye özetiniz</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="p-2 rounded-xl bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#6B7280] hover:text-[#1F2937]"
+                  className="p-2 rounded-xl bg-muted hover:bg-accent text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Total Balance Card */}
-              <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl p-4 space-y-1.5">
-                <p className="text-[10px] text-[#6B7280] font-semibold uppercase tracking-wider">Toplam Net Kazanç</p>
-                <div className="text-2xl font-bold text-[#10B981] font-mono">
+              <div className="bg-background border border-border rounded-xl p-4 space-y-1.5">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Toplam Net Kazanç</p>
+                <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                   {completedOrders.reduce((acc, curr) => acc + (curr.courier_net || 0), 0)} ₺
                 </div>
-                <div className="flex items-center justify-between text-xs text-[#6B7280] pt-2 border-t border-[#E5E7EB]">
+                <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
                   <span>Tamamlanan Teslimat:</span>
-                  <span className="font-bold text-[#1F2937]">{completedOrders.length} Adet</span>
+                  <span className="font-bold text-foreground">{completedOrders.length} Adet</span>
                 </div>
               </div>
 
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#F8FAFC] border border-[#E5E7EB] p-3 rounded-xl space-y-0.5">
-                  <span className="text-[10px] text-[#6B7280] uppercase font-semibold block">Ortalama Teslimat Net</span>
-                  <span className="text-sm font-bold text-[#1F2937] font-mono">
+                <div className="bg-background border border-border p-3 rounded-xl space-y-0.5">
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Ortalama Teslimat Net</span>
+                  <span className="text-sm font-bold text-foreground font-mono">
                     {completedOrders.length > 0 
                       ? Math.round((completedOrders.reduce((acc, curr) => acc + (curr.courier_net || 0), 0) / completedOrders.length)) 
                       : 0} ₺
                   </span>
                 </div>
-                <div className="bg-[#F8FAFC] border border-[#E5E7EB] p-3 rounded-xl space-y-0.5">
-                  <span className="text-[10px] text-[#6B7280] uppercase font-semibold block">Ödeme Durumu</span>
-                  <span className="text-xs font-semibold text-[#2563EB] bg-blue-50 px-2 py-0.5 rounded-md inline-block border border-blue-200">
+                <div className="bg-background border border-border p-3 rounded-xl space-y-0.5">
+                  <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Ödeme Durumu</span>
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-md inline-block border border-primary/20">
                     Haftalık Aktarım
                   </span>
                 </div>
@@ -4468,7 +4468,7 @@ export function AsistanPage() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-full py-2.5 bg-[#2563EB] hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase transition-all cursor-pointer shadow-sm"
+                className="w-full py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer shadow-xs"
               >
                 Kapat
               </button>
@@ -4480,37 +4480,37 @@ export function AsistanPage() {
       {/* Bildirimler Modal */}
       <AnimatePresence>
         {activeModal === 'notifications' && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-xl space-y-5 text-[#1F2937]"
+              className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-xl space-y-5 text-foreground"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-[#2563EB]">
-                    <Bell className="w-5 h-5 text-[#2563EB]" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                    <Bell className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[#1F2937]">Bildirim & Ses Ayarları</h3>
-                    <p className="text-xs text-[#6B7280]">Saha bildirimleri ve ses tercihleri</p>
+                    <h3 className="text-base font-bold text-foreground">Bildirim & Ses Ayarları</h3>
+                    <p className="text-xs text-muted-foreground">Saha bildirimleri ve ses tercihleri</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="p-2 rounded-xl bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#6B7280] hover:text-[#1F2937]"
+                  className="p-2 rounded-xl bg-muted hover:bg-accent text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-3">
-                <div className="p-3.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between">
+                <div className="p-3.5 bg-background border border-border rounded-xl flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-semibold text-[#1F2937]">Sesli Görev Uyarıları</h4>
-                    <p className="text-[11px] text-[#6B7280]">Yeni sipariş geldiğinde yüksek sesli zil çalar</p>
+                    <h4 className="text-xs font-semibold text-foreground">Sesli Görev Uyarıları</h4>
+                    <p className="text-[11px] text-muted-foreground">Yeni sipariş geldiğinde yüksek sesli zil çalar</p>
                   </div>
                   <button
                     type="button"
@@ -4518,18 +4518,18 @@ export function AsistanPage() {
                       playNotificationSound();
                       toast({ title: 'Test Sesi', description: 'Bildirim sesi çalındı.' });
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 text-[#1F2937] font-bold text-xs border border-[#E5E7EB] shadow-sm cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-card hover:bg-accent/50 text-foreground font-bold text-xs border border-border shadow-xs cursor-pointer"
                   >
                     Test Et
                   </button>
                 </div>
 
-                <div className="p-3.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between">
+                <div className="p-3.5 bg-background border border-border rounded-xl flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-semibold text-[#1F2937]">GPS Canlı Konum</h4>
-                    <p className="text-[11px] text-[#6B7280]">Çevrimiçi modda arka planda konum iletilir</p>
+                    <h4 className="text-xs font-semibold text-foreground">GPS Canlı Konum</h4>
+                    <p className="text-[11px] text-muted-foreground">Çevrimiçi modda arka planda konum iletilir</p>
                   </div>
-                  <span className="text-[10px] font-bold text-[#10B981] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                     Etkin
                   </span>
                 </div>
@@ -4538,7 +4538,7 @@ export function AsistanPage() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-full py-2.5 bg-[#2563EB] hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase transition-all cursor-pointer shadow-sm"
+                className="w-full py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer shadow-xs"
               >
                 Tamam
               </button>
@@ -4550,51 +4550,51 @@ export function AsistanPage() {
       {/* Ayarlar Modal */}
       <AnimatePresence>
         {activeModal === 'settings' && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-6 shadow-xl space-y-5 text-[#1F2937]"
+              className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-xl space-y-5 text-foreground"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-100 border border-[#E5E7EB] flex items-center justify-center text-[#1F2937]">
-                    <Settings className="w-5 h-5 text-[#1F2937]" />
+                  <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground">
+                    <Settings className="w-5 h-5 text-foreground" />
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[#1F2937]">Asistan Ayarları</h3>
-                    <p className="text-xs text-[#6B7280]">Araç ve uygulama parametreleri</p>
+                    <h3 className="text-base font-bold text-foreground">Asistan Ayarları</h3>
+                    <p className="text-xs text-muted-foreground">Araç ve uygulama parametreleri</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setActiveModal(null)}
-                  className="p-2 rounded-xl bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#6B7280] hover:text-[#1F2937]"
+                  className="p-2 rounded-xl bg-muted hover:bg-accent text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-2.5">
-                <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-xs">
-                  <span className="text-[#6B7280]">Araç Tipi</span>
-                  <span className="font-semibold text-[#1F2937] capitalize">{currentAssistant?.vehicle_type || 'Motosiklet'}</span>
+                <div className="p-3 bg-background border border-border rounded-xl flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Araç Tipi</span>
+                  <span className="font-semibold text-foreground capitalize">{currentAssistant?.vehicle_type || 'Motosiklet'}</span>
                 </div>
-                <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-xs">
-                  <span className="text-[#6B7280]">Çalışma Şehri</span>
-                  <span className="font-semibold text-[#1F2937]">{currentAssistant?.city || 'İstanbul'}</span>
+                <div className="p-3 bg-background border border-border rounded-xl flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Çalışma Şehri</span>
+                  <span className="font-semibold text-foreground">{currentAssistant?.city || 'İstanbul'}</span>
                 </div>
-                <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl flex items-center justify-between text-xs">
-                  <span className="text-[#6B7280]">Uygulama Sürümü</span>
-                  <span className="font-mono text-[#6B7280]">v2.4.0 (Saha Sürümü)</span>
+                <div className="p-3 bg-background border border-border rounded-xl flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Uygulama Sürümü</span>
+                  <span className="font-mono text-muted-foreground">v2.4.0 (Saha Sürümü)</span>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-full py-2.5 bg-[#2563EB] hover:bg-blue-600 text-white font-bold rounded-xl text-xs uppercase transition-all cursor-pointer shadow-sm"
+                className="w-full py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer shadow-xs"
               >
                 Kapat
               </button>
@@ -4607,23 +4607,18 @@ export function AsistanPage() {
       <AnimatePresence>
         {cancelModalOrder && (
           <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-            style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              style={{
-                backgroundColor: '#FFFFFF',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.18)'
-              }}
-              className="w-full max-w-md border border-[#E5E7EB] rounded-[18px] p-6 space-y-4 text-[#1F2937] opacity-100"
+              className="w-full max-w-md bg-card border border-border rounded-2xl p-6 space-y-4 text-foreground shadow-xl"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5E7EB]">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
                 <div>
-                  <h3 className="text-base font-bold text-[#1F2937]">Sipariş İptal Nedeni</h3>
-                  <p className="text-xs text-[#6B7280] mt-0.5">Lütfen iptal nedenini belirtiniz</p>
+                  <h3 className="text-base font-bold text-foreground">Sipariş İptal Nedeni</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Lütfen iptal nedenini belirtiniz</p>
                 </div>
                 <button
                   type="button"
@@ -4631,20 +4626,20 @@ export function AsistanPage() {
                     setCancelModalOrder(null);
                     setCancelReasonText('');
                   }}
-                  className="p-2 rounded-xl bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#6B7280] hover:text-[#1F2937] cursor-pointer transition-colors"
+                  className="p-2 rounded-xl bg-muted hover:bg-accent text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-[#1F2937] block">İptal Sebebi</label>
+                <label className="text-xs font-semibold text-foreground block">İptal Sebebi</label>
                 <textarea
                   value={cancelReasonText}
                   onChange={(e) => setCancelReasonText(e.target.value)}
                   placeholder="Müşteri telefonlara cevap vermiyor, adreste bulunamadı vb."
                   rows={3}
-                  className="w-full bg-white border border-[#D1D5DB] rounded-xl p-3 text-xs text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB]"
+                  className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -4655,7 +4650,7 @@ export function AsistanPage() {
                     setCancelModalOrder(null);
                     setCancelReasonText('');
                   }}
-                  className="flex-1 py-2.5 bg-white hover:bg-red-50 text-[#EF4444] font-bold rounded-xl text-xs uppercase border border-[#EF4444] cursor-pointer transition-colors shadow-sm"
+                  className="flex-1 py-2.5 bg-card hover:bg-destructive/10 text-destructive font-bold rounded-xl text-xs uppercase border border-destructive/30 cursor-pointer transition-colors shadow-xs"
                 >
                   İptal
                 </button>
@@ -4664,7 +4659,7 @@ export function AsistanPage() {
                   type="button"
                   disabled={isSubmittingCancel || !cancelReasonText.trim()}
                   onClick={() => handleCancelOrder(cancelModalOrder.id, cancelReasonText.trim())}
-                  className="flex-1 py-2.5 bg-[#EF4444] hover:bg-red-600 text-white font-bold rounded-xl text-xs uppercase transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+                  className="flex-1 py-2.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold rounded-xl text-xs uppercase transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-xs"
                 >
                   {isSubmittingCancel ? (
                     <Loader2 className="w-4 h-4 animate-spin text-white" />

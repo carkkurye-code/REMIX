@@ -520,7 +520,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
       <div className={`${adminTheme.card} p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
         <div>
           <h1 className={`${adminTheme.title} text-2xl flex items-center gap-2`}>
-            <Calendar className="w-6 h-6 text-[#111111]" /> Asistan Kiralama Yönetimi
+            <Calendar className="w-6 h-6 text-foreground" /> Asistan Kiralama Yönetimi
           </h1>
           <p className={`${adminTheme.subtitle} mt-1`}>
             Saha asistanlarının aylık kiralama sürelerini, abonelik durumlarını, yenileme taleplerini ve ödeme onaylarını takip edin.
@@ -533,7 +533,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
             disabled={loading}
             className={adminTheme.buttonSecondary}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#111111]' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-foreground' : ''}`} />
             Yenile
           </button>
         </div>
@@ -543,39 +543,39 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className={`${adminTheme.card} p-4 space-y-1`}>
           <span className={`${adminTheme.label} block`}>Toplam Asistan</span>
-          <div className="text-xl font-black text-[#111111] font-mono">{totalAssistants}</div>
+          <div className="text-xl font-black text-foreground font-mono">{totalAssistants}</div>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-emerald-200 shadow-sm space-y-1">
-          <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Aktif Kiralama</span>
-          <div className="text-xl font-black text-emerald-700 font-mono">{activeRentals}</div>
+        <div className="bg-card p-4 rounded-2xl border border-emerald-500/30 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] space-y-1">
+          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">Aktif Kiralama</span>
+          <div className="text-xl font-black text-emerald-700 dark:text-emerald-400 font-mono">{activeRentals}</div>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-amber-200 shadow-sm space-y-1">
-          <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">7 Gün İçinde Biten</span>
-          <div className="text-xl font-black text-amber-700 font-mono">{nearExpiryCount}</div>
+        <div className="bg-card p-4 rounded-2xl border border-amber-500/30 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] space-y-1">
+          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider block">7 Gün İçinde Biten</span>
+          <div className="text-xl font-black text-amber-700 dark:text-amber-400 font-mono">{nearExpiryCount}</div>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-red-200 shadow-sm space-y-1">
-          <span className="text-[10px] font-bold text-red-700 uppercase tracking-wider block">Süresi Dolan</span>
-          <div className="text-xl font-black text-red-700 font-mono">{expiredCount}</div>
+        <div className="bg-card p-4 rounded-2xl border border-red-500/30 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] space-y-1">
+          <span className="text-[10px] font-bold text-red-700 dark:text-red-400 uppercase tracking-wider block">Süresi Dolan</span>
+          <div className="text-xl font-black text-red-700 dark:text-red-400 font-mono">{expiredCount}</div>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-blue-200 shadow-sm space-y-1">
-          <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider block">Yenileme Bekleyen</span>
-          <div className="text-xl font-black text-blue-800 font-mono">{pendingRenewalCount}</div>
+        <div className="bg-card p-4 rounded-2xl border border-blue-500/30 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] space-y-1">
+          <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider block">Yenileme Bekleyen</span>
+          <div className="text-xl font-black text-blue-700 dark:text-blue-400 font-mono">{pendingRenewalCount}</div>
         </div>
 
-        <div className="bg-[#FFFFFF] p-4 rounded-xl border border-orange-200 shadow-sm space-y-1">
-          <span className="text-[10px] font-bold text-orange-700 uppercase tracking-wider block">Ödeme Bekleyen</span>
-          <div className="text-xl font-black text-orange-700 font-mono">{pendingPaymentCount}</div>
+        <div className="bg-card p-4 rounded-2xl border border-orange-500/30 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] space-y-1">
+          <span className="text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase tracking-wider block">Ödeme Bekleyen</span>
+          <div className="text-xl font-black text-orange-700 dark:text-orange-400 font-mono">{pendingPaymentCount}</div>
         </div>
       </div>
 
       {/* SEARCH AND FILTERS */}
       <div className={`${adminTheme.card} p-4 flex flex-col sm:flex-row gap-3`}>
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-[#8A8A8A] absolute left-3 top-3" />
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
           <input
             type="text"
             placeholder="Asistan adı, telefon veya e-posta ara..."
@@ -603,14 +603,14 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
       {/* ASSISTANT SUBSCRIPTIONS LIST */}
       {loading ? (
         <div className={`${adminTheme.card} p-12 text-center space-y-3`}>
-          <Loader2 className="w-8 h-8 text-[#111111] animate-spin mx-auto" />
-          <p className="text-xs text-[#666666] font-medium">Asistan kiralama verileri yükleniyor...</p>
+          <Loader2 className="w-8 h-8 text-foreground animate-spin mx-auto" />
+          <p className="text-xs text-muted-foreground font-medium">Asistan kiralama verileri yükleniyor...</p>
         </div>
       ) : filteredList.length === 0 ? (
         <div className={`${adminTheme.card} p-12 text-center space-y-2`}>
-          <AlertCircle className="w-10 h-10 text-[#8A8A8A] mx-auto" />
-          <h3 className="text-sm font-bold text-[#111111]">Kayıt Bulunamadı</h3>
-          <p className="text-xs text-[#666666]">Arama kriterlerinize uygun asistan kiralama kaydı bulunamadı.</p>
+          <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto" />
+          <h3 className="text-sm font-bold text-foreground">Kayıt Bulunamadı</h3>
+          <p className="text-xs text-muted-foreground">Arama kriterlerinize uygun asistan kiralama kaydı bulunamadı.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -626,41 +626,41 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                 key={asst.id} 
                 className={`${adminTheme.card} p-5 space-y-4 transition-all ${
                   hasRenewalReq 
-                    ? 'border-[#111111] ring-1 ring-[#111111]' 
+                    ? 'border-primary ring-1 ring-primary' 
                     : isExpired 
-                    ? 'border-red-200' 
+                    ? 'border-red-500/40' 
                     : isNearExpiry 
-                    ? 'border-amber-200' 
+                    ? 'border-amber-500/40' 
                     : ''
                 }`}
               >
                 {/* Header Row: Assistant Info + Subscription Status Badge */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E5E7] pb-3.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3.5">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#F7F7F8] border border-[#E5E5E7] text-[#111111] font-black text-sm flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-accent/40 border border-border text-foreground font-black text-sm flex items-center justify-center shrink-0">
                       {asst.full_name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-black text-[#111111]">{asst.full_name}</h2>
+                        <h2 className="text-sm font-black text-foreground">{asst.full_name}</h2>
                         {hasRenewalReq && (
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#111111] text-white">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-primary text-primary-foreground">
                             YENİLEME TALEBİ VAR
                           </span>
                         )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#666666] font-medium mt-0.5">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground font-medium mt-0.5">
                         <span className="flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-[#8A8A8A]" /> {asst.phone}
+                          <Phone className="w-3 h-3 text-muted-foreground" /> {asst.phone}
                         </span>
                         {asst.email && (
                           <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3 text-[#8A8A8A]" /> {asst.email}
+                            <Mail className="w-3 h-3 text-muted-foreground" /> {asst.email}
                           </span>
                         )}
                         {asst.city && (
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-[#8A8A8A]" /> {asst.city}
+                            <MapPin className="w-3 h-3 text-muted-foreground" /> {asst.city}
                           </span>
                         )}
                       </div>
@@ -674,11 +674,11 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                         Abonelik Yok
                       </span>
                     ) : isExpired ? (
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-200">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20">
                         ● Süresi Doldu
                       </span>
                     ) : isNearExpiry ? (
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
                         ● Süresi Yaklaşıyor
                       </span>
                     ) : (
@@ -692,38 +692,38 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                 {/* Subscription Metrics Grid or "No Sub" Prompt */}
                 {sub ? (
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 text-xs">
-                    <div className="bg-[#F7F7F8] p-3 rounded-xl border border-[#E5E5E7] space-y-0.5">
-                      <span className="text-[10px] text-[#666666] font-semibold uppercase tracking-wider block">Başlangıç</span>
-                      <span className="text-[#111111] font-bold block">{formatDateForDisplay(sub.start_date)}</span>
+                    <div className="bg-accent/20 p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Başlangıç</span>
+                      <span className="text-foreground font-bold block">{formatDateForDisplay(sub.start_date)}</span>
                     </div>
 
-                    <div className="bg-[#F7F7F8] p-3 rounded-xl border border-[#E5E5E7] space-y-0.5">
-                      <span className="text-[10px] text-[#666666] font-semibold uppercase tracking-wider block">Bitiş</span>
-                      <span className="text-[#111111] font-bold block">{formatDateForDisplay(sub.expires_at)}</span>
+                    <div className="bg-accent/20 p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Bitiş</span>
+                      <span className="text-foreground font-bold block">{formatDateForDisplay(sub.expires_at)}</span>
                     </div>
 
-                    <div className="bg-[#F7F7F8] p-3 rounded-xl border border-[#E5E5E7] space-y-0.5">
-                      <span className="text-[10px] text-[#666666] font-semibold uppercase tracking-wider block">Kalan Süre</span>
-                      <span className={`font-bold font-mono block ${isExpired ? 'text-red-600' : isNearExpiry ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    <div className="bg-accent/20 p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Kalan Süre</span>
+                      <span className={`font-bold font-mono block ${isExpired ? 'text-red-600 dark:text-red-400' : isNearExpiry ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                         {Math.max(0, remaining)} Gün
                       </span>
                     </div>
 
-                    <div className="bg-[#F7F7F8] p-3 rounded-xl border border-[#E5E5E7] space-y-0.5">
-                      <span className="text-[10px] text-[#666666] font-semibold uppercase tracking-wider block">Aylık Kira</span>
-                      <span className="text-[#111111] font-bold font-mono block">
+                    <div className="bg-accent/20 p-3 rounded-xl border border-border space-y-0.5">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Aylık Kira</span>
+                      <span className="text-foreground font-bold font-mono block">
                         {sub.monthly_price ? `${sub.monthly_price} ₺` : 'Belirtilmedi'}
                       </span>
                     </div>
 
-                    <div className="bg-[#F7F7F8] p-3 rounded-xl border border-[#E5E5E7] space-y-0.5 col-span-2 sm:col-span-1">
-                      <span className="text-[10px] text-[#666666] font-semibold uppercase tracking-wider block">Ödeme Durumu</span>
+                    <div className="bg-accent/20 p-3 rounded-xl border border-border space-y-0.5 col-span-2 sm:col-span-1">
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider block">Ödeme Durumu</span>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <select
                           value={sub.payment_status || 'pending'}
                           onChange={(e) => handlePaymentStatusChange(sub, e.target.value)}
                           disabled={submittingId === sub.id}
-                          className="bg-white border border-[#E5E5E7] text-[11px] font-bold rounded-lg px-2 py-0.5 focus:outline-none focus:border-[#111111]"
+                          className="bg-card border border-border text-foreground text-[11px] font-bold rounded-lg px-2 py-0.5 focus:outline-none focus:border-primary"
                         >
                           <option value="paid">Ödendi</option>
                           <option value="pending">Ödeme Bekliyor</option>
@@ -733,8 +733,8 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-[#F7F7F8] p-4 rounded-xl border border-dashed border-[#E5E5E7] flex items-center justify-between gap-4">
-                    <div className="text-xs text-[#666666] font-medium">
+                  <div className="bg-accent/20 p-4 rounded-xl border border-dashed border-border flex items-center justify-between gap-4">
+                    <div className="text-xs text-muted-foreground font-medium">
                       Bu asistan için henüz aktif bir kiralama veya abonelik tanımı bulunmuyor.
                     </div>
                     <button
@@ -750,7 +750,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                       }}
                       className={`${adminTheme.buttonPrimary} text-xs py-2`}
                     >
-                      <Plus className="w-3.5 h-3.5 text-white" />
+                      <Plus className="w-3.5 h-3.5 text-primary-foreground" />
                       Abonelik Oluştur
                     </button>
                   </div>
@@ -758,18 +758,18 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
 
                 {/* Admin Actions Bar */}
                 {sub && (
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#E5E5E7] text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border text-xs">
                     
                     {/* Left: Renewal Request Decision Actions */}
                     <div className="flex items-center gap-2">
                       {sub.renewal_requested && sub.renewal_decision === 'pending' ? (
-                        <div className="flex items-center gap-2 bg-[#F7F7F8] border border-[#E5E5E7] p-2 rounded-xl">
-                          <span className="text-[11px] font-bold text-[#111111] shrink-0">Talep Kararı:</span>
+                        <div className="flex items-center gap-2 bg-accent/20 border border-border p-2 rounded-xl">
+                          <span className="text-[11px] font-bold text-foreground shrink-0">Talep Kararı:</span>
                           <button
                             type="button"
                             disabled={submittingId === sub.id}
                             onClick={() => handleRenewalDecision(sub, 'approved')}
-                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0 shadow-sm"
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0 shadow-sm border-0"
                           >
                             <Check className="w-3 h-3 text-white" /> Yenilemeyi Onayla
                           </button>
@@ -777,22 +777,22 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                             type="button"
                             disabled={submittingId === sub.id}
                             onClick={() => handleRenewalDecision(sub, 'rejected')}
-                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0 shadow-sm"
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white font-bold text-[11px] rounded-lg transition-all cursor-pointer flex items-center gap-1 shrink-0 shadow-sm border-0"
                           >
                             <X className="w-3 h-3 text-white" /> Yenilemeyi Reddet
                           </button>
                         </div>
                       ) : sub.renewal_decision === 'approved' ? (
-                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                        <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
                           ✓ Yenileme Talebi Onaylandı
                         </span>
                       ) : sub.renewal_decision === 'rejected' ? (
-                        <span className="text-[11px] font-semibold text-red-700 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200">
+                        <span className="text-[11px] font-semibold text-red-700 dark:text-red-300 bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/20">
                           ✕ Yenileme Talebi Reddedildi
                         </span>
                       ) : (
-                        <span className="text-[11px] text-[#666666] font-medium">
-                          Yenileme Talebi: <strong className="text-[#111111]">Talep Yok</strong>
+                        <span className="text-[11px] text-muted-foreground font-medium">
+                          Yenileme Talebi: <strong className="text-foreground">Talep Yok</strong>
                         </span>
                       )}
                     </div>
@@ -806,9 +806,9 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                         className={`${adminTheme.buttonPrimary} text-xs py-1.5`}
                       >
                         {submittingId === sub.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-foreground" />
                         ) : (
-                          <ArrowRight className="w-3.5 h-3.5 text-white" />
+                          <ArrowRight className="w-3.5 h-3.5 text-primary-foreground" />
                         )}
                         <span>Yeni Dönemi Başlat</span>
                       </button>
@@ -828,7 +828,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                         }}
                         className={adminTheme.buttonSecondary}
                       >
-                        <Edit className="w-3.5 h-3.5 text-[#666666]" /> Düzenle
+                        <Edit className="w-3.5 h-3.5 text-muted-foreground" /> Düzenle
                       </button>
                     </div>
 
@@ -845,8 +845,8 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
       {creatingForAssistant && (
         <div className={adminTheme.modalOverlay}>
           <div className={`${adminTheme.modalCard} max-w-md`}>
-            <div className="flex items-center justify-between border-b border-[#E5E5E7] pb-3">
-              <h3 className="text-base font-black text-[#111111]">Abonelik Oluştur</h3>
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-base font-black text-foreground">Abonelik Oluştur</h3>
               <button
                 type="button"
                 onClick={() => setCreatingForAssistant(null)}
@@ -928,7 +928,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E5E7]">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setCreatingForAssistant(null)}
@@ -941,7 +941,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                   disabled={submittingId === 'create'}
                   className={adminTheme.buttonPrimary}
                 >
-                  {submittingId === 'create' ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : null}
+                  {submittingId === 'create' ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-foreground" /> : null}
                   Kaydet
                 </button>
               </div>
@@ -954,8 +954,8 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
       {editingSub && (
         <div className={adminTheme.modalOverlay}>
           <div className={`${adminTheme.modalCard} max-w-md`}>
-            <div className="flex items-center justify-between border-b border-[#E5E5E7] pb-3">
-              <h3 className="text-base font-black text-[#111111]">Kiralama Detaylarını Düzenle</h3>
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h3 className="text-base font-black text-foreground">Kiralama Detaylarını Düzenle</h3>
               <button
                 type="button"
                 onClick={() => setEditingSub(null)}
@@ -1052,7 +1052,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E5E7]">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setEditingSub(null)}
@@ -1065,7 +1065,7 @@ export const AdminAssistantSubscriptionsTab: React.FC<AdminAssistantSubscription
                   disabled={submittingId === editingSub.sub?.id}
                   className={adminTheme.buttonPrimary}
                 >
-                  {submittingId === editingSub.sub?.id ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : null}
+                  {submittingId === editingSub.sub?.id ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary-foreground" /> : null}
                   Değişiklikleri Kaydet
                 </button>
               </div>

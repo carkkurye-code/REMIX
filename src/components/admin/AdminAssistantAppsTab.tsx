@@ -217,32 +217,32 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-[1.65rem] sm:rounded-2xl border border-border shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)]">
         <div>
-          <h1 className="text-2xl font-black text-[#1F2937] tracking-tight">Asistan (Kurye) Başvuruları</h1>
-          <p className="text-xs sm:text-sm text-[#6B7280] font-medium mt-1">Saha teslimat ekibine katılmak isteyen kuryelerin sürücü ve evrak başvuruları.</p>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Asistan (Kurye) Başvuruları</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">Saha teslimat ekibine katılmak isteyen kuryelerin sürücü ve evrak başvuruları.</p>
         </div>
-        <div className="px-3.5 py-2 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 font-bold text-xs flex items-center gap-2 shadow-sm">
-          <Bike className="w-4 h-4 text-blue-600" /> {pendingApps.length} Onay Bekleyen Başvuru
+        <div className="px-3.5 py-2 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-700 dark:text-blue-400 font-bold text-xs flex items-center gap-2 shadow-sm">
+          <Bike className="w-4 h-4 text-blue-600 dark:text-blue-400" /> {pendingApps.length} Onay Bekleyen Başvuru
         </div>
       </div>
 
       {/* SEARCH & BULK ACTIONS */}
-      <div className="bg-white border border-[#E5E7EB] p-4 rounded-2xl space-y-3 shadow-sm">
+      <div className="bg-card border border-border p-4 rounded-[1.65rem] sm:rounded-2xl space-y-3 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)]">
         <div className="relative">
-          <Search className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-3" />
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
           <input
             type="text"
             placeholder="Kurye adı, şehir veya telefon ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-10 bg-gray-50 border border-[#E5E7EB] rounded-xl pl-9 pr-3 text-xs font-medium text-[#1F2937] focus:outline-none focus:border-[#1F2937] focus:ring-1 focus:ring-[#1F2937] transition-all shadow-sm"
+            className="w-full h-10 bg-background border border-border rounded-xl pl-9 pr-3 text-xs font-medium text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm placeholder:text-muted-foreground/60"
           />
         </div>
 
         {selectedAppIds.length > 0 && (
-          <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs shadow-sm">
-            <span className="font-bold text-blue-700">{selectedAppIds.length} başvuru seçildi</span>
+          <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs shadow-sm">
+            <span className="font-bold text-blue-700 dark:text-blue-400">{selectedAppIds.length} başvuru seçildi</span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -254,7 +254,7 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
               <button
                 type="button"
                 onClick={handleBulkDelete}
-                className="px-3.5 py-1.5 bg-red-50 border border-red-200 text-red-600 font-bold rounded-xl hover:bg-red-100 cursor-pointer transition-all shadow-sm active:scale-95"
+                className="px-3.5 py-1.5 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 font-bold rounded-xl hover:bg-red-500/20 cursor-pointer transition-all shadow-sm active:scale-95"
               >
                 Toplu Sil
               </button>
@@ -266,9 +266,9 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
       {/* APPLICATIONS LIST */}
       <div className="space-y-3">
         {filteredApps.length === 0 ? (
-          <div className="text-center py-12 bg-white border border-dashed border-[#E5E7EB] rounded-2xl shadow-sm">
+          <div className="text-center py-12 bg-card border border-dashed border-border rounded-2xl shadow-sm">
             <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-2 opacity-60" />
-            <p className="text-sm font-semibold text-[#1F2937]">Onay bekleyen başvuru bulunmuyor.</p>
+            <p className="text-sm font-semibold text-foreground">Onay bekleyen başvuru bulunmuyor.</p>
           </div>
         ) : (
           filteredApps.map((app) => {
@@ -278,55 +278,55 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
             const franchiseName = getFranchiseName(app.franchise_id);
 
             return (
-              <div key={app.id} className={`p-5 bg-white border rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all shadow-sm hover:shadow-md ${isChecked ? 'border-blue-400 bg-blue-50/30' : 'border-[#E5E7EB]'}`}>
+              <div key={app.id} className={`p-5 bg-card border rounded-[1.65rem] sm:rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] hover:shadow-md ${isChecked ? 'border-primary/60 bg-primary/5' : 'border-border'}`}>
                 <div className="flex items-start gap-3.5">
                   <input
                     type="checkbox"
                     checked={isChecked}
                     onChange={() => toggleSelect(app.id)}
-                    className="mt-1 rounded border-[#E5E7EB] text-[#1F2937] focus:ring-0 cursor-pointer w-4 h-4"
+                    className="mt-1 rounded border-border text-primary focus:ring-0 cursor-pointer w-4 h-4"
                   />
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 font-bold flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center shrink-0 shadow-sm">
                     <Bike className="w-6 h-6" />
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-bold text-[#1F2937] text-sm">
+                      <h3 className="font-bold text-foreground text-sm">
                         {app.full_name}
                       </h3>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 capitalize">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20 capitalize">
                         {app.vehicle_type || 'Motosiklet'}
                       </span>
                       {cityName && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200 flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-gray-500" />
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-accent/40 text-foreground border border-border flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-muted-foreground" />
                           {cityName}
                         </span>
                       )}
                       {franchiseName && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                          <Building className="w-3 h-3 text-emerald-600" />
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                          <Building className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                           {franchiseName}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#6B7280] font-medium">
-                      <span>Tel: <span className="font-mono text-[#1F2937]">{app.phone}</span></span>
-                      {app.email && <span>• E-posta: <span className="text-[#1F2937]">{app.email}</span></span>}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground font-medium">
+                      <span>Tel: <span className="font-mono text-foreground">{app.phone}</span></span>
+                      {app.email && <span>• E-posta: <span className="text-foreground">{app.email}</span></span>}
                     </div>
 
                     {/* PAKET & ÖDENECEK TUTAR BİLGİSİ */}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-xs">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[#6B7280] font-medium">Paket:</span>
-                        <span className="font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md">
+                        <span className="text-muted-foreground font-medium">Paket:</span>
+                        <span className="font-bold text-purple-700 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-md">
                           {pkgInfo.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[#6B7280] font-medium">Ödenecek Tutar:</span>
-                        <span className="font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                        <span className="text-muted-foreground font-medium">Ödenecek Tutar:</span>
+                        <span className="font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
                           {pkgInfo.price}
                         </span>
                       </div>
@@ -334,7 +334,7 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 shrink-0 border-t md:border-t-0 border-[#E5E7EB] pt-3 md:pt-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0 border-t md:border-t-0 border-border pt-3 md:pt-0">
                   <button
                     type="button"
                     onClick={() => handleApprove(app)}
@@ -346,7 +346,7 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
                   <button
                     type="button"
                     onClick={() => handleOpenReject(app)}
-                    className="px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 font-bold text-xs hover:bg-red-100 cursor-pointer flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
+                    className="px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 font-bold text-xs hover:bg-red-500/20 cursor-pointer flex items-center gap-1.5 transition-all shadow-sm active:scale-95"
                   >
                     <X className="w-3.5 h-3.5" /> Reddet
                   </button>
@@ -359,34 +359,34 @@ export const AdminAssistantAppsTab: React.FC<AdminAssistantAppsTabProps> = ({
 
       {/* REJECT MODAL */}
       {rejectingApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative text-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-[1.65rem] sm:rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative text-xs text-foreground">
             <button
               type="button"
               onClick={() => setRejectingApp(null)}
               aria-label="Kapat"
               title="Kapat"
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#6B7280] hover:text-[#1F2937] flex items-center justify-center transition-colors cursor-pointer"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-card hover:bg-accent/40 border border-border text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-sm font-bold text-[#1F2937]">Başvuruyu Reddet ({rejectingApp.full_name})</h3>
-            <p className="text-[#6B7280]">Kuryeye iletilecek red nedenini giriniz:</p>
+            <h3 className="text-sm font-bold text-foreground">Başvuruyu Reddet ({rejectingApp.full_name})</h3>
+            <p className="text-muted-foreground">Kuryeye iletilecek red nedenini giriniz:</p>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Örn: Sürücü belgesi süresi dolmuş veya okunamıyor."
               rows={3}
-              className="w-full bg-gray-50 border border-[#E5E7EB] rounded-xl p-3 text-[#1F2937] focus:border-red-500 focus:outline-none"
+              className="w-full bg-background border border-border rounded-xl p-3 text-foreground focus:border-red-500 focus:outline-none"
             />
             {rejectError && <p className="text-red-600 font-bold text-[11px]">{rejectError}</p>}
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-[#E5E7EB]">
+            <div className="flex justify-end gap-2 pt-2 border-t border-border">
               <button
                 type="button"
                 onClick={() => setRejectingApp(null)}
-                className="px-4 py-2 rounded-xl border border-[#E5E7EB] text-[#4B5563] font-semibold hover:bg-gray-50 bg-white cursor-pointer shadow-sm"
+                className="px-4 py-2 rounded-xl border border-border text-foreground font-semibold hover:bg-accent/40 bg-card cursor-pointer shadow-sm"
               >
                 İptal
               </button>

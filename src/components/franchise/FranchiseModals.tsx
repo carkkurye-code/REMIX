@@ -66,20 +66,20 @@ export const AddAssistantModal: React.FC<AddAssistantModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+      <div className="bg-card w-full max-w-md rounded-[1.65rem] sm:rounded-2xl p-6 border border-border shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#111111] text-white flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center">
               <User className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-[#111111]">Yeni Asistan Ekle</h3>
-              <p className="text-xs text-[#666666] font-medium">{cityNameDisplay} Bölgesi Asistan Kadrosu</p>
+              <h3 className="text-base font-black text-foreground">Yeni Asistan Ekle</h3>
+              <p className="text-xs text-muted-foreground font-medium">{cityNameDisplay} Bölgesi Asistan Kadrosu</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="w-8 h-8 rounded-xl bg-background hover:bg-accent/40 border border-border text-foreground flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
@@ -87,49 +87,49 @@ export const AddAssistantModal: React.FC<AddAssistantModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-1">
-            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Asistan Adı & Soyadı</label>
+            <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Asistan Adı & Soyadı</label>
             <input
               type="text"
               required
               placeholder="Örn: Ahmet Yılmaz"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+              className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Telefon Numarası</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Telefon Numarası</label>
               <input
                 type="tel"
                 required
                 placeholder="0532 000 00 00"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono font-bold transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-mono font-bold transition-all"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">E-Posta (İsteğe Bağlı)</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">E-Posta (İsteğe Bağlı)</label>
               <input
                 type="email"
                 placeholder="asistan@ugra.app"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground transition-all"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Ulaşım / Araç Tipi</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Ulaşım / Araç Tipi</label>
               <select
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value as any)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
               >
                 <option value="motosiklet">🛵 Motosiklet</option>
                 <option value="arac">🚗 Otomobil / Araç</option>
@@ -138,18 +138,18 @@ export const AddAssistantModal: React.FC<AddAssistantModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Plaka (Varsa)</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Plaka (Varsa)</label>
               <input
                 type="text"
                 placeholder="34 ABC 123"
                 value={plateNumber}
                 onChange={(e) => setPlateNumber(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono transition-all uppercase"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-mono transition-all uppercase"
               />
             </div>
           </div>
 
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
             <span>Eklenen asistan otomatik olarak <strong>{cityNameDisplay}</strong> bayinize tanımlanır ve talepler atanabilir.</span>
           </div>
@@ -158,14 +158,14 @@ export const AddAssistantModal: React.FC<AddAssistantModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
+              className="flex-1 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold border border-border cursor-pointer transition-all"
             >
               Vazgeç
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
+              className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
             >
               {loading ? 'Ekleniyor...' : 'Asistanı Kaydet'}
             </button>
@@ -230,15 +230,15 @@ export const EditAssistantModal: React.FC<EditAssistantModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+      <div className="bg-card w-full max-w-md rounded-[1.65rem] sm:rounded-2xl p-6 border border-border shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
-            <h3 className="text-base font-black text-[#111111]">Asistan Bilgilerini Düzenle</h3>
-            <p className="text-[11px] text-[#666666] font-mono">ID: {assistant.id.slice(0, 8)}</p>
+            <h3 className="text-base font-black text-foreground">Asistan Bilgilerini Düzenle</h3>
+            <p className="text-[11px] text-muted-foreground font-mono">ID: {assistant.id.slice(0, 8)}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="w-8 h-8 rounded-xl bg-background hover:bg-accent/40 border border-border text-foreground flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
@@ -246,46 +246,46 @@ export const EditAssistantModal: React.FC<EditAssistantModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-1">
-            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Ad Soyad</label>
+            <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Ad Soyad</label>
             <input
               type="text"
               required
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+              className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Telefon</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Telefon</label>
               <input
                 type="tel"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono font-bold transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-mono font-bold transition-all"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">E-Posta</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">E-Posta</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground transition-all"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Araç Tipi</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Araç Tipi</label>
               <select
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value as any)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
               >
                 <option value="motosiklet">🛵 Motosiklet</option>
                 <option value="arac">🚗 Araç / Otomobil</option>
@@ -294,11 +294,11 @@ export const EditAssistantModal: React.FC<EditAssistantModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Durum</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Durum</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
               >
                 <option value="active">Aktif (Göreve Hazır)</option>
                 <option value="passive">Pasif (Kapalı)</option>
@@ -308,13 +308,13 @@ export const EditAssistantModal: React.FC<EditAssistantModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Araç Plakası</label>
+            <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Araç Plakası</label>
             <input
               type="text"
               placeholder="34 ABC 123"
               value={plateNumber}
               onChange={(e) => setPlateNumber(e.target.value)}
-              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-mono uppercase transition-all"
+              className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-mono uppercase transition-all"
             />
           </div>
 
@@ -322,14 +322,14 @@ export const EditAssistantModal: React.FC<EditAssistantModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
+              className="flex-1 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold border border-border cursor-pointer transition-all"
             >
               Vazgeç
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
+              className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
             >
               {loading ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
             </button>
@@ -363,59 +363,59 @@ export const AssistantDetailModal: React.FC<AssistantDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+      <div className="bg-card w-full max-w-md rounded-[1.65rem] sm:rounded-2xl p-6 border border-border shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-[#111111] text-white flex items-center justify-center font-bold text-sm">
+            <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
               {assistant.full_name?.charAt(0) || 'A'}
             </div>
             <div>
-              <h3 className="text-sm font-black text-[#111111]">{assistant.full_name}</h3>
-              <p className="text-[11px] text-[#666666] font-mono">ID: {assistant.id.slice(0, 8)}</p>
+              <h3 className="text-sm font-black text-foreground">{assistant.full_name}</h3>
+              <p className="text-[11px] text-muted-foreground font-mono">ID: {assistant.id.slice(0, 8)}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="w-8 h-8 rounded-xl bg-background hover:bg-accent/40 border border-border text-foreground flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="space-y-2.5">
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Çalışma Durumu:</span>
-            <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Çalışma Durumu:</span>
+            <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold ${isActive ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20' : 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'}`}>
               {isActive ? 'Aktif (Göreve Hazır)' : 'Pasif'}
             </span>
           </div>
 
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Telefon:</span>
-            <span className="font-mono font-bold text-[#111111]">{assistant.phone || '-'}</span>
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Telefon:</span>
+            <span className="font-mono font-bold text-foreground">{assistant.phone || '-'}</span>
           </div>
 
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">E-Posta:</span>
-            <span className="font-mono text-[#111111]">{assistant.email || '-'}</span>
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">E-Posta:</span>
+            <span className="font-mono text-foreground">{assistant.email || '-'}</span>
           </div>
 
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Araç & Plaka:</span>
-            <span className="font-bold text-[#111111] flex items-center gap-1.5">
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Araç & Plaka:</span>
+            <span className="font-bold text-foreground flex items-center gap-1.5">
               {assistant.vehicle_type === 'arac' ? '🚗 Otomobil' : assistant.vehicle_type === 'bisiklet' ? '🚲 Bisiklet' : '🛵 Motosiklet'}
               {assistant.plate_number ? `(${assistant.plate_number})` : ''}
             </span>
           </div>
 
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Tamamlanan Görev Sayısı:</span>
-            <span className="font-mono font-bold text-[#111111]">{assistant.completed_orders || 0} Talep</span>
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Tamamlanan Görev Sayısı:</span>
+            <span className="font-mono font-bold text-foreground">{assistant.completed_orders || 0} Talep</span>
           </div>
 
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Kayıt Tarihi:</span>
-            <span className="font-medium text-[#111111]">
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Kayıt Tarihi:</span>
+            <span className="font-medium text-foreground">
               {assistant.created_at ? new Date(assistant.created_at).toLocaleDateString('tr-TR') : '-'}
             </span>
           </div>
@@ -427,7 +427,7 @@ export const AssistantDetailModal: React.FC<AssistantDetailModalProps> = ({
               onClose();
               onOpenEdit(assistant);
             }}
-            className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
+            className="flex-1 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold border border-border cursor-pointer transition-all"
           >
             Bilgileri Düzenle
           </button>
@@ -437,7 +437,7 @@ export const AssistantDetailModal: React.FC<AssistantDetailModalProps> = ({
               onClose();
             }}
             className={`flex-1 py-3 rounded-xl font-bold cursor-pointer transition-all ${
-              isActive ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+              isActive ? 'bg-red-500/10 text-red-700 dark:text-red-300 hover:bg-red-500/20 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/20'
             }`}
           >
             {isActive ? 'Pasife Al' : 'Aktif Et'}
@@ -503,31 +503,31 @@ export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+      <div className="bg-card w-full max-w-lg rounded-[1.65rem] sm:rounded-2xl p-6 border border-border shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
-            <h3 className="text-base font-black text-[#111111]">Talebe Asistan Ata</h3>
-            <p className="text-xs text-[#666666] font-mono">Talep ID: #{order.id.slice(0, 8)}</p>
+            <h3 className="text-base font-black text-foreground">Talebe Asistan Ata</h3>
+            <p className="text-xs text-muted-foreground font-mono">Talep ID: #{order.id.slice(0, 8)}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="w-8 h-8 rounded-xl bg-background hover:bg-accent/40 border border-border text-foreground flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Order Preview */}
-        <div className="p-3 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] space-y-1">
-          <div className="flex justify-between font-bold text-[#111111]">
+        <div className="p-3 rounded-xl bg-background border border-border space-y-1">
+          <div className="flex justify-between font-bold text-foreground">
             <span>Müşteri: {order.customer_name || 'Misafir Müşteri'}</span>
-            <span className="font-mono">{order.total_price ? `₺${order.total_price}` : ''}</span>
+            <span className="font-mono text-primary">{order.total_price ? `₺${order.total_price}` : ''}</span>
           </div>
-          <p className="text-[#666666] text-[11px] line-clamp-2">
+          <p className="text-muted-foreground text-[11px] line-clamp-2">
             📍 {order.delivery_address || order.customer_address || 'Adres belirtilmedi'}
           </p>
           {order.task_description && (
-            <p className="text-[#111111] text-[11px] font-medium pt-1">
+            <p className="text-foreground text-[11px] font-medium pt-1">
               📝 {order.task_description}
             </p>
           )}
@@ -535,7 +535,7 @@ export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
 
         {/* Search Assistant */}
         <div className="space-y-2">
-          <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">
+          <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">
             Bölgedeki Müsait Asistanı Seçin ({activeAssistants.length} Aktif)
           </label>
           <input
@@ -543,12 +543,12 @@ export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
             placeholder="Asistan adı, telefon veya araç ile ara..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-2.5 text-[#111111] transition-all"
+            className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-2.5 text-foreground transition-all"
           />
 
           <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
             {filtered.length === 0 ? (
-              <div className="p-4 text-center text-[#8A8A8A]">Müsait asistan bulunamadı.</div>
+              <div className="p-4 text-center text-muted-foreground">Müsait asistan bulunamadı.</div>
             ) : (
               filtered.map(ast => {
                 const isSelected = selectedAssistantId === ast.id;
@@ -559,24 +559,24 @@ export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
                     onClick={() => setSelectedAssistantId(ast.id)}
                     className={`w-full text-left p-3 rounded-xl border flex items-center justify-between transition-all cursor-pointer ${
                       isSelected 
-                        ? 'bg-[#111111] text-white border-[#111111]' 
-                        : 'bg-white text-[#111111] border-[#E5E7EB] hover:bg-[#F7F7F8]'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-xs' 
+                        : 'bg-card text-foreground border-border hover:bg-accent/40'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${isSelected ? 'bg-white text-[#111111]' : 'bg-[#F7F7F8] text-[#111111]'}`}>
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${isSelected ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-background text-foreground'}`}>
                         {ast.vehicle_type === 'arac' ? '🚗' : ast.vehicle_type === 'bisiklet' ? '🚲' : '🛵'}
                       </div>
                       <div>
                         <div className="font-black text-xs">{ast.full_name}</div>
-                        <div className={`text-[10px] font-mono ${isSelected ? 'text-gray-300' : 'text-[#666666]'}`}>
+                        <div className={`text-[10px] font-mono ${isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                           {ast.phone} {ast.plate_number ? `• ${ast.plate_number}` : ''}
                         </div>
                       </div>
                     </div>
 
                     {isSelected && (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <CheckCircle2 className="w-5 h-5 text-primary-foreground shrink-0" />
                     )}
                   </button>
                 );
@@ -589,7 +589,7 @@ export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
+            className="flex-1 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold border border-border cursor-pointer transition-all"
           >
             Vazgeç
           </button>
@@ -597,7 +597,7 @@ export const AssignAssistantModal: React.FC<AssignAssistantModalProps> = ({
             type="button"
             onClick={handleConfirm}
             disabled={loading || !selectedAssistantId}
-            className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm disabled:opacity-50"
           >
             {loading ? 'Atanıyor...' : 'Asistanı Göreve Ata'}
           </button>
@@ -634,26 +634,26 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
       case 'kurye_bekleniyor':
       case 'pending':
       case 'bekliyor':
-        return { label: 'Asistan Bekliyor', bg: 'bg-amber-50 text-amber-800 border-amber-200' };
+        return { label: 'Asistan Bekliyor', bg: 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20' };
       case 'kurye_atandi':
       case 'accepted':
-        return { label: 'Asistan Atandı', bg: 'bg-blue-50 text-blue-800 border-blue-200' };
+        return { label: 'Asistan Atandı', bg: 'bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-500/20' };
       case 'hazirlaniyor':
       case 'preparing':
-        return { label: 'Hazırlanıyor', bg: 'bg-purple-50 text-purple-800 border-purple-200' };
+        return { label: 'Hazırlanıyor', bg: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/20' };
       case 'yolda':
       case 'on_the_way':
-        return { label: 'Asistan Yolda', bg: 'bg-indigo-50 text-indigo-800 border-indigo-200' };
+        return { label: 'Asistan Yolda', bg: 'bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 border-indigo-500/20' };
       case 'teslim_edildi':
       case 'delivered':
       case 'tamamlandi':
-        return { label: 'Tamamlandı', bg: 'bg-emerald-50 text-emerald-800 border-emerald-200' };
+        return { label: 'Tamamlandı', bg: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/20' };
       case 'iptal':
       case 'iptal_edildi':
       case 'cancelled':
-        return { label: 'İptal Edildi', bg: 'bg-red-50 text-red-800 border-red-200' };
+        return { label: 'İptal Edildi', bg: 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20' };
       default:
-        return { label: status, bg: 'bg-gray-50 text-gray-800 border-gray-200' };
+        return { label: status, bg: 'bg-accent text-foreground border-border' };
     }
   };
 
@@ -661,33 +661,33 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+      <div className="bg-card w-full max-w-lg rounded-[1.65rem] sm:rounded-2xl p-6 border border-border shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] text-[#666666] uppercase">TALEP #{order.id.slice(0, 8)}</span>
+              <span className="font-mono text-[10px] text-muted-foreground uppercase">TALEP #{order.id.slice(0, 8)}</span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusObj.bg}`}>
                 {statusObj.label}
               </span>
             </div>
-            <h3 className="text-base font-black text-[#111111] mt-0.5">
+            <h3 className="text-base font-black text-foreground mt-0.5">
               {order.customer_name || 'Bölgesel Talep'}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="w-8 h-8 rounded-xl bg-background hover:bg-accent/40 border border-border text-foreground flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Assigned Assistant Banner */}
-        <div className="p-3.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] flex items-center justify-between">
+        <div className="p-3.5 rounded-xl bg-background border border-border flex items-center justify-between">
           <div>
-            <span className="text-[10px] text-[#8A8A8A] font-bold uppercase block">Görevli Asistan</span>
-            <div className="font-black text-xs text-[#111111] flex items-center gap-1.5 mt-0.5">
-              <Bike className="w-4 h-4 text-[#111111]" />
+            <span className="text-[10px] text-muted-foreground font-bold uppercase block">Görevli Asistan</span>
+            <div className="font-black text-xs text-foreground flex items-center gap-1.5 mt-0.5">
+              <Bike className="w-4 h-4 text-primary" />
               {order.assistant_name || (order.assistant_id ? `Asistan #${order.assistant_id.slice(0, 6)}` : 'Asistan Atanmadı')}
             </div>
           </div>
@@ -697,7 +697,7 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
               onClose();
               onOpenAssign(order);
             }}
-            className="px-3 py-1.5 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-bold text-[11px] cursor-pointer transition-all shadow-sm"
+            className="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-[11px] cursor-pointer transition-all shadow-sm"
           >
             {order.assistant_id ? 'Asistanı Değiştir' : 'Asistan Ata'}
           </button>
@@ -705,36 +705,36 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
 
         {/* Details Grid */}
         <div className="space-y-2">
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Müşteri Telefon:</span>
-            <span className="font-mono font-bold text-[#111111]">{order.customer_phone || '-'}</span>
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Müşteri Telefon:</span>
+            <span className="font-mono font-bold text-foreground">{order.customer_phone || '-'}</span>
           </div>
 
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Tutar / Ödeme:</span>
-            <span className="font-mono font-bold text-[#111111]">
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Tutar / Ödeme:</span>
+            <span className="font-mono font-bold text-foreground">
               ₺{order.total_price || 0} ({order.payment_type === 'cash' ? 'Nakit' : 'Kredi Kartı'})
             </span>
           </div>
 
-          <div className="flex justify-between py-2 border-b border-[#F2F2F3]">
-            <span className="text-[#666666]">Tarih / Saat:</span>
-            <span className="font-medium text-[#111111]">
+          <div className="flex justify-between py-2 border-b border-border/40">
+            <span className="text-muted-foreground">Tarih / Saat:</span>
+            <span className="font-medium text-foreground">
               {order.created_at ? new Date(order.created_at).toLocaleString('tr-TR') : '-'}
             </span>
           </div>
 
-          <div className="py-2 border-b border-[#F2F2F3] space-y-1">
-            <span className="text-[#666666] block font-medium">Teslimat / Görev Adresi:</span>
-            <p className="p-2.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] font-medium text-[#111111]">
+          <div className="py-2 border-b border-border/40 space-y-1">
+            <span className="text-muted-foreground block font-medium">Teslimat / Görev Adresi:</span>
+            <p className="p-2.5 rounded-xl bg-background border border-border font-medium text-foreground">
               {order.delivery_address || order.customer_address || 'Adres belirtilmedi'}
             </p>
           </div>
 
           {order.task_description && (
             <div className="py-2 space-y-1">
-              <span className="text-[#666666] block font-medium">Görev / Sipariş Detayı:</span>
-              <p className="p-2.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] font-medium text-[#111111]">
+              <span className="text-muted-foreground block font-medium">Görev / Sipariş Detayı:</span>
+              <p className="p-2.5 rounded-xl bg-background border border-border font-medium text-foreground">
                 {order.task_description}
               </p>
             </div>
@@ -743,26 +743,26 @@ export const RequestDetailModal: React.FC<RequestDetailModalProps> = ({
 
         {/* Quick Status Buttons */}
         <div className="space-y-1.5 pt-2">
-          <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Operasyon Durumunu Güncelle</label>
+          <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Operasyon Durumunu Güncelle</label>
           <div className="grid grid-cols-3 gap-2">
             <button
               disabled={loading}
               onClick={() => onUpdateStatus(order.id, 'yolda')}
-              className="py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold border border-blue-200 cursor-pointer transition-all text-center"
+              className="py-2 px-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 cursor-pointer transition-all text-center"
             >
               Yolda
             </button>
             <button
               disabled={loading}
               onClick={() => onUpdateStatus(order.id, 'teslim_edildi')}
-              className="py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold border border-emerald-200 cursor-pointer transition-all text-center"
+              className="py-2 px-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-500/20 cursor-pointer transition-all text-center"
             >
               Tamamla
             </button>
             <button
               disabled={loading}
               onClick={() => onUpdateStatus(order.id, 'iptal_edildi')}
-              className="py-2 px-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-bold border border-red-200 cursor-pointer transition-all text-center"
+              className="py-2 px-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-700 dark:text-red-300 font-bold border border-red-500/20 cursor-pointer transition-all text-center"
             >
               İptal Et
             </button>
@@ -823,20 +823,20 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+      <div className="bg-card w-full max-w-lg rounded-[1.65rem] sm:rounded-2xl p-6 border border-border shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] flex items-center justify-center text-[#111111]">
+            <div className="w-8 h-8 rounded-xl bg-background border border-border flex items-center justify-center text-foreground">
               <Headphones className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-black text-[#111111]">Genel Merkeze Destek Talebi</h3>
-              <p className="text-xs text-[#666666] font-medium">{cityNameDisplay} Ana Bayiliği İletişim Formu</p>
+              <h3 className="text-base font-black text-foreground">Genel Merkeze Destek Talebi</h3>
+              <p className="text-xs text-muted-foreground font-medium">{cityNameDisplay} Ana Bayiliği İletişim Formu</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="w-8 h-8 rounded-xl bg-background hover:bg-accent/40 border border-border text-foreground flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
@@ -844,24 +844,24 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="space-y-1">
-            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Talep Konusu / Başlık</label>
+            <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Talep Konusu / Başlık</label>
             <input
               type="text"
               required
               placeholder="Örn: Hak ediş mutabakatı veya sistem entegrasyonu..."
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+              className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Kategori</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Kategori</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
               >
                 <option value="finans_hakedis">Finans & Hak Ediş</option>
                 <option value="sozlesme_lisans">Sözleşme & Lisans</option>
@@ -872,11 +872,11 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
             </div>
 
             <div className="space-y-1">
-              <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Öncelik Derecesi</label>
+              <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Öncelik Derecesi</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] font-bold transition-all"
+                className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground font-bold transition-all"
               >
                 <option value="low">Düşük (Bilgilendirme)</option>
                 <option value="normal">Normal</option>
@@ -887,14 +887,14 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
           </div>
 
           <div className="space-y-1">
-            <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Açıklama / Mesajınız</label>
+            <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Açıklama / Mesajınız</label>
             <textarea
               rows={4}
               required
               placeholder="Talebinizi detaylı olarak açıklayınız..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full bg-[#F7F7F8] border border-[#E5E7EB] focus:border-[#111111] outline-none rounded-xl p-3 text-[#111111] transition-all leading-relaxed"
+              className="w-full bg-background border border-border focus:border-primary outline-none rounded-xl p-3 text-foreground transition-all leading-relaxed"
             />
           </div>
 
@@ -902,14 +902,14 @@ export const CreateSupportTicketModal: React.FC<CreateSupportTicketModalProps> =
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] text-[#111111] font-bold border border-[#E5E7EB] cursor-pointer transition-all"
+              className="flex-1 py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-bold border border-border cursor-pointer transition-all"
             >
               Vazgeç
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2"
             >
               <Send className="w-3.5 h-3.5" />
               <span>{loading ? 'Gönderiliyor...' : 'Talebi İlet'}</span>
@@ -939,43 +939,43 @@ export const SupportTicketDetailModal: React.FC<SupportTicketDetailModalProps> =
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl p-6 border border-[#E5E7EB] shadow-2xl space-y-4 text-xs font-sans">
-        <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+      <div className="bg-card w-full max-w-lg rounded-[1.65rem] sm:rounded-2xl p-6 border border-border shadow-2xl space-y-4 text-xs font-sans">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] text-[#666666] uppercase">BİLET #{ticket.id.slice(0, 8)}</span>
-              <span className="px-2 py-0.5 rounded-md bg-[#F7F7F8] text-[#111111] text-[10px] font-bold border border-[#E5E7EB]">
+              <span className="font-mono text-[10px] text-muted-foreground uppercase">BİLET #{ticket.id.slice(0, 8)}</span>
+              <span className="px-2 py-0.5 rounded-md bg-background text-foreground text-[10px] font-bold border border-border">
                 {ticket.category}
               </span>
             </div>
-            <h3 className="text-base font-black text-[#111111] mt-0.5">{ticket.subject}</h3>
+            <h3 className="text-base font-black text-foreground mt-0.5">{ticket.subject}</h3>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#F7F7F8] hover:bg-[#F2F2F3] border border-[#E5E7EB] text-[#111111] flex items-center justify-center cursor-pointer transition-all active:scale-95"
+            className="w-8 h-8 rounded-xl bg-background hover:bg-accent/40 border border-border text-foreground flex items-center justify-center cursor-pointer transition-all active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Ticket Info Details */}
-        <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] text-[11px]">
+        <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-background border border-border text-[11px]">
           <div>
-            <span className="text-[#666666] block">Oluşturulma:</span>
-            <span className="font-medium text-[#111111]">
+            <span className="text-muted-foreground block">Oluşturulma:</span>
+            <span className="font-medium text-foreground">
               {ticket.created_at ? new Date(ticket.created_at).toLocaleString('tr-TR') : '-'}
             </span>
           </div>
           <div>
-            <span className="text-[#666666] block">Öncelik:</span>
-            <span className="font-bold text-[#111111] uppercase">{ticket.priority}</span>
+            <span className="text-muted-foreground block">Öncelik:</span>
+            <span className="font-bold text-foreground uppercase">{ticket.priority}</span>
           </div>
         </div>
 
         {/* Initial Ticket Message */}
         <div className="space-y-1">
-          <label className="text-[#666666] font-bold uppercase tracking-wider text-[10px]">Bayi Talebi</label>
-          <div className="p-3.5 rounded-xl bg-[#F7F7F8] border border-[#E5E7EB] text-[#111111] leading-relaxed whitespace-pre-wrap font-medium">
+          <label className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Bayi Talebi</label>
+          <div className="p-3.5 rounded-xl bg-background border border-border text-foreground leading-relaxed whitespace-pre-wrap font-medium">
             {ticket.message}
           </div>
         </div>
@@ -983,11 +983,11 @@ export const SupportTicketDetailModal: React.FC<SupportTicketDetailModalProps> =
         {/* Headquarters Response */}
         {ticket.admin_reply ? (
           <div className="space-y-1">
-            <label className="text-emerald-700 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+            <label className="text-emerald-700 dark:text-emerald-300 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
               Genel Merkez Yanıtı
             </label>
-            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 leading-relaxed whitespace-pre-wrap font-medium">
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-900 dark:text-emerald-200 leading-relaxed whitespace-pre-wrap font-medium">
               {ticket.admin_reply}
               {ticket.replied_at && (
                 <div className="text-[10px] text-emerald-600 mt-2 font-mono">
@@ -997,7 +997,7 @@ export const SupportTicketDetailModal: React.FC<SupportTicketDetailModalProps> =
             </div>
           </div>
         ) : (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
             <Clock className="w-4 h-4 text-amber-600 shrink-0" />
             <span>Genel Merkez operasyon ve destek ekibi talebinizi incelemektedir.</span>
           </div>
@@ -1006,7 +1006,7 @@ export const SupportTicketDetailModal: React.FC<SupportTicketDetailModalProps> =
         <div className="pt-2">
           <button
             onClick={onClose}
-            className="w-full py-3 rounded-xl bg-[#111111] hover:bg-[#222222] text-white font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
+            className="w-full py-3 rounded-xl bg-secondary hover:bg-secondary/80 text-foreground font-extrabold cursor-pointer transition-all active:scale-95 shadow-sm"
           >
             Kapat
           </button>

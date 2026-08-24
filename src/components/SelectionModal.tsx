@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ArrowLeft, ArrowRight, Loader2, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +40,7 @@ export function SelectionModal({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [pendingDispatchSubmit, setPendingDispatchSubmit] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const submitLockRef = useRef(false);
 
   const activeDeliveryType = selectedType || 'hemen';
 
@@ -58,6 +59,8 @@ export function SelectionModal({
       setTaskDescription('');
       setSelectedTimeSlot('');
       setCustomerOffer('');
+      setIsSubmittingOrder(false);
+      submitLockRef.current = false;
 
       const initialPhone =
         profile?.phone ||
@@ -125,6 +128,10 @@ export function SelectionModal({
     offerNum >= 100;
 
   const executeOrderSubmission = async () => {
+    if (submitLockRef.current) {
+      return;
+    }
+    submitLockRef.current = true;
     setIsSubmittingOrder(true);
 
     if (!taskDescription.trim()) {
@@ -134,6 +141,7 @@ export function SelectionModal({
         variant: 'destructive',
       });
       setIsSubmittingOrder(false);
+      submitLockRef.current = false;
       return;
     }
 
@@ -144,6 +152,7 @@ export function SelectionModal({
         variant: 'destructive',
       });
       setIsSubmittingOrder(false);
+      submitLockRef.current = false;
       return;
     }
 
@@ -158,6 +167,7 @@ export function SelectionModal({
         variant: 'destructive',
       });
       setIsSubmittingOrder(false);
+      submitLockRef.current = false;
       return;
     }
 
@@ -168,6 +178,7 @@ export function SelectionModal({
         variant: 'destructive',
       });
       setIsSubmittingOrder(false);
+      submitLockRef.current = false;
       return;
     }
 
@@ -297,6 +308,7 @@ export function SelectionModal({
       });
     } finally {
       setIsSubmittingOrder(false);
+      submitLockRef.current = false;
     }
   };
 

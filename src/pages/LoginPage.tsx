@@ -63,13 +63,10 @@ export function LoginPage() {
           return;
         }
 
-        // 3. Check Assistant or Partner via user_metadata
+        // 3. Check Assistant via user_metadata
         const metaRole = user.user_metadata?.role;
         if (metaRole === 'assistant' || metaRole === 'asistan') {
           setLocation('/asistan');
-          return;
-        } else if (metaRole === 'partner') {
-          setLocation('/partner');
           return;
         }
 

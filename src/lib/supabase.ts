@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { CATEGORY_STUDIO_IMAGES } from './categoryImages';
 
 // Environment variables & LocalStorage configuration support
 const getSupabaseUrl = (): string => {
@@ -738,24 +737,24 @@ export const categorySlugToName = (slug: string): string => {
 };
 
 export const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
-  'Kahve': CATEGORY_STUDIO_IMAGES['Kahve'],
-  'Giyim': CATEGORY_STUDIO_IMAGES['Giyim'],
-  'Sağlık & Medikal': CATEGORY_STUDIO_IMAGES['Sağlık & Medikal'],
-  'Petshop': CATEGORY_STUDIO_IMAGES['Petshop'],
-  'Çiçekçi': CATEGORY_STUDIO_IMAGES['Çiçekçi'],
-  'Market': CATEGORY_STUDIO_IMAGES['Senin Dükkanın'],
-  'Kozmetik': CATEGORY_STUDIO_IMAGES['Kozmetik'],
-  'Parfüm & Parfümeri': CATEGORY_STUDIO_IMAGES['Parfüm & Parfümeri'],
-  'Kırtasiye': CATEGORY_STUDIO_IMAGES['Kırtasiye'],
-  'Teknoloji': CATEGORY_STUDIO_IMAGES['Teknoloji'],
-  'Yapı Market': CATEGORY_STUDIO_IMAGES['Yapı Market'],
-  'Nalbur': CATEGORY_STUDIO_IMAGES['Yapı Market'],
-  'Bebek': CATEGORY_STUDIO_IMAGES['Bebek'],
-  'Hediyelik': CATEGORY_STUDIO_IMAGES['Hediyelik'],
-  'Optik': CATEGORY_STUDIO_IMAGES['Optik'],
-  'Takı & Aksesuar': CATEGORY_STUDIO_IMAGES['Takı & Aksesuar'],
-  'Çanta & Valiz': CATEGORY_STUDIO_IMAGES['Çanta & Valiz'],
-  'Senin Dükkanın': CATEGORY_STUDIO_IMAGES['Senin Dükkanın'],
+  'Kahve': 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80',
+  'Giyim': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&auto=format&fit=crop&q=80',
+  'Sağlık & Medikal': 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
+  'Petshop': 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&auto=format&fit=crop&q=80',
+  'Çiçekçi': 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800&auto=format&fit=crop&q=80',
+  'Market': 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=800&auto=format&fit=crop&q=80',
+  'Kozmetik': 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&auto=format&fit=crop&q=80',
+  'Parfüm & Parfümeri': 'https://images.unsplash.com/photo-1541643600914-78b084683601?w=800&auto=format&fit=crop&q=80',
+  'Kırtasiye': 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=800&auto=format&fit=crop&q=80',
+  'Teknoloji': 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80',
+  'Yapı Market': 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop&q=80',
+  'Nalbur': 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop&q=80',
+  'Bebek': 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800&auto=format&fit=crop&q=80',
+  'Hediyelik': 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&auto=format&fit=crop&q=80',
+  'Optik': 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&auto=format&fit=crop&q=80',
+  'Takı & Aksesuar': 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80',
+  'Çanta & Valiz': 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+  'Senin Dükkanın': 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=800&auto=format&fit=crop&q=80',
 };
 
 export const getCategoryDefaultImage = (cat?: string): string => {
@@ -4838,7 +4837,7 @@ export const db = {
       working_hours_end: '00:00',
       tax_rate: 20,
       contact_phone: '0850 123 45 67',
-      contact_email: 'destek@ugra.app',
+      contact_email: 'ugraapp@gmail.com',
       contact_whatsapp: '908501234567',
       address: 'Maslak Mah. Büyükdere Cad. No:123 Sarıyer / İstanbul',
       social_media: {

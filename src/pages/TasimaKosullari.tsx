@@ -1,8 +1,19 @@
 import React from 'react';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { motion } from 'framer-motion';
-import { X, ShieldAlert, Cpu, Scale, Ban, AlertTriangle } from 'lucide-react';
+import { 
+  X, 
+  Cpu, 
+  User, 
+  UserCheck, 
+  Handshake, 
+  DollarSign, 
+  ShieldCheck, 
+  Ban, 
+  ShieldAlert, 
+  Building2, 
+  CheckCircle2 
+} from 'lucide-react';
 import { useLocation } from 'wouter';
 
 export function TasimaKosullari() {
@@ -18,158 +29,221 @@ export function TasimaKosullari() {
 
   const sections = [
     {
-      id: "1",
-      title: "1. Yazılım Altyapısı Şartları ve Hizmet Niteliği",
+      id: "ugra-tasima-hizmeti-sunmaz",
+      icon: Cpu,
+      title: "1. UĞRA Taşıma Hizmeti Sunmaz",
       paragraphs: [
-        "UĞRA Teknoloji A.Ş. (\"UĞRA\"), bağımsız partner mağazalara mağaza paneli ve bağımsız asistanlara asistan paneli kiralayan bir yazılım teknolojisi sağlayıcısıdır.",
-        "UĞRA kesinlikle kurye şirketi, taşıyıcı, nakliyeci, teslimat firması, satıcı veya hizmet sağlayıcı DEĞİLDİR. Platform yalnızca bağımsız tarafların dijital ortamda ilan ve talep paylaşmasını sağlayan yazılım altyapısını sunar."
+        "UĞRA doğrudan taşıma, kurye veya teslimat hizmeti sunan bir işletme değildir.",
+        "UĞRA'nın sunduğu hizmet, müşteriler ile bağımsız asistanların birbirleriyle iletişim kurmasını sağlayan dijital yazılım altyapısıdır."
       ]
     },
     {
-      id: "2",
-      title: "2. Talep ve Teslimat Süreçlerinin Taraf Bağımsızlığı",
+      id: "musteri-talepleri",
+      icon: User,
+      title: "2. Müşteri Talepleri",
       paragraphs: [
-        "Müşteriler tarafından yayınlanan talepler (\"Hazır Olanı Al\" / \"Hazır Olanı Bırak\") ve Mağaza Siparişleri tamamen bağımsız asistanlar ve mağazalar tarafından yürütülür.",
-        "UĞRA teslimat operasyonlarının, taşıma sürelerinin, rota tercihlerinin veya saha eylemlerinin tarafı, yönlendiricisi veya garantörü değildir. Tüm iletişim ve anlaşma doğrudan taraflar arasında gerçekleşir."
+        "Müşteriler UĞRA platformu üzerinden zaman kazanmak adına ihtiyaçlarına ilişkin talep oluşturabilir.",
+        "Talebin içeriği ve hizmet için sunulan bedel müşteri tarafından belirlenebilir."
       ]
     },
     {
-      id: "3",
-      title: "3. Yasaklı Ürün ve Maddeler",
-      intro: "Platform yazılımı üzerinden aşağıdaki içerik, ürün ve eşyaların talebe konu edilmesi kesinlikle yasaktır:",
-      items: [
-        "Türk Ceza Kanunu ve ilgili mevzuata aykırı tüm yasa dışı maddeler",
-        "Ateşli silahlar, mühimmat, bıçak ve patlayıcı düzenekler",
-        "Uyuşturucu, uyarıcı maddeler ve reçetesiz satışı yasak ilaçlar",
-        "Yanıcı, parlayıcı, zehirli ve tehlikeli kimyasal maddeler",
-        "Canlı hayvanlar ve insan organ/doku örnekleri",
-        "Mevzuat uyarınca nakli ve satışı özel izne tabi diğer unsurlar"
+      id: "asistanlarin-talepleri-degerlendirmesi",
+      icon: UserCheck,
+      title: "3. Asistanların Talepleri Değerlendirmesi",
+      paragraphs: [
+        "UĞRA asistan panelini kullanan bağımsız asistanlar kendilerine iletilen talepleri inceleyebilir.",
+        "Asistan talebi kabul edebilir veya reddedebilir.",
+        "Talebi kabul eden asistan, müşteri ile doğrudan iletişim kurarak hizmetin detaylarını görüşür."
+      ]
+    },
+    {
+      id: "hizmetin-gerceklestirilmesi",
+      icon: Handshake,
+      title: "4. Hizmetin Gerçekleştirilmesi",
+      paragraphs: [
+        "Talebi kabul eden asistan ile müşteri, hizmetin gerçekleştirileceği zamanı, konumu, kapsamını ve diğer şartlarını kendi aralarında belirler.",
+        "UĞRA bu fiziksel hizmetin doğrudan tarafı değildir."
+      ]
+    },
+    {
+      id: "ucret-ve-odeme",
+      icon: DollarSign,
+      title: "5. Ücret ve Ödeme",
+      paragraphs: [
+        "Müşteri ile asistan arasında kararlaştırılan hizmet bedeli taraflar arasındaki bağımsız ilişkiye aittir.",
+        "UĞRA bu hizmet bedelinden komisyon almaz.",
+        "Ödeme yöntemi ve ödeme koşulları taraflar arasında kararlaştırılır."
+      ]
+    },
+    {
+      id: "asistanlarin-bagimsizligi",
+      icon: ShieldCheck,
+      title: "6. Asistanların Bağımsızlığı",
+      paragraphs: [
+        "Asistanlar UĞRA'nın çalışanı veya doğrudan personeli olarak değerlendirilmez.",
+        "Asistanlar kendi faaliyetlerinden ve kendi yasal yükümlülüklerinden sorumludur.",
+        "Bayi sistemi üzerinden sisteme dahil edilen asistanlar bakımından bayi ile asistan arasındaki ilişki ayrıca değerlendirilebilir."
+      ]
+    },
+    {
+      id: "yasakli-ve-riskli-talepler",
+      icon: Ban,
+      title: "7. Yasaklı ve Riskli Talepler",
+      paragraphs: [
+        "Mevzuata aykırı, tehlikeli veya taşınması yasak olan maddelerin taşınması ya da teslim edilmesi amacıyla talep oluşturulamaz.",
+        "UĞRA güvenlik veya mevzuat nedeniyle uygun görmediği talepleri sınırlandırabilir veya kaldırabilir."
+      ]
+    },
+    {
+      id: "sorumluluk",
+      icon: ShieldAlert,
+      title: "8. Sorumluluk",
+      isHighlighted: true,
+      paragraphs: [
+        "UĞRA'nın sorumluluğu sunduğu dijital yazılım altyapısı ile sınırlıdır.",
+        "UĞRA:"
       ],
-      outro: "Yasaklı madde talebinde bulunan veya taşıyan tarafların panel abonelikleri derhal ve tek taraflı olarak iptal edilir, gerekli hallerde adli mercilere bildirim yapılır."
+      items: [
+        "Fiziksel taşıma yapmaz.",
+        "Kurye görevi üstlenmez.",
+        "Teslimat garantisi vermez.",
+        "Müşteri ile asistan arasındaki hizmetin tarafı değildir.",
+        "Hizmetin sonucunu garanti etmez.",
+        "Taraflar arasındaki ödeme anlaşmasının tarafı değildir."
+      ],
+      outro: "Müşteri ve asistan, kendi aralarında gerçekleştirdikleri hizmetin şartlarını ve yasal yükümlülüklerini kendileri üstlenir."
     },
     {
-      id: "4",
-      title: "4. Ücretlendirme, Komisyonsuzluk ve Ödeme Beyanı",
+      id: "bayiler-ve-kendi-asistanlari",
+      icon: Building2,
+      title: "9. Bayiler ve Kendi Asistanları",
       paragraphs: [
-        "UĞRA müşterilerden hiçbir ad altında taşıma veya hizmet ücreti almaz.",
-        "Müşterinin teklif ettiği hizmet bedeli %100 oranında görevi üstlenen bağımsız asistana veya anlaşmalı mağazaya aittir. UĞRA taşıma veya teslimat işlemlerinden komisyon veya pay almaz.",
-        "Ödemeler tamamen taraflar arasında doğrudan (nakit veya havale/EFT) gerçekleştirilir. UĞRA ödeme almaz ve ödeme aracılığı yapmaz."
+        "Bayi sistemi kapsamında faaliyet gösteren bayiler, UĞRA tarafından kendilerine verilen yetkiler dahilinde kendi asistanlarını sisteme dahil edebilir.",
+        "Bayi tarafından sisteme dahil edilen asistanların faaliyetleri ve bayi ile asistan arasındaki ilişki, ilgili tarafların kendi sorumluluğundadır.",
+        "UĞRA'nın rolü dijital yazılım altyapısının sağlanmasıdır."
       ]
     },
     {
-      id: "5",
-      title: "5. Eksiksiz Sorumluluk Sınırlandırması",
+      id: "son-hukumler",
+      icon: CheckCircle2,
+      title: "10. Son Hükümler",
       paragraphs: [
-        "UĞRA Teknoloji A.Ş.; taşınan ürünlerin kırılması, kaybolması, çalınması, bozulması, gecikmesi veya hasar görmesinden hiçbir hukuki veya maddi sorumluluk kabul etmez.",
-        "Ürün ayıpları, teslimat gecikmeleri, hatalı adres bildirimleri ve taraflar arasında doğabilecek uyuşmazlıklar doğrudan ve münhasıran ilgili Müşteri, Mağaza ve Asistanın sorumluluğundadır."
-      ]
-    },
-    {
-      id: "6",
-      title: "6. Uygulanacak Hukuk",
-      paragraphs: [
-        "İşbu Kullanım Şartları Türkiye Cumhuriyeti kanunlarına tabidir. Doğabilecek uyuşmazlıklarda İstanbul (Çağlayan) Mahkemeleri ve İcra Daireleri yetkilidir."
+        "UĞRA platformunun kullanılması, kullanıcıların bu koşulları kabul ettiği anlamına gelir.",
+        "UĞRA, mevzuat veya iş modelindeki değişiklikler doğrultusunda bu koşulları güncelleme hakkını saklı tutar."
       ]
     }
   ];
 
   return (
-    <div className="min-h-screen w-full bg-[#0B0B0C] text-[#E4E4E7] font-sans relative overflow-hidden selection:bg-white/10 selection:text-white">
-      {/* Background glow decorations */}
-      <div className="absolute top-40 left-10 w-96 h-96 bg-orange-500/5 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-40 right-10 w-96 h-96 bg-white/5 blur-[100px] rounded-full pointer-events-none" />
+    <main className="relative min-h-[100dvh] overflow-hidden bg-background text-foreground">
+      {/* Background ambient glow matching Home */}
+      <div className="pointer-events-none absolute left-[-90px] top-[10%] h-72 w-72 rounded-full bg-primary/10 blur-3xl sm:left-[-30px]" aria-hidden="true" />
+      <div className="pointer-events-none absolute bottom-[-90px] right-[-70px] h-80 w-80 rounded-full bg-accent/40 blur-3xl" aria-hidden="true" />
 
-      <Header />
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1280px] flex-col px-5 pb-6 sm:px-8 lg:px-12 justify-between">
+        <Header />
 
-      <main className="container mx-auto px-6 md:px-12 pt-32 pb-20 relative z-10 max-w-4xl">
-        {/* Main Title with Top-Right Close Button */}
-        <motion.div 
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 flex items-start justify-between gap-4 border-b border-white/10 pb-8"
-        >
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-orange-400 font-medium mb-3">
-              <Cpu className="w-3.5 h-3.5" />
-              <span>Yazılım Altyapısı Şartları</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
-              Dijital Altyapı ve Taşıma Koşulları
-            </h1>
-            <p className="text-zinc-400 leading-relaxed max-w-2xl text-sm sm:text-base font-light">
-              UĞRA Teknoloji A.Ş. yazılım platformu üzerinden paylaşılan talep ve teslimat süreçlerine ilişkin taraf sorumluluk sınırları.
-            </p>
-            <p className="text-xs text-zinc-500 mt-2">Son Güncelleme: 1 Ocak 2026</p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Kapat"
-            title="Kapat"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-1"
+        <div className="mx-auto w-full max-w-4xl pt-6 pb-12 sm:pt-10">
+          {/* Main Title with Top-Right Close Button */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-10 flex items-start justify-between gap-4 border-b border-border/40 pb-8"
           >
-            <X className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        </motion.div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/60 border border-foreground/10 text-xs text-foreground font-medium mb-3">
+                <Cpu className="w-3.5 h-3.5 text-primary" />
+                <span>Dijital Yazılım Altyapısı ve Süreç Esasları</span>
+              </div>
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl leading-tight tracking-[-0.03em] text-foreground mb-3">
+                Hizmet ve Talep Koşulları
+              </h1>
+              <p className="text-muted-foreground leading-relaxed max-w-2xl text-sm sm:text-base font-normal">
+                UĞRA platformu üzerinden oluşturulan taleplerin, bağımsız asistanların ve taraflar arasındaki hizmet sürecinin esasları.
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-2 font-mono">Son Güncelleme: 1 Ocak 2026</p>
+            </div>
 
-        {/* Section List */}
-        <div className="space-y-6">
-          {sections.map((section, idx) => {
-            return (
-              <motion.section 
-                key={section.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: idx * 0.04 }}
-                className="rounded-2xl p-6 md:p-8 border border-white/10 bg-[#121215]"
-              >
-                <div className="mb-4">
-                  <h2 className="text-xl font-bold text-white tracking-tight">
-                    {section.title}
-                  </h2>
-                </div>
+            <button
+              type="button"
+              onClick={handleBack}
+              aria-label="Kapat"
+              title="Kapat"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-foreground/15 bg-card/80 text-foreground transition-all duration-300 hover:border-primary/60 hover:text-primary hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 cursor-pointer shrink-0 mt-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </motion.div>
 
-                {section.paragraphs && (
-                  <div className="space-y-3">
-                    {section.paragraphs.map((p, pIdx) => (
-                      <p key={pIdx} className="text-zinc-300 text-sm md:text-base leading-relaxed">
-                        {p}
-                      </p>
-                    ))}
+          {/* Section List */}
+          <div className="space-y-6">
+            {sections.map((section, idx) => {
+              const Icon = section.icon;
+              return (
+                <motion.section 
+                  key={section.id}
+                  id={section.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: idx * 0.04 }}
+                  className={`rounded-[1.65rem] border p-6 sm:p-8 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] ${
+                    section.isHighlighted 
+                      ? 'border-primary/30 bg-primary/[0.03]' 
+                      : 'border-foreground/10 bg-card'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl border shrink-0 ${
+                      section.isHighlighted 
+                        ? 'bg-primary/10 border-primary/30 text-primary' 
+                        : 'bg-accent/40 border-foreground/10 text-foreground'
+                    }`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold tracking-tight text-foreground">
+                      {section.title}
+                    </h2>
                   </div>
-                )}
 
-                {section.intro && (
-                  <p className="text-zinc-300 text-sm md:text-base leading-relaxed mb-3">
-                    {section.intro}
-                  </p>
-                )}
+                  {section.paragraphs && (
+                    <div className="space-y-3">
+                      {section.paragraphs.map((p, pIdx) => (
+                        <p key={pIdx} className="text-muted-foreground text-sm sm:text-[15px] leading-relaxed">
+                          {p}
+                        </p>
+                      ))}
+                    </div>
+                  )}
 
-                {section.items && (
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
-                    {section.items.map((item, itemIdx) => (
-                      <li key={itemIdx} className="flex items-center gap-2.5 text-sm text-zinc-300 bg-black/40 border border-white/5 rounded-xl p-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                  {section.items && (
+                    <ul className="mt-4 space-y-2.5">
+                      {section.items.map((item, itemIdx) => (
+                        <li key={itemIdx} className="flex items-start gap-3 text-sm text-foreground/90 bg-accent/30 border border-foreground/5 rounded-2xl p-3.5">
+                          <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />
+                          <span className="leading-relaxed">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
 
-                {section.outro && (
-                  <p className="text-zinc-400 text-xs md:text-sm leading-relaxed mt-3 pt-3 border-t border-white/5 font-medium">
-                    {section.outro}
-                  </p>
-                )}
-              </motion.section>
-            );
-          })}
+                  {section.outro && (
+                    <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed mt-4 pt-3 border-t border-border/40 font-medium">
+                      {section.outro}
+                    </p>
+                  )}
+                </motion.section>
+              );
+            })}
+          </div>
         </div>
-      </main>
 
-      <Footer />
-    </div>
+        {/* Minimal Footer */}
+        <footer className="w-full py-4 border-t border-border/40 flex items-center justify-start text-xs text-muted-foreground">
+          <span>&copy; 2026 UĞRA<span className="text-primary">.</span></span>
+        </footer>
+      </div>
+    </main>
   );
 }
+

@@ -177,17 +177,17 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#E5E7EB] shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card p-6 rounded-[1.65rem] sm:rounded-2xl border border-border shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)]">
         <div>
-          <h1 className="text-2xl font-black text-[#1F2937] tracking-tight">Saha Asistanı (Kurye) Yönetimi</h1>
-          <p className="text-xs sm:text-sm text-[#6B7280] font-medium mt-1">Saha kuryelerini, canlı konumlarını, araç tiplerini, aktif ve pasif durumlarını yönetin.</p>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Saha Asistanı (Kurye) Yönetimi</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">Saha kuryelerini, canlı konumlarını, araç tiplerini, aktif ve pasif durumlarını yönetin.</p>
         </div>
         <button
           type="button"
           onClick={() => setIsCreateOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-[#1F2937] hover:bg-black text-white font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm text-xs active:scale-95 border-0"
+          className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm text-xs active:scale-95 border-0"
         >
-          <Plus className="w-4 h-4 text-white" /> Yeni Asistan Ekle
+          <Plus className="w-4 h-4 text-primary-foreground" /> Yeni Asistan Ekle
         </button>
       </div>
 
@@ -198,8 +198,8 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
           onClick={() => setSelectedStatus('all')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
             selectedStatus === 'all'
-              ? 'bg-[#1F2937] text-white border-[#1F2937] shadow-sm'
-              : 'bg-white text-[#4B5563] border-[#E5E7EB] hover:bg-gray-50'
+              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+              : 'bg-card text-muted-foreground border-border hover:bg-accent/40 hover:text-foreground'
           }`}
         >
           Tüm Asistanlar ({assistants.length})
@@ -210,7 +210,7 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
             selectedStatus === 'active'
               ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-              : 'bg-white text-emerald-700 border-[#E5E7EB] hover:bg-emerald-50'
+              : 'bg-card text-emerald-700 dark:text-emerald-400 border-border hover:bg-emerald-500/10'
           }`}
         >
           <CheckCircle2 className="w-3.5 h-3.5" /> Aktif Asistanlar ({activeCount})
@@ -221,7 +221,7 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
             selectedStatus === 'passive'
               ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
-              : 'bg-white text-amber-700 border-[#E5E7EB] hover:bg-amber-50'
+              : 'bg-card text-amber-700 dark:text-amber-400 border-border hover:bg-amber-500/10'
           }`}
         >
           <XCircle className="w-3.5 h-3.5" /> Pasif Asistanlar ({passiveCount})
@@ -233,7 +233,7 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border ${
               selectedStatus === 'suspended'
                 ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                : 'bg-white text-purple-700 border-[#E5E7EB] hover:bg-purple-50'
+                : 'bg-card text-purple-700 dark:text-purple-400 border-border hover:bg-purple-500/10'
             }`}
           >
             <ShieldAlert className="w-3.5 h-3.5" /> Askıda ({suspendedCount})
@@ -242,22 +242,22 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
       </div>
 
       {/* SEARCH AND VEHICLE FILTERS */}
-      <div className="bg-white border border-[#E5E7EB] p-4 rounded-2xl shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="bg-card border border-border p-4 rounded-[1.65rem] sm:rounded-2xl shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="relative">
-          <Search className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-3" />
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
           <input
             type="text"
             placeholder="Asistan adı, telefon veya e-posta ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-10 bg-gray-50 border border-[#E5E7EB] rounded-xl pl-9 pr-3 text-xs font-medium text-[#1F2937] focus:outline-none focus:border-[#1F2937] focus:ring-1 focus:ring-[#1F2937] transition-all shadow-sm"
+            className="w-full h-10 bg-background border border-border rounded-xl pl-9 pr-3 text-xs font-medium text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm placeholder:text-muted-foreground/60"
           />
         </div>
 
         <select
           value={selectedVehicle}
           onChange={(e) => setSelectedVehicle(e.target.value)}
-          className="h-10 bg-gray-50 border border-[#E5E7EB] rounded-xl px-3 text-xs font-medium text-[#1F2937] focus:outline-none focus:border-[#1F2937] focus:ring-1 focus:ring-[#1F2937] transition-all shadow-sm"
+          className="h-10 bg-background border border-border rounded-xl px-3 text-xs font-medium text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm"
         >
           <option value="">Tüm Araç Tipleri</option>
           <option value="motosiklet">Motosiklet</option>
@@ -269,7 +269,7 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
       {/* ASSISTANTS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredAssistants.length === 0 ? (
-          <div className="col-span-full text-center py-12 bg-white border border-dashed border-[#E5E7EB] rounded-2xl text-[#6B7280] text-sm font-medium shadow-sm">
+          <div className="col-span-full text-center py-12 bg-card border border-dashed border-border rounded-2xl text-muted-foreground text-sm font-medium shadow-sm">
             Kriterlere uygun asistan bulunamadı.
           </div>
         ) : (
@@ -283,62 +283,62 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
             return (
               <div 
                 key={asst.id} 
-                className={`bg-white border rounded-2xl p-5 space-y-3.5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${
-                  isPassive ? 'border-amber-200 bg-amber-50/20' : isSuspended ? 'border-purple-200 bg-purple-50/20' : 'border-[#E5E7EB]'
+                className={`bg-card border rounded-[1.65rem] sm:rounded-2xl p-5 space-y-3.5 shadow-[0_12px_28px_hsl(256_24%_17%_/_0.04)] hover:shadow-md transition-all flex flex-col justify-between ${
+                  isPassive ? 'border-amber-500/30 bg-amber-500/5' : isSuspended ? 'border-purple-500/30 bg-purple-500/5' : 'border-border'
                 }`}
               >
                 <div className="space-y-3">
                   {/* Header info */}
-                  <div className="flex items-start justify-between gap-2 border-b border-[#E5E7EB] pb-3">
+                  <div className="flex items-start justify-between gap-2 border-b border-border pb-3">
                     <div className="flex items-center gap-3">
                       <div className={`w-11 h-11 rounded-2xl border font-bold flex items-center justify-center shrink-0 shadow-sm ${
                         isPassive 
-                          ? 'bg-amber-50 border-amber-200 text-amber-600'
+                          ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'
                           : isSuspended 
-                          ? 'bg-purple-50 border-purple-200 text-purple-600'
-                          : 'bg-blue-50 border-blue-200 text-blue-600'
+                          ? 'bg-purple-500/10 border-purple-500/20 text-purple-700 dark:text-purple-400'
+                          : 'bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-400'
                       }`}>
                         <Bike className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-[#1F2937] text-sm flex items-center gap-1.5">
+                        <h3 className="font-bold text-foreground text-sm flex items-center gap-1.5">
                           {asst.full_name}
                         </h3>
-                        <p className="text-xs text-[#6B7280] font-mono mt-0.5">{asst.phone}</p>
-                        <span className="inline-block text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize font-semibold mt-1">
+                        <p className="text-xs text-muted-foreground font-mono mt-0.5">{asst.phone}</p>
+                        <span className="inline-block text-[10px] text-blue-700 dark:text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md capitalize font-semibold mt-1">
                           {asst.vehicle_type || 'Motosiklet'}
                         </span>
                       </div>
                     </div>
 
                     <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
-                      isBusy ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                      isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      isSuspended ? 'bg-purple-50 text-purple-700 border border-purple-200' :
-                      'bg-amber-50 text-amber-700 border border-amber-200'
+                      isBusy ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20' :
+                      isActive ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20' :
+                      isSuspended ? 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20' :
+                      'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
                     }`}>
                       {isBusy ? 'Görevde' : isActive ? 'Aktif' : isSuspended ? 'Askıda' : 'Pasif'}
                     </span>
                   </div>
 
                   {/* Location Box */}
-                  <div className="p-3 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl text-xs space-y-1">
-                    <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Canlı Konum Bilgisi</span>
-                    <div className="text-[#1F2937] font-medium flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#1F2937] shrink-0" />
+                  <div className="p-3 bg-background border border-border rounded-xl text-xs space-y-1">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Canlı Konum Bilgisi</span>
+                    <div className="text-foreground font-medium flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="truncate">{asst.latitude && asst.longitude ? `${asst.latitude.toFixed(4)}, ${asst.longitude.toFixed(4)}` : 'Konum Belirtilmedi'}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#E5E7EB] text-xs">
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-border text-xs">
                   <button
                     type="button"
                     onClick={() => setViewingAssistant(asst)}
-                    className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#1F2937] font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-card hover:bg-accent/40 border border-border text-foreground font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
                   >
-                    <Eye className="w-3.5 h-3.5 text-[#1F2937]" /> Profil
+                    <Eye className="w-3.5 h-3.5 text-muted-foreground" /> Profil
                   </button>
 
                   <div className="flex items-center gap-1.5">
@@ -346,26 +346,26 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
                       <button
                         type="button"
                         onClick={() => handleDeactivate(asst)}
-                        className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
                         title="Asistanı Pasife Al"
                       >
-                        <PowerOff className="w-3.5 h-3.5 text-amber-700" /> Pasife Al
+                        <PowerOff className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" /> Pasife Al
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleActivate(asst)}
-                        className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
                         title="Asistanı Aktif Et"
                       >
-                        <Check className="w-3.5 h-3.5 text-emerald-700" /> Aktif Et
+                        <Check className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" /> Aktif Et
                       </button>
                     )}
 
                     <button
                       type="button"
                       onClick={() => handleSuspend(asst)}
-                      className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-100 flex items-center justify-center transition-all shadow-sm active:scale-95 cursor-pointer"
+                      className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 flex items-center justify-center transition-all shadow-sm active:scale-95 cursor-pointer"
                       title={isSuspended ? 'Askıdan Çıkar' : 'Askıya Al'}
                     >
                       <ShieldAlert className="w-4 h-4" />
@@ -380,36 +380,36 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
 
       {/* VIEW ASSISTANT PROFILE MODAL */}
       {viewingAssistant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5 relative text-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-[1.65rem] sm:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5 relative text-xs text-foreground">
             <button
               type="button"
               onClick={() => setViewingAssistant(null)}
               aria-label="Kapat"
               title="Kapat"
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#6B7280] hover:text-[#1F2937] flex items-center justify-center transition-colors cursor-pointer"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-card hover:bg-accent/40 border border-border text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
             >
               <PowerOff className="w-4 h-4 hidden" />
               <span className="text-sm font-bold">✕</span>
             </button>
 
-            <div className="flex items-center gap-3 border-b border-[#E5E7EB] pb-4">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 font-bold flex items-center justify-center">
+            <div className="flex items-center gap-3 border-b border-border pb-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center">
                 <Bike className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-[#1F2937]">{viewingAssistant.full_name}</h2>
-                <p className="text-[#6B7280] font-medium">{viewingAssistant.phone} {viewingAssistant.email ? `• ${viewingAssistant.email}` : ''}</p>
+                <h2 className="text-lg font-bold text-foreground">{viewingAssistant.full_name}</h2>
+                <p className="text-muted-foreground font-medium">{viewingAssistant.phone} {viewingAssistant.email ? `• ${viewingAssistant.email}` : ''}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-1">
-                <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Asistan Bilgileri</span>
-                <div><span className="text-[#6B7280]">Araç Tipi:</span> <span className="capitalize font-bold text-[#1F2937]">{viewingAssistant.vehicle_type}</span></div>
+              <div className="p-3.5 bg-background border border-border rounded-xl space-y-1">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Asistan Bilgileri</span>
+                <div><span className="text-muted-foreground">Araç Tipi:</span> <span className="capitalize font-bold text-foreground">{viewingAssistant.vehicle_type}</span></div>
                 <div>
-                  <span className="text-[#6B7280]">Durum:</span>{' '}
-                  <span className="capitalize font-bold text-[#1F2937]">
+                  <span className="text-muted-foreground">Durum:</span>{' '}
+                  <span className="capitalize font-bold text-foreground">
                     {(viewingAssistant.status === 'passive' || viewingAssistant.status === 'pasif' || viewingAssistant.active === false) 
                       ? 'Pasif' 
                       : (viewingAssistant.status === 'suspended')
@@ -419,28 +419,28 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
                 </div>
               </div>
 
-              <div className="p-3.5 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-1">
-                <span className="text-[10px] font-semibold text-[#6B7280] uppercase block">Sistem Detayları</span>
-                <div><span className="text-[#6B7280]">Kayıt Tarihi:</span> <span className="font-bold text-[#1F2937]">{new Date(viewingAssistant.created_at).toLocaleDateString('tr-TR')}</span></div>
-                {viewingAssistant.city && <div><span className="text-[#6B7280]">Şehir:</span> <span className="font-bold text-[#1F2937]">{viewingAssistant.city}</span></div>}
+              <div className="p-3.5 bg-background border border-border rounded-xl space-y-1">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase block">Sistem Detayları</span>
+                <div><span className="text-muted-foreground">Kayıt Tarihi:</span> <span className="font-bold text-foreground">{new Date(viewingAssistant.created_at).toLocaleDateString('tr-TR')}</span></div>
+                {viewingAssistant.city && <div><span className="text-muted-foreground">Şehir:</span> <span className="font-bold text-foreground">{viewingAssistant.city}</span></div>}
               </div>
             </div>
 
             {/* Live Location Map Card */}
-            <div className="p-4 bg-blue-50/50 border border-blue-200 rounded-xl space-y-2">
-              <div className="font-bold text-blue-700 flex items-center gap-2">
-                <Navigation className="w-4 h-4 animate-bounce text-blue-600" /> Canlı Saha Konum Takibi
+            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-2">
+              <div className="font-bold text-blue-700 dark:text-blue-400 flex items-center gap-2">
+                <Navigation className="w-4 h-4 animate-bounce text-blue-600 dark:text-blue-400" /> Canlı Saha Konum Takibi
               </div>
-              <div className="w-full h-32 bg-white rounded-lg border border-[#E5E7EB] flex items-center justify-center text-[#6B7280] font-mono text-xs shadow-inner">
+              <div className="w-full h-32 bg-background rounded-lg border border-border flex items-center justify-center text-muted-foreground font-mono text-xs shadow-inner">
                 [GPS MAP - LAT: {viewingAssistant.latitude || 41.0082}, LNG: {viewingAssistant.longitude || 28.9784}]
               </div>
             </div>
 
-            <div className="flex justify-end pt-2 border-t border-[#E5E7EB]">
+            <div className="flex justify-end pt-2 border-t border-border">
               <button
                 type="button"
                 onClick={() => setViewingAssistant(null)}
-                className="px-4 py-2 rounded-xl bg-white border border-[#E5E7EB] text-[#4B5563] hover:text-[#1F2937] font-semibold cursor-pointer shadow-sm hover:bg-gray-50 transition-all"
+                className="px-4 py-2 rounded-xl bg-card border border-border text-foreground hover:bg-accent/40 font-semibold cursor-pointer shadow-sm transition-all"
               >
                 Kapat
               </button>
@@ -451,62 +451,62 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
 
       {/* CREATE NEW ASSISTANT MODAL */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white border border-[#E5E7EB] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative text-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-[1.65rem] sm:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative text-xs text-foreground">
             <button
               type="button"
               onClick={() => setIsCreateOpen(false)}
               aria-label="Kapat"
               title="Kapat"
-              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-[#6B7280] hover:text-[#1F2937] flex items-center justify-center transition-colors cursor-pointer"
+              className="absolute top-4 right-4 w-9 h-9 rounded-full bg-card hover:bg-accent/40 border border-border text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
             >
               <span className="text-sm font-bold">✕</span>
             </button>
 
-            <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
-              <Plus className="w-5 h-5 text-[#1F2937]" /> Yeni Saha Asistanı Kaydet
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" /> Yeni Saha Asistanı Kaydet
             </h2>
 
             <form onSubmit={handleCreateSubmit} className="space-y-3">
               <div>
-                <label className="block text-[#4B5563] mb-1 font-semibold">Ad Soyad</label>
+                <label className="block text-muted-foreground mb-1 font-semibold">Ad Soyad</label>
                 <input
                   type="text"
                   required
                   value={newAssistant.full_name}
                   onChange={(e) => setNewAssistant({ ...newAssistant, full_name: e.target.value })}
-                  className="w-full bg-gray-50 border border-[#E5E7EB] rounded-xl p-2.5 text-[#1F2937] focus:border-[#1F2937] focus:outline-none"
+                  className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground focus:border-primary focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#4B5563] mb-1 font-semibold">Telefon</label>
+                  <label className="block text-muted-foreground mb-1 font-semibold">Telefon</label>
                   <input
                     type="text"
                     required
                     value={newAssistant.phone}
                     onChange={(e) => setNewAssistant({ ...newAssistant, phone: e.target.value })}
-                    className="w-full bg-gray-50 border border-[#E5E7EB] rounded-xl p-2.5 text-[#1F2937] focus:border-[#1F2937] focus:outline-none"
+                    className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#4B5563] mb-1 font-semibold">E-posta</label>
+                  <label className="block text-muted-foreground mb-1 font-semibold">E-posta</label>
                   <input
                     type="email"
                     value={newAssistant.email || ''}
                     onChange={(e) => setNewAssistant({ ...newAssistant, email: e.target.value })}
-                    className="w-full bg-gray-50 border border-[#E5E7EB] rounded-xl p-2.5 text-[#1F2937] focus:border-[#1F2937] focus:outline-none"
+                    className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#4B5563] mb-1 font-semibold">Araç Tipi</label>
+                <label className="block text-muted-foreground mb-1 font-semibold">Araç Tipi</label>
                 <select
                   value={newAssistant.vehicle_type}
                   onChange={(e) => setNewAssistant({ ...newAssistant, vehicle_type: e.target.value as any })}
-                  className="w-full bg-gray-50 border border-[#E5E7EB] rounded-xl p-2.5 text-[#1F2937] focus:border-[#1F2937] focus:outline-none"
+                  className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground focus:border-primary focus:outline-none"
                 >
                   <option value="motosiklet">Motosiklet</option>
                   <option value="bisiklet">Bisiklet</option>
@@ -514,17 +514,17 @@ export const AdminAssistantsTab: React.FC<AdminAssistantsTabProps> = ({
                 </select>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#E5E7EB]">
+              <div className="flex justify-end gap-2 pt-3 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-[#E5E7EB] text-[#4B5563] hover:text-[#1F2937] font-semibold cursor-pointer bg-white hover:bg-gray-50 shadow-sm"
+                  className="px-4 py-2 rounded-xl border border-border text-foreground hover:bg-accent/40 font-semibold cursor-pointer bg-card shadow-sm"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#1F2937] hover:bg-black text-white font-bold cursor-pointer transition-all shadow-sm border-0"
+                  className="px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer transition-all shadow-sm border-0"
                 >
                   Kaydet & Aktif Yap
                 </button>

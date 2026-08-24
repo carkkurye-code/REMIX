@@ -430,7 +430,7 @@ export function Footer({ isCategoryPage = false }: FooterProps) {
                         <Mail className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
                         <div>
                           <div className="text-xs font-semibold text-white">E-Posta</div>
-                          <a href="mailto:destek@ugra.app" className="text-zinc-300 hover:text-white transition-colors">destek@ugra.app</a>
+                          <a href="mailto:ugraapp@gmail.com" className="text-zinc-300 hover:text-white transition-colors">ugraapp@gmail.com</a>
                         </div>
                       </div>
                       <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white/5 border border-white/5">
@@ -464,10 +464,10 @@ export function Footer({ isCategoryPage = false }: FooterProps) {
                     </div>
                     <div className="space-y-3 text-sm text-zinc-300 leading-relaxed">
                       <p>
-                        UĞRA Teknoloji A.Ş., yazılım, saha operasyonları, veri analitiği ve müşteri deneyimi alanlarında dinamik yetenekleri bünyesine katmaktadır.
+                        UĞRA, yazılım, saha operasyonları, veri analitiği ve müşteri deneyimi alanlarında dinamik yetenekleri bünyesine katmaktadır.
                       </p>
                       <p>
-                        Açık pozisyonlar ve başvuru süreçleri için özgeçmişinizi <span className="text-orange-400 font-semibold">ik@ugra.app</span> adresine iletebilirsiniz.
+                        Açık pozisyonlar ve başvuru süreçleri için özgeçmişinizi <span className="text-orange-400 font-semibold">ugraapp@gmail.com</span> adresine iletebilirsiniz.
                       </p>
                     </div>
                   </div>
