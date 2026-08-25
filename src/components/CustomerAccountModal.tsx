@@ -78,13 +78,15 @@ export function CustomerAccountModal({
   }, [profile]);
 
   // Fetch Orders for current customer
-  const fetchCustomerOrders = async () => {
+  const fetchCustomerOrders = async (isSilent = false) => {
     if (!user || !user.id) {
       setOrders([]);
-      setLoading(false);
+      if (!isSilent) setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!isSilent) {
+      setLoading(true);
+    }
     try {
       let fetched: Order[] = [];
       if (supabase) {
@@ -256,11 +258,33 @@ export function CustomerAccountModal({
         (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       );
 
-      setOrders(sorted);
+      setOrders((prev) => {
+        if (prev.length === sorted.length) {
+          const isIdentical = prev.every((oldOrder, i) => {
+            const newOrder = sorted[i];
+            return (
+              oldOrder.id === newOrder.id &&
+              oldOrder.status === newOrder.status &&
+              oldOrder.assistant_id === newOrder.assistant_id &&
+              oldOrder.assistant_name === newOrder.assistant_name &&
+              oldOrder.updated_at === newOrder.updated_at &&
+              oldOrder.customer_price === newOrder.customer_price &&
+              oldOrder.total_price === newOrder.total_price &&
+              oldOrder.task_description === newOrder.task_description
+            );
+          });
+          if (isIdentical) {
+            return prev;
+          }
+        }
+        return sorted;
+      });
     } catch (err) {
       console.error('Error fetching customer orders:', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -295,7 +319,21 @@ export function CustomerAccountModal({
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (!error && data) {
-        setNotifications(data);
+        setNotifications((prev) => {
+          if (prev.length === data.length) {
+            const isIdentical = prev.every((oldN, i) => {
+              const newN = data[i];
+              return (
+                oldN.id === newN.id &&
+                oldN.status === newN.status &&
+                oldN.message === newN.message &&
+                oldN.created_at === newN.created_at
+              );
+            });
+            if (isIdentical) return prev;
+          }
+          return data;
+        });
       }
     } catch (err) {
       console.warn('Error fetching customer notifications:', err);
@@ -482,7 +520,7 @@ export function CustomerAccountModal({
 
   useEffect(() => {
     if (isOpen && user) {
-      fetchCustomerOrders();
+      fetchCustomerOrders(false);
       fetchCustomerNotifications();
 
       // Realtime EventBus subscriptions
@@ -501,20 +539,20 @@ export function CustomerAccountModal({
             )
           );
         }
-        fetchCustomerOrders();
+        fetchCustomerOrders(true);
         fetchCustomerNotifications();
       });
 
       const unsub2 = eventBus.subscribe('TASK_ASSIGNED', () => {
-        fetchCustomerOrders();
+        fetchCustomerOrders(true);
       });
 
       const unsub3 = eventBus.subscribe('TASK_COMPLETED', () => {
-        fetchCustomerOrders();
+        fetchCustomerOrders(true);
       });
 
       const unsub4 = eventBus.subscribe('TASK_CREATED', () => {
-        fetchCustomerOrders();
+        fetchCustomerOrders(true);
       });
 
       // Realtime Supabase Channel
@@ -524,19 +562,19 @@ export function CustomerAccountModal({
           channel = supabase
             .channel(`customer-orders-realtime-${user.id}-${Date.now()}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-              fetchCustomerOrders();
+              fetchCustomerOrders(true);
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
-              fetchCustomerOrders();
+              fetchCustomerOrders(true);
             })
             .subscribe();
         } catch (e) {}
       }
 
       const interval = setInterval(() => {
-        fetchCustomerOrders();
+        fetchCustomerOrders(true);
         fetchCustomerNotifications();
-      }, 3000);
+      }, 4000);
 
       return () => {
         clearInterval(interval);
@@ -582,7 +620,7 @@ export function CustomerAccountModal({
       });
 
       setSelectedOrderForPayment(null);
-      await fetchCustomerOrders();
+      await fetchCustomerOrders(true);
     } catch (err: any) {
       toast({
         title: 'Hata',
@@ -1044,7 +1082,7 @@ export function CustomerAccountModal({
                         </span>
                         <button
                           type="button"
-                          onClick={fetchCustomerOrders}
+                          onClick={() => fetchCustomerOrders(false)}
                           className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer font-bold"
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
