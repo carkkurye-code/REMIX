@@ -19,7 +19,29 @@ export function Header() {
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const drawerRef = useRef<HTMLDivElement | null>(null);
 
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, role, signOut } = useAuth();
+
+  const isGuest = !user;
+  const isAssistant = Boolean(user && (profile?.role === 'assistant' || role === 'assistant'));
+  const isPartnerOrAdmin = Boolean(
+    user && (
+      profile?.role === 'partner' ||
+      profile?.role === 'admin' ||
+      profile?.role === 'super_admin' ||
+      role === 'partner' ||
+      role === 'admin' ||
+      role === 'super_admin'
+    )
+  );
+
+  // Portallar görünürlük kontrolü:
+  // - Misafir: Asistan Girişi ve Bayi Girişi gösterilir
+  // - Asistan: Asistan Girişi gösterilir
+  // - Bayi/Admin: Bayi Girişi gösterilir
+  // - Müşteri: Asistan ve Bayi girişleri gizlenir
+  const showAsistanPortal = isGuest || isAssistant;
+  const showBayiPortal = isGuest || isPartnerOrAdmin;
+  const showPortalsSection = showAsistanPortal || showBayiPortal;
 
   useBodyScrollLock(isOpen);
   useModalBackButton(isOpen, () => setIsOpen(false), 'hamburger-menu');
@@ -293,49 +315,55 @@ export function Header() {
                   </div>
 
                   {/* PORTALLAR & HİZMETLER */}
-                  <div className="space-y-3">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
-                      PORTALLAR
-                    </span>
+                  {showPortalsSection && (
+                    <div className="space-y-3">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
+                        PORTALLAR
+                      </span>
 
-                    <div className="space-y-1.5">
-                      <button
-                        type="button"
-                        onClick={() => navigateTo('/asistan')}
-                        className="flex items-center justify-between w-full p-3 rounded-2xl border border-border bg-background/50 hover:bg-background hover:border-primary/40 text-foreground transition-all cursor-pointer text-left group"
-                        data-testid="link-drawer-asistan"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <Bike className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold leading-tight">Asistan Girişi</p>
-                            <p className="text-xs text-muted-foreground">Kurye ve asistan paneli</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-                      </button>
+                      <div className="space-y-1.5">
+                        {showAsistanPortal && (
+                          <button
+                            type="button"
+                            onClick={() => navigateTo('/asistan')}
+                            className="flex items-center justify-between w-full p-3 rounded-2xl border border-border bg-background/50 hover:bg-background hover:border-primary/40 text-foreground transition-all cursor-pointer text-left group"
+                            data-testid="link-drawer-asistan"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <Bike className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold leading-tight">Asistan Girişi</p>
+                                <p className="text-xs text-muted-foreground">Kurye ve asistan paneli</p>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                        )}
 
-                      <button
-                        type="button"
-                        onClick={() => navigateTo('/bayi')}
-                        className="flex items-center justify-between w-full p-3 rounded-2xl border border-border bg-background/50 hover:bg-background hover:border-primary/40 text-foreground transition-all cursor-pointer text-left group"
-                        data-testid="link-drawer-bayi"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            <Building className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold leading-tight">Bayi Girişi</p>
-                            <p className="text-xs text-muted-foreground">İl / bölge yönetim paneli</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-                      </button>
+                        {showBayiPortal && (
+                          <button
+                            type="button"
+                            onClick={() => navigateTo('/bayi')}
+                            className="flex items-center justify-between w-full p-3 rounded-2xl border border-border bg-background/50 hover:bg-background hover:border-primary/40 text-foreground transition-all cursor-pointer text-left group"
+                            data-testid="link-drawer-bayi"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <Building className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold leading-tight">Bayi Girişi</p>
+                                <p className="text-xs text-muted-foreground">İl / bölge yönetim paneli</p>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* UYGULAMA YÜKLEME */}
                   <div className="space-y-3">

@@ -139,18 +139,18 @@ export function PWAInstallPrompt() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:max-w-md z-[200] glass-panel border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 text-white"
+            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-6 md:max-w-md z-[200] bg-card border border-border/80 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 text-card-foreground"
           >
             <button
               onClick={handleDismiss}
-              className="absolute top-3.5 right-3.5 text-[#7A7A82] hover:text-white transition-colors p-1.5 rounded-lg hover:bg-[#1A1A1E]"
+              className="absolute top-3.5 right-3.5 text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/80 cursor-pointer"
               aria-label="Kapat"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-3.5 pr-6">
-              <div className="w-12 h-12 rounded-xl bg-[#0B0B0C] border border-[#242428] p-1.5 flex-shrink-0 flex items-center justify-center shadow-inner">
+              <div className="w-12 h-12 rounded-xl bg-background border border-border p-1.5 flex-shrink-0 flex items-center justify-center shadow-xs">
                 <img
                   src="/favicon.svg"
                   alt="UĞRA"
@@ -160,14 +160,14 @@ export function PWAInstallPrompt() {
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold text-white tracking-wide">
-                    UĞRA<span className="text-[#FF7A00]">.</span> Zaman Asistanı
+                  <h4 className="text-sm font-bold text-card-foreground tracking-wide">
+                    UĞRA<span className="text-primary">.</span> Zaman Asistanı
                   </h4>
-                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-white/10 text-white border border-white/20">
+                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                     PWA
                   </span>
                 </div>
-                <p className="text-xs text-[#D6D6D6] leading-relaxed mt-0.5">
+                <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
                   Tek dokunuşla sipariş verin, zamanınız size kalsın! Hemen uygulamayı yükleyin.
                 </p>
               </div>
@@ -176,14 +176,14 @@ export function PWAInstallPrompt() {
             <div className="flex items-center gap-2.5 pt-1">
               <button
                 onClick={handleInstallClick}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-neutral-200 active:scale-95 text-xs uppercase tracking-wider font-bold text-black rounded-xl transition-all shadow-lg shadow-white/10 cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 active:scale-95 text-xs uppercase tracking-wider font-bold text-primary-foreground rounded-xl transition-all shadow-md shadow-primary/20 cursor-pointer"
               >
-                <Download className="w-4 h-4 text-black" />
+                <Download className="w-4 h-4 text-primary-foreground" />
                 Uygulamayı Yükle
               </button>
               <button
                 onClick={handleDismiss}
-                className="px-4 py-2.5 border border-[#2E2E34] bg-transparent hover:bg-[#1A1A1E] text-xs uppercase tracking-wider font-semibold text-[#D6D6D6] hover:text-white rounded-xl transition-all cursor-pointer"
+                className="px-4 py-2.5 border border-border bg-card hover:bg-muted text-xs uppercase tracking-wider font-semibold text-muted-foreground hover:text-foreground rounded-xl transition-all cursor-pointer"
               >
                 Daha Sonra
               </button>
@@ -195,7 +195,7 @@ export function PWAInstallPrompt() {
       {/* iOS Safari Instruction sheet / modal */}
       <AnimatePresence>
         {showIOSInstructions && (
-          <div className="fixed inset-0 z-[210] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-6">
+          <div className="fixed inset-0 z-[210] bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-6">
             {/* Backdrop click to close */}
             <div className="absolute inset-0" onClick={() => setShowIOSInstructions(false)} />
 
@@ -204,14 +204,14 @@ export function PWAInstallPrompt() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="relative w-full sm:max-w-md glass-panel border-t sm:border border-white/10 rounded-t-[2rem] sm:rounded-3xl p-6 text-left shadow-2xl overflow-hidden flex flex-col gap-5 text-white my-auto font-sans z-50"
+              className="relative w-full sm:max-w-md bg-card border-t sm:border border-border/80 rounded-t-[2rem] sm:rounded-3xl p-6 text-left shadow-2xl overflow-hidden flex flex-col gap-5 text-card-foreground my-auto font-sans z-50"
             >
               {/* iOS pull bar on mobile */}
-              <div className="w-12 h-1 bg-white/20 rounded-full mx-auto sm:hidden -mt-2 mb-1" />
+              <div className="w-12 h-1 bg-border rounded-full mx-auto sm:hidden -mt-2 mb-1" />
 
               <button
                 onClick={() => setShowIOSInstructions(false)}
-                className="absolute top-4 right-4 sm:top-5 sm:right-5 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-muted-foreground hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 z-20"
+                className="absolute top-4 right-4 sm:top-5 sm:right-5 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-muted/60 hover:bg-muted border border-border text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer shrink-0 z-20"
                 aria-label="Kapat"
                 title="Kapat"
               >
@@ -219,7 +219,7 @@ export function PWAInstallPrompt() {
               </button>
 
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-[#0B0B0C] border border-[#242428] p-2 flex-shrink-0 flex items-center justify-center shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-background border border-border p-2 flex-shrink-0 flex items-center justify-center shadow-xs">
                   <img
                     src="/favicon.svg"
                     alt="UĞRA"
@@ -228,47 +228,47 @@ export function PWAInstallPrompt() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
-                    Ana Ekrana Ekle <span className="text-[#FF7A00]">.</span>
+                  <h3 className="text-lg font-bold text-card-foreground flex items-center gap-1.5">
+                    Ana Ekrana Ekle <span className="text-primary">.</span>
                   </h3>
-                  <p className="text-xs text-[#7A7A82]">
+                  <p className="text-xs text-muted-foreground">
                     UĞRA'yı iPhone'unuza uygulama olarak yükleyin.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 bg-[#161618] border border-[#242428] rounded-2xl p-5 text-sm">
+              <div className="flex flex-col gap-4 bg-background border border-border rounded-2xl p-5 text-sm">
                 <div className="flex gap-3.5 items-start">
-                  <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
                     1
                   </div>
-                  <p className="text-[#D6D6D6] leading-relaxed">
-                    Safari alt araç çubuğundaki <span className="inline-flex items-center gap-1 font-semibold text-white px-1.5 py-0.5 bg-white/10 border border-white/10 rounded"><Share className="w-3.5 h-3.5 text-white inline" /> Paylaş</span> simgesine dokunun.
+                  <p className="text-foreground/90 leading-relaxed">
+                    Safari alt araç çubuğundaki <span className="inline-flex items-center gap-1 font-semibold text-foreground px-1.5 py-0.5 bg-muted border border-border rounded"><Share className="w-3.5 h-3.5 text-foreground inline" /> Paylaş</span> simgesine dokunun.
                   </p>
                 </div>
 
                 <div className="flex gap-3.5 items-start">
-                  <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
                     2
                   </div>
-                  <p className="text-[#D6D6D6] leading-relaxed">
-                    Aşağı kaydırın ve açılan listeden <span className="inline-flex items-center gap-1 font-semibold text-white px-1.5 py-0.5 bg-white/10 border border-white/10 rounded"><PlusSquare className="w-3.5 h-3.5 text-white inline" /> Ana Ekrana Ekle</span> seçeneğini seçin.
+                  <p className="text-foreground/90 leading-relaxed">
+                    Aşağı kaydırın ve açılan listeden <span className="inline-flex items-center gap-1 font-semibold text-foreground px-1.5 py-0.5 bg-muted border border-border rounded"><PlusSquare className="w-3.5 h-3.5 text-foreground inline" /> Ana Ekrana Ekle</span> seçeneğini seçin.
                   </p>
                 </div>
 
                 <div className="flex gap-3.5 items-start">
-                  <div className="w-6 h-6 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
                     3
                   </div>
-                  <p className="text-[#D6D6D6] leading-relaxed">
-                    Sağ üst köşedeki <span className="font-semibold text-white">Ekle</span> butonuna dokunarak kurulumu tamamlayın.
+                  <p className="text-foreground/90 leading-relaxed">
+                    Sağ üst köşedeki <span className="font-semibold text-foreground">Ekle</span> butonuna dokunarak kurulumu tamamlayın.
                   </p>
                 </div>
               </div>
 
               <button
                 onClick={() => setShowIOSInstructions(false)}
-                className="w-full py-3 bg-white hover:bg-neutral-200 text-xs uppercase tracking-wider font-bold text-black rounded-xl transition-all shadow-lg shadow-white/10 cursor-pointer"
+                className="w-full py-3 bg-primary hover:bg-primary/90 text-xs uppercase tracking-wider font-bold text-primary-foreground rounded-xl transition-all shadow-md shadow-primary/20 cursor-pointer"
               >
                 Anladım
               </button>
