@@ -947,7 +947,7 @@ export function CustomerAccountModal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="fixed inset-0 bg-black/80 backdrop-blur-md"
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
               />
 
               {/* Modal Card */}
@@ -956,19 +956,19 @@ export function CustomerAccountModal({
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 260 }}
-                className="relative z-10 w-full max-w-3xl bg-[#0F0F12] border border-white/10 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+                className="relative z-10 w-full max-w-3xl bg-card border border-border rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
               >
                 {/* Modal Header */}
-                <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-zinc-900/60 backdrop-blur-xl">
+                <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-card/90 backdrop-blur-xl">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#FF7A00]/10 border border-[#FF7A00]/20 flex items-center justify-center text-[#FF7A00]">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                       <UserIcon className="w-5 h-5" />
                     </div>
                     <div>
-                      <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
                         <span>{profile?.full_name || user?.email || 'Müşteri Hesabı'}</span>
                       </h2>
-                      <p className="text-xs text-zinc-400">
+                      <p className="text-xs text-muted-foreground">
                         Siparişlerinizi, bildirimlerinizi ve ödemelerinizi yönetin.
                       </p>
                     </div>
@@ -976,7 +976,7 @@ export function CustomerAccountModal({
 
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                    className="p-2 rounded-xl bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground border border-border/60 transition-colors cursor-pointer"
                     aria-label="Kapat"
                   >
                     <X className="w-5 h-5" />
@@ -984,20 +984,20 @@ export function CustomerAccountModal({
                 </div>
 
                 {/* Navigation Tabs */}
-                <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-3 border-b border-white/10 bg-black/40 overflow-x-auto scrollbar-none shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 border-b border-border bg-background/60 overflow-x-auto scrollbar-none shrink-0">
                   <button
                     type="button"
                     onClick={() => setActiveTab('taleplerim')}
                     className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                       activeTab === 'taleplerim'
-                        ? 'bg-white text-black shadow-md'
-                        : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border'
                     }`}
                   >
                     <ShoppingBag className="w-4 h-4" />
                     <span>Taleplerim</span>
                     {orders.length > 0 && (
-                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${activeTab === 'taleplerim' ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${activeTab === 'taleplerim' ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                         {orders.length}
                       </span>
                     )}
@@ -1008,14 +1008,14 @@ export function CustomerAccountModal({
                     onClick={() => setActiveTab('gelen_kutusu')}
                     className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                       activeTab === 'gelen_kutusu'
-                        ? 'bg-white text-black shadow-md'
-                        : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border'
                     }`}
                   >
                     <Inbox className="w-4 h-4" />
                     <span>Gelen Kutusu</span>
                     {pendingPaymentOrders.length > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-[#FF7A00] animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                     )}
                   </button>
 
@@ -1024,8 +1024,8 @@ export function CustomerAccountModal({
                     onClick={() => setActiveTab('hesap_bilgilerim')}
                     className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 ${
                       activeTab === 'hesap_bilgilerim'
-                        ? 'bg-white text-black shadow-md'
-                        : 'bg-white/5 text-zinc-400 hover:text-white hover:bg-white/10'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'bg-card text-muted-foreground hover:text-foreground hover:bg-card/80 border border-border'
                     }`}
                   >
                     <UserIcon className="w-4 h-4" />
@@ -1038,14 +1038,14 @@ export function CustomerAccountModal({
                   {/* TAB 1: TALEPLERİM */}
                   {activeTab === 'taleplerim' && (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                      <div className="flex items-center justify-between pb-2 border-b border-border">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
                           Oluşturduğunuz Asistan Talepleri ({orders.length})
                         </span>
                         <button
                           type="button"
                           onClick={fetchCustomerOrders}
-                          className="text-xs text-[#FF7A00] hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+                          className="text-xs text-primary hover:underline flex items-center gap-1 cursor-pointer font-bold"
                         >
                           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                           <span>Yenile</span>
@@ -1053,15 +1053,15 @@ export function CustomerAccountModal({
                       </div>
 
                       {loading && orders.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-zinc-400 space-y-3">
-                          <Loader2 className="w-7 h-7 animate-spin text-[#FF7A00]" />
+                        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground space-y-3">
+                          <Loader2 className="w-7 h-7 animate-spin text-primary" />
                           <p className="text-xs font-medium">Talepleriniz yükleniyor...</p>
                         </div>
                       ) : orders.length === 0 ? (
-                        <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl space-y-3 p-6">
-                          <Package className="w-10 h-10 text-zinc-500 mx-auto" />
-                          <h3 className="text-sm font-bold text-white">Henüz Bir Asistan Talebiniz Yok</h3>
-                          <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                        <div className="text-center py-12 bg-card/60 border border-border/80 rounded-2xl space-y-2.5 p-6">
+                          <Package className="w-10 h-10 text-muted-foreground/60 mx-auto" />
+                          <h3 className="text-sm font-bold text-foreground">Henüz Bir Asistan Talebiniz Yok</h3>
+                          <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                             Mağaza veya kurye sayfalarımızdan dilediğiniz zaman asistan talebi oluşturabilirsiniz.
                           </p>
                         </div>
@@ -1100,18 +1100,18 @@ export function CustomerAccountModal({
                             return (
                               <div
                                 key={order.id}
-                                className="bg-zinc-900/90 border border-white/10 rounded-2xl p-4 sm:p-5 space-y-4 transition-all hover:border-white/20 shadow-lg"
+                                className="bg-card border border-border rounded-2xl p-4 sm:p-5 space-y-4 transition-all hover:border-primary/40 shadow-sm"
                               >
                                 {/* Talep Numarası ve Sil Butonu */}
                                 <div className="flex items-center justify-between pb-1">
-                                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                     Talep {index + 1}
                                   </div>
                                   <button
                                     type="button"
                                     onClick={() => setOrderToDelete(order)}
                                     disabled={deletingOrderId === order.id}
-                                    className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 font-medium text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                    className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                                     title="Talebi Sil"
                                   >
                                     {deletingOrderId === order.id ? (
@@ -1125,12 +1125,12 @@ export function CustomerAccountModal({
 
                                 {/* Talep Kodu ve Türü / Durumu */}
                                 <div className="space-y-1">
-                                  <div className="text-base font-mono font-bold text-white">
+                                  <div className="text-base font-mono font-bold text-foreground">
                                     #UG-{order.id.slice(0, 8).toUpperCase()}
                                   </div>
-                                  <div className="text-xs text-zinc-300 font-medium">
-                                    {serviceBadge} <span className="text-zinc-500">·</span>{' '}
-                                    <span className={isAccepted ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
+                                  <div className="text-xs text-muted-foreground font-medium">
+                                    {serviceBadge} <span className="text-border">·</span>{' '}
+                                    <span className={isAccepted ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}>
                                       {statusInfo.label}
                                     </span>
                                   </div>
@@ -1138,11 +1138,11 @@ export function CustomerAccountModal({
 
                                 {/* Yapılacak İş */}
                                 <div className="space-y-1.5 pt-1">
-                                  <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                                  <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                     Yapılacak İş
                                   </div>
-                                  <div className="bg-black/40 border border-white/5 rounded-xl p-3.5">
-                                    <p className="text-sm font-semibold text-white leading-relaxed">
+                                  <div className="bg-background/80 border border-border/80 rounded-xl p-3.5">
+                                    <p className="text-sm font-medium text-foreground leading-relaxed">
                                       {taskDesc}
                                     </p>
                                   </div>
@@ -1150,11 +1150,11 @@ export function CustomerAccountModal({
 
                                 {/* Atanan Asistan (Sadece atanmışsa gösterilir) */}
                                 {isAccepted && displayAssistantName && (
-                                  <div className="space-y-1 pt-1 border-t border-white/10">
-                                    <div className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                                  <div className="space-y-1 pt-2 border-t border-border/60">
+                                    <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                       Atanan Asistan
                                     </div>
-                                    <div className="text-sm font-bold text-emerald-400">
+                                    <div className="text-sm font-bold text-emerald-600">
                                       {displayAssistantName}
                                     </div>
                                   </div>
@@ -1170,8 +1170,8 @@ export function CustomerAccountModal({
                   {/* TAB 2: GELEN KUTUSU */}
                   {activeTab === 'gelen_kutusu' && (
                     <div className="space-y-4">
-                      <div className="pb-2 border-b border-white/10">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                      <div className="pb-2 border-b border-border">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
                           Sipariş & Ödeme Bildirimleriniz
                         </span>
                       </div>
@@ -1238,10 +1238,10 @@ export function CustomerAccountModal({
 
                         if (!hasAnyContent) {
                           return (
-                            <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3">
-                              <Inbox className="w-10 h-10 text-zinc-500 mx-auto" />
-                              <h3 className="text-sm font-bold text-white">Gelen Kutunuz Boş</h3>
-                              <p className="text-xs text-zinc-400">
+                            <div className="text-center py-12 bg-card/60 border border-border/80 rounded-2xl p-6 space-y-2.5">
+                              <Inbox className="w-10 h-10 text-muted-foreground/60 mx-auto" />
+                              <h3 className="text-sm font-bold text-foreground">Gelen Kutunuz Boş</h3>
+                              <p className="text-xs text-muted-foreground">
                                 Asistanınız talebinizi kabul ettiğinde durum bildirimleri ve ödeme bilgileri buraya gelecektir.
                               </p>
                             </div>
@@ -1264,16 +1264,16 @@ export function CustomerAccountModal({
                               return (
                                 <div
                                   key={notif.id}
-                                  className="p-4 bg-zinc-900 border border-white/10 rounded-2xl space-y-3"
+                                  className="p-4 bg-card border border-border rounded-2xl space-y-3 shadow-sm"
                                 >
-                                  <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                                      <CreditCard className="w-4 h-4" />
+                                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                                    <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
+                                      <CreditCard className="w-4 h-4 text-emerald-600" />
                                       <span>{notif.title || 'Asistan Ödeme Bilgilerini Gönderdi'}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                       {notif.created_at && (
-                                        <span className="text-[10px] text-zinc-400">
+                                        <span className="text-[10px] text-muted-foreground font-mono">
                                           {new Date(notif.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                       )}
@@ -1281,7 +1281,7 @@ export function CustomerAccountModal({
                                         type="button"
                                         onClick={() => setNotifToDelete(notif)}
                                         disabled={deletingNotifId === notif.id}
-                                        className="p-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 text-xs transition-colors flex items-center cursor-pointer disabled:opacity-50"
+                                        className="p-1 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 text-xs transition-colors flex items-center cursor-pointer disabled:opacity-50"
                                         title="Bildirimi Sil"
                                       >
                                         {deletingNotifId === notif.id ? (
@@ -1295,20 +1295,20 @@ export function CustomerAccountModal({
 
                                   <div className="space-y-2 text-xs">
                                     {accountHolder && (
-                                      <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
+                                      <div className="p-2.5 bg-background/80 border border-border/80 rounded-xl flex items-center justify-between gap-2">
                                         <div className="min-w-0 flex-1">
-                                          <span className="text-[10px] text-zinc-400 font-bold uppercase block">Hesap Sahibi</span>
-                                          <span className="text-white font-semibold text-xs truncate block">{accountHolder}</span>
+                                          <span className="text-[10px] text-muted-foreground font-bold uppercase block">Hesap Sahibi</span>
+                                          <span className="text-foreground font-semibold text-xs truncate block">{accountHolder}</span>
                                         </div>
                                         <button
                                           type="button"
                                           onClick={() => handleCopyText(accountHolder, 'Hesap Sahibi', notif.id)}
-                                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                                          className="px-2.5 py-1 rounded-lg bg-card hover:bg-background border border-border text-foreground font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
                                         >
                                           {copiedField === `${notif.id}_Hesap Sahibi` ? (
-                                            <Check className="w-3 h-3 text-emerald-400" />
+                                            <Check className="w-3 h-3 text-emerald-600" />
                                           ) : (
-                                            <Copy className="w-3 h-3" />
+                                            <Copy className="w-3 h-3 text-muted-foreground" />
                                           )}
                                           <span>Kopyala</span>
                                         </button>
@@ -1316,20 +1316,20 @@ export function CustomerAccountModal({
                                     )}
 
                                     {bankName && (
-                                      <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
+                                      <div className="p-2.5 bg-background/80 border border-border/80 rounded-xl flex items-center justify-between gap-2">
                                         <div className="min-w-0 flex-1">
-                                          <span className="text-[10px] text-zinc-400 font-bold uppercase block">Banka</span>
-                                          <span className="text-white font-semibold text-xs truncate block">{bankName}</span>
+                                          <span className="text-[10px] text-muted-foreground font-bold uppercase block">Banka</span>
+                                          <span className="text-foreground font-semibold text-xs truncate block">{bankName}</span>
                                         </div>
                                         <button
                                           type="button"
                                           onClick={() => handleCopyText(bankName, 'Banka', notif.id)}
-                                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                                          className="px-2.5 py-1 rounded-lg bg-card hover:bg-background border border-border text-foreground font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
                                         >
                                           {copiedField === `${notif.id}_Banka` ? (
-                                            <Check className="w-3 h-3 text-emerald-400" />
+                                            <Check className="w-3 h-3 text-emerald-600" />
                                           ) : (
-                                            <Copy className="w-3 h-3" />
+                                            <Copy className="w-3 h-3 text-muted-foreground" />
                                           )}
                                           <span>Kopyala</span>
                                         </button>
@@ -1337,20 +1337,20 @@ export function CustomerAccountModal({
                                     )}
 
                                     {iban && (
-                                      <div className="p-2.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between gap-2">
+                                      <div className="p-2.5 bg-background/80 border border-border/80 rounded-xl flex items-center justify-between gap-2">
                                         <div className="min-w-0 flex-1">
-                                          <span className="text-[10px] text-zinc-400 font-bold uppercase block">IBAN</span>
-                                          <span className="text-white font-mono font-semibold text-xs tracking-wider break-all block">{iban}</span>
+                                          <span className="text-[10px] text-muted-foreground font-bold uppercase block">IBAN</span>
+                                          <span className="text-foreground font-mono font-semibold text-xs tracking-wider break-all block">{iban}</span>
                                         </div>
                                         <button
                                           type="button"
                                           onClick={() => handleCopyText(iban, 'IBAN', notif.id)}
-                                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-zinc-300 hover:text-white font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                                          className="px-2.5 py-1 rounded-lg bg-card hover:bg-background border border-border text-foreground font-bold text-[11px] transition-colors flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
                                         >
                                           {copiedField === `${notif.id}_IBAN` ? (
-                                            <Check className="w-3 h-3 text-emerald-400" />
+                                            <Check className="w-3 h-3 text-emerald-600" />
                                           ) : (
-                                            <Copy className="w-3 h-3" />
+                                            <Copy className="w-3 h-3 text-muted-foreground" />
                                           )}
                                           <span>Kopyala</span>
                                         </button>
@@ -1372,27 +1372,27 @@ export function CustomerAccountModal({
                             return (
                               <div
                                 key={order.id}
-                                className="p-4 bg-zinc-900 border border-white/10 rounded-2xl space-y-3"
+                                className="p-4 bg-card border border-border rounded-2xl space-y-2.5 shadow-sm"
                               >
                                 {isAccepted && (
                                   <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                                    <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                                       <span>🎉 Asistan Talebinizi Kabul Etti!</span>
                                     </div>
-                                    <p className="text-xs text-zinc-300 leading-relaxed">
-                                      <strong className="text-white">{order.assistant_name || 'Uğra Asistanı'}</strong> talebinizi kabul etti. Talebiniz en kısa sürede hazırlanıp adresinize ulaştırılacaktır.
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                      <strong className="text-foreground">{order.assistant_name || 'Uğra Asistanı'}</strong> talebinizi kabul etti. Talebiniz en kısa sürede hazırlanıp adresinize ulaştırılacaktır.
                                     </p>
                                   </div>
                                 )}
 
                                 {isReported && (
                                   <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-purple-400 font-bold text-xs">
-                                      <CheckCircle2 className="w-4 h-4" />
+                                    <div className="flex items-center gap-2 text-purple-700 font-bold text-xs">
+                                      <CheckCircle2 className="w-4 h-4 text-purple-600" />
                                       <span>💳 Ödeme Bildirimi Gönderildi</span>
                                     </div>
-                                    <p className="text-xs text-zinc-300">
+                                    <p className="text-xs text-muted-foreground">
                                       Ödemeyi gönderdiğinizi asistana ilettik. Asistanınız kontrol ettikten sonra mağazadan ürünleri satın almak üzere harekete geçecektir.
                                     </p>
                                   </div>
@@ -1400,23 +1400,23 @@ export function CustomerAccountModal({
 
                                 {isPurchasing && (
                                   <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-indigo-400 font-bold text-xs">
-                                      <Package className="w-4 h-4" />
+                                    <div className="flex items-center gap-2 text-indigo-700 font-bold text-xs">
+                                      <Package className="w-4 h-4 text-indigo-600" />
                                       <span>🛍️ Ürünler Alınıyor</span>
                                     </div>
-                                    <p className="text-xs text-zinc-300">
-                                      Asistanınız <strong className="text-white">{order.partner_name || 'Mağaza'}</strong> noktasından seçtiğiniz ürünleri tedarik ediyor.
+                                    <p className="text-xs text-muted-foreground">
+                                      Asistanınız <strong className="text-foreground">{order.partner_name || 'Mağaza'}</strong> noktasından seçtiğiniz ürünleri tedarik ediyor.
                                     </p>
                                   </div>
                                 )}
 
                                 {isDelivering && (
                                   <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs">
-                                      <Truck className="w-4 h-4" />
+                                    <div className="flex items-center gap-2 text-sky-700 font-bold text-xs">
+                                      <Truck className="w-4 h-4 text-sky-600" />
                                       <span>🛵 Teslimata Çıktı</span>
                                     </div>
-                                    <p className="text-xs text-zinc-300">
+                                    <p className="text-xs text-muted-foreground">
                                       Asistanınız siparişinizi teslim etmek üzere verdiğiniz konuma doğru yola çıktı.
                                     </p>
                                   </div>
@@ -1424,11 +1424,11 @@ export function CustomerAccountModal({
 
                                 {isCompleted && (
                                   <div className="space-y-1">
-                                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                                      <CheckCircle2 className="w-4 h-4" />
+                                    <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                       <span>✅ Teslim Edildi</span>
                                     </div>
-                                    <p className="text-xs text-zinc-300">
+                                    <p className="text-xs text-muted-foreground">
                                       Siparişiniz başarıyla teslim edilmiştir. UĞRA'yı tercih ettiğiniz için teşekkür ederiz!
                                     </p>
                                   </div>
@@ -1445,57 +1445,57 @@ export function CustomerAccountModal({
                   {/* TAB 3: HESAP BİLGİLERİM */}
                   {activeTab === 'hesap_bilgilerim' && (
                     <form onSubmit={handleSaveProfile} className="space-y-4 max-w-lg mx-auto">
-                      <div className="pb-2 border-b border-white/10">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                      <div className="pb-2 border-b border-border">
+                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground font-mono">
                           Müşteri Profil Bilgileriniz
                         </span>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-zinc-300 block">Ad Soyad</label>
+                        <label className="text-xs font-bold text-foreground block">Ad Soyad</label>
                         <input
                           type="text"
                           required
                           placeholder="Adınız Soyadınız"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          className="w-full bg-zinc-900 border border-white/10 focus:border-[#FF7A00] outline-none rounded-xl p-3 text-xs text-white placeholder:text-zinc-600 transition-all"
+                          className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/50 transition-all font-medium"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-zinc-300 block">Telefon Numarası</label>
+                        <label className="text-xs font-bold text-foreground block">Telefon Numarası</label>
                         <input
                           type="tel"
                           required
                           placeholder="05xx xxx xx xx"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
-                          className="w-full bg-zinc-900 border border-white/10 focus:border-[#FF7A00] outline-none rounded-xl p-3 text-xs text-white placeholder:text-zinc-600 transition-all"
+                          className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/50 transition-all font-medium"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-zinc-300 block">E-posta Adresi</label>
+                        <label className="text-xs font-bold text-foreground block">E-posta Adresi</label>
                         <input
                           type="email"
                           disabled
                           value={user?.email || ''}
-                          className="w-full bg-zinc-900/50 border border-white/5 outline-none rounded-xl p-3 text-xs text-zinc-400 cursor-not-allowed"
+                          className="w-full bg-background/50 border border-border/60 outline-none rounded-xl p-3 text-xs text-muted-foreground cursor-not-allowed font-medium"
                         />
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-[#FF7A00]" />
+                          <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-primary" />
                             <span>Konumum</span>
                           </label>
                           <button
                             type="button"
                             onClick={handleGetCurrentLocation}
                             disabled={gettingLocation}
-                            className="text-[11px] font-semibold text-[#FF7A00] hover:text-[#ff9433] flex items-center gap-1 cursor-pointer transition-colors bg-[#FF7A00]/10 hover:bg-[#FF7A00]/20 px-2 py-1 rounded-lg border border-[#FF7A00]/20"
+                            className="text-[11px] font-semibold text-primary hover:text-primary/90 flex items-center gap-1 cursor-pointer transition-colors bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg border border-primary/20"
                           >
                             {gettingLocation ? (
                               <>
@@ -1515,9 +1515,9 @@ export function CustomerAccountModal({
                           placeholder="Konumunuz / Açık adresiniz..."
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
-                          className="w-full bg-zinc-900 border border-white/10 focus:border-[#FF7A00] outline-none rounded-xl p-3 text-xs text-white placeholder:text-zinc-600 transition-all resize-none"
+                          className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-xl p-3 text-xs text-foreground placeholder:text-muted-foreground/50 transition-all resize-none font-medium"
                         />
-                        <p className="text-[10px] text-zinc-500">
+                        <p className="text-[10px] text-muted-foreground">
                           Taleplerinizde asistanın size ulaşacağı varsayılan konumunuz olarak kullanılır.
                         </p>
                       </div>
@@ -1526,10 +1526,10 @@ export function CustomerAccountModal({
                         <button
                           type="submit"
                           disabled={savingProfile}
-                          className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 border-0"
+                          className="w-full py-3.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 border-0 shadow-md shadow-primary/20"
                         >
                           {savingProfile ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-black" />
+                            <Loader2 className="w-4 h-4 animate-spin text-primary-foreground" />
                           ) : (
                             <>
                               <Check className="w-4 h-4" />
@@ -1545,25 +1545,25 @@ export function CustomerAccountModal({
                 {/* Confirm Delete Order Modal */}
                 <AnimatePresence>
                   {orderToDelete && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="bg-zinc-900 border border-white/10 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl"
+                        className="bg-card border border-border rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl"
                       >
-                        <div className="flex items-center gap-3 text-red-400">
+                        <div className="flex items-center gap-3 text-red-600">
                           <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                             <Trash2 className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="text-sm font-bold text-white">Talebi Sil</h4>
-                            <p className="text-xs text-zinc-400">Bu işlem geri alınamaz.</p>
+                            <h4 className="text-sm font-bold text-foreground">Talebi Sil</h4>
+                            <p className="text-xs text-muted-foreground">Bu işlem geri alınamaz.</p>
                           </div>
                         </div>
 
-                        <p className="text-xs text-zinc-300 leading-relaxed">
-                          <strong className="text-white">#UG-{orderToDelete.id.slice(0, 8).toUpperCase()}</strong> kodlu talebinizi silmek istediğinizden emin misiniz?
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          <strong className="text-foreground">#UG-{orderToDelete.id.slice(0, 8).toUpperCase()}</strong> kodlu talebinizi silmek istediğinizden emin misiniz?
                         </p>
 
                         <div className="flex items-center justify-end gap-2 pt-2">
@@ -1571,7 +1571,7 @@ export function CustomerAccountModal({
                             type="button"
                             onClick={() => setOrderToDelete(null)}
                             disabled={Boolean(deletingOrderId)}
-                            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                            className="px-4 py-2 rounded-xl bg-background hover:bg-muted border border-border text-xs font-semibold text-foreground transition-colors cursor-pointer"
                           >
                             İptal
                           </button>
@@ -1579,7 +1579,7 @@ export function CustomerAccountModal({
                             type="button"
                             onClick={() => handleDeleteOrder(orderToDelete)}
                             disabled={Boolean(deletingOrderId)}
-                            className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-lg shadow-red-500/20"
+                            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-md shadow-red-600/20"
                           >
                             {deletingOrderId ? (
                               <>
@@ -1602,24 +1602,24 @@ export function CustomerAccountModal({
                 {/* Confirm Delete Notification Modal */}
                 <AnimatePresence>
                   {notifToDelete && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="bg-zinc-900 border border-white/10 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl"
+                        className="bg-card border border-border rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl"
                       >
-                        <div className="flex items-center gap-3 text-red-400">
+                        <div className="flex items-center gap-3 text-red-600">
                           <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                             <Trash2 className="w-5 h-5" />
                           </div>
                           <div>
-                            <h4 className="text-sm font-bold text-white">Bildirimi Sil</h4>
-                            <p className="text-xs text-zinc-400">Gelen kutunuzdan kaldırılacaktır.</p>
+                            <h4 className="text-sm font-bold text-foreground">Bildirimi Sil</h4>
+                            <p className="text-xs text-muted-foreground">Gelen kutunuzdan kaldırılacaktır.</p>
                           </div>
                         </div>
 
-                        <p className="text-xs text-zinc-300 leading-relaxed">
+                        <p className="text-xs text-muted-foreground leading-relaxed">
                           Seçilen bildirimi gelen kutunuzdan silmek istediğinizden emin misiniz?
                         </p>
 
@@ -1628,7 +1628,7 @@ export function CustomerAccountModal({
                             type="button"
                             onClick={() => setNotifToDelete(null)}
                             disabled={Boolean(deletingNotifId)}
-                            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                            className="px-4 py-2 rounded-xl bg-background hover:bg-muted border border-border text-xs font-semibold text-foreground transition-colors cursor-pointer"
                           >
                             İptal
                           </button>
@@ -1636,7 +1636,7 @@ export function CustomerAccountModal({
                             type="button"
                             onClick={() => handleDeleteNotification(notifToDelete)}
                             disabled={Boolean(deletingNotifId)}
-                            className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-lg shadow-red-500/20"
+                            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5 cursor-pointer shadow-md shadow-red-600/20"
                           >
                             {deletingNotifId ? (
                               <>
