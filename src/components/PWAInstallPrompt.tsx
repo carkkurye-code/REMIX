@@ -163,9 +163,6 @@ export function PWAInstallPrompt() {
                   <h4 className="text-sm font-bold text-card-foreground tracking-wide">
                     UĞRA<span className="text-primary">.</span> Zaman Asistanı
                   </h4>
-                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    PWA
-                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
                   Tek dokunuşla sipariş verin, zamanınız size kalsın! Hemen uygulamayı yükleyin.
