@@ -1064,7 +1064,8 @@ export function AsistanPage() {
     }
     const isPendingStatus = ['pending', 'created', 'bekliyor', 'beklemede', 'hazirlaniyor', 'hazir'].includes(o.status);
     const isAssignedToMeOrOpen = !o.assistant_id || (currentAssistant && (o.assistant_id === currentAssistant.id || o.assistant_id === currentAssistant.user_id));
-    return isPendingStatus && isAssignedToMeOrOpen;
+    const isNotExpired = !o.created_at || (Date.now() - new Date(o.created_at).getTime() < 30 * 60 * 1000);
+    return isPendingStatus && isAssignedToMeOrOpen && isNotExpired;
   });
 
   const activeOrders = allOrders.filter((o) => {

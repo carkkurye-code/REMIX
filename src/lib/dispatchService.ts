@@ -272,6 +272,15 @@ export class LiveDispatchService {
 
     const dispatchKey = isTaskRecord ? `task_${validTaskId}` : `order_${validOrderId}`;
 
+    // Check item age: if older than 30 minutes, do not dispatch new offers and terminate dispatch cycle
+    if (item.created_at) {
+      const itemAgeMs = Date.now() - new Date(item.created_at).getTime();
+      if (itemAgeMs >= 30 * 60 * 1000) {
+        console.log(`[LiveDispatch] Item ${dispatchKey} has reached 30-minute expiration threshold. Halting dispatch cycle.`);
+        return false;
+      }
+    }
+
     if (this.activelyDispatchingIds.has(dispatchKey)) {
       console.warn(`[LiveDispatch] Already dispatching ${dispatchKey}, preventing recursive loop.`);
       return false;
