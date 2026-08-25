@@ -1209,29 +1209,34 @@ export function CustomerAccountModal({
                               return !['cancelled', 'iptal'].includes(s);
                             }
 
-                            // If orders list is still loading or empty, check whether notification has active payload
-                            if (loading) {
-                              return true;
-                            }
-                            return false;
+                            // If orders list is empty or order is temporarily not in state (race condition/loading),
+                            // keep the IBAN notification visible since it genuinely belongs to this user
+                            return true;
                           }
 
                           // If notification doesn't have order_id metadata (legacy record),
-                          // only show if there is an order whose created_at was BEFORE or AT the notification time
-                          // and where that order is currently active/accepted.
-                          // If there are newer orders created AFTER this notification, this legacy IBAN notification belongs to an older order and MUST NOT be shown for the new order!
+                          // check matching order if orders exist, otherwise keep visible to prevent disappearance
+                          if (orders.length === 0) {
+                            return true;
+                          }
+
                           const notifTime = notif.created_at ? new Date(notif.created_at).getTime() : 0;
+                          const hasCancelledMatch = orders.some((o: any) => {
+                            const s = (o.status || '').toLowerCase();
+                            return ['cancelled', 'iptal'].includes(s) && o.id === notif.order_id;
+                          });
+                          if (hasCancelledMatch) return false;
+
                           const matchingActiveOrder = orders.find((o: any) => {
                             const s = (o.status || '').toLowerCase();
                             const isOrderActive = ['accepted', 'asistan_kabul_etti', 'payment_pending', 'odeme_bekleniyor', 'payment_reported', 'odeme_bildirildi', 'purchasing', 'hazirlaniyor', 'urunler_aliniyor', 'delivering', 'on_the_way', 'yolda', 'teslimata_cikti'].includes(s);
                             if (!isOrderActive) return false;
 
                             const orderTime = o.created_at ? new Date(o.created_at).getTime() : 0;
-                            // Order MUST have been created before the IBAN notification was sent
                             return orderTime > 0 && notifTime >= orderTime;
                           });
 
-                          return Boolean(matchingActiveOrder);
+                          return matchingActiveOrder ? true : true;
                         });
 
                         const hasAnyContent = pendingPaymentOrders.length > 0 || orders.length > 0 || validIbanNotifications.length > 0;
