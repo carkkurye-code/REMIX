@@ -685,7 +685,6 @@ export class LiveDispatchService {
               if (tMatch.order_id && isUUID(tMatch.order_id)) {
                 const orderPayload = filterOrderPayload({
                   assistant_id: validAssistantId,
-                  assistant_name: assistantName || undefined,
                   status: 'accepted'
                 });
                 await client.from('orders').update(orderPayload).eq('id', tMatch.order_id);
@@ -693,7 +692,6 @@ export class LiveDispatchService {
             } else {
               const orderPayload = filterOrderPayload({
                 assistant_id: validAssistantId,
-                assistant_name: assistantName || undefined,
                 status: 'accepted'
               });
               if (Object.keys(orderPayload).length > 0) {

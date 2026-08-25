@@ -1345,7 +1345,7 @@ export const VALID_TASK_COLUMNS = new Set([
 ]);
 
 export const VALID_ORDER_COLUMNS = new Set([
-  'id', 'customer_id', 'partner_id', 'assistant_id', 'assistant_name', 'store_id', 'status',
+  'id', 'customer_id', 'partner_id', 'assistant_id', 'store_id', 'status',
   'payment_type', 'total_price', 'customer_price', 'courier_net', 'base_price',
   'fuel_cost', 'wear_cost', 'operation_cost', 'tax_cost', 'vat_cost', 'commission',
   'service_type', 'distance_km', 'estimated_minutes', 'pickup_address', 'delivery_address',

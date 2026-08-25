@@ -2129,7 +2129,6 @@ export function AsistanPage() {
           const orderCols = await getExactTableColumns('orders');
           const rawOrderPayload: Record<string, any> = {
             assistant_id: assistantId,
-            assistant_name: assistantName,
             status: 'accepted',
             accepted_at: nowIso,
             updated_at: nowIso
