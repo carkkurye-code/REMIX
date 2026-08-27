@@ -1,7 +1,6 @@
 import { supabase, getActiveSupabaseClient, isSupabaseConfigured, getStored, setStored, LOCAL_STORAGE_KEYS, Order, Assistant, db, isUUID, toUUID, getExactTableColumns, filterPayloadByValidColumns, filterTaskPayload, filterOrderPayload } from './supabase';
 import { eventBus } from './eventBus';
 import { createDomainEvent } from './domainEvents';
-import { NotificationService } from '@/services/notificationService';
 import { isDistrictSupported, extractZoneFromAddress } from '@/lib/locationUtils';
 import { CalculatePriceOutput } from './priceEngine';
 
@@ -542,25 +541,6 @@ export class LiveDispatchService {
               code: offerErr.code
             });
             return false;
-          }
-        }
-
-        if (offerInsertSuccess) {
-          try {
-            let recipientUserId = validAssistantId;
-
-            if (recipientUserId && isUUID(recipientUserId)) {
-              await NotificationService.createNotification({
-                recipient_profile_id: recipientUserId,
-                title: '⚡ Yeni Görev Teklifi!',
-                body: `Sipariş #${String(validTaskId || validOrderId || '').slice(0, 8)}: ${item.notes || item.task_description || 'Yeni hizmet talebi'}`,
-                type: 'task_assigned',
-                channels: ['app'],
-                payload: offerData
-              });
-            }
-          } catch (notifErr) {
-            console.warn('[LiveDispatch] notifications insert notice:', notifErr);
           }
         }
       }
