@@ -276,6 +276,15 @@ export class IntegrationService {
     this.unbindList.push(
       eventBus.subscribe<TaskCancelledPayload>('TASK_CANCELLED', async (evt) => {
         let { taskId, customerId, assistantId, price, reason } = evt.payload;
+        const status = (evt.payload as any)?.status;
+        const offerId = (evt.payload as any)?.offerId;
+
+        // Skip all notifications if this is an offer rejection or not a genuine full task cancellation
+        if (status === 'rejected' || reason === 'rejected' || offerId) {
+          console.log(`[IntegrationEngine] Skipping notifications for offer rejection on ${taskId}`);
+          return;
+        }
+
         console.log(`[IntegrationEngine] Processing TASK_CANCELLED for task ${taskId}`);
 
         if ((!customerId || !assistantId) && taskId && isUUID(taskId) && isSupabaseConfigured && supabase) {

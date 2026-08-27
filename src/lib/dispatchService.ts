@@ -673,12 +673,14 @@ export class LiveDispatchService {
    * 4. Handle Assistant Reject ("Reddet") Action
    * Rejects ONLY the specified assistant's pending dispatch offer.
    * Does NOT affect other assistants' pending offers.
+   * Does NOT insert notifications or trigger customer cancellation.
    */
   public static async rejectOffer(
     orderIdOrOfferId: string,
     offerIdOrAssistantId: string,
     assistantIdParam?: string,
-    customClient?: any
+    customClient?: any,
+    assistantIdsList?: string[]
   ): Promise<{ success: boolean; message?: string }> {
     try {
       let orderId = orderIdOrOfferId;
@@ -692,6 +694,9 @@ export class LiveDispatchService {
         orderId = '';
       }
 
+      const allAssistantIds = Array.from(new Set([assistantId, ...(assistantIdsList || [])].filter(Boolean)));
+      const validAssistantId = allAssistantIds[0] || assistantId;
+
       const client = customClient || supabase;
       if (isSupabaseConfigured && client) {
         try {
@@ -704,6 +709,9 @@ export class LiveDispatchService {
           };
           const filteredUpdate = filterPayloadByValidColumns(updatePayload, targetCols);
 
+          let updated = false;
+
+          // Attempt 1: Update by offerId if valid UUID
           if (offerId && isUUID(offerId)) {
             let query = client
               .from('dispatch_offers')
@@ -711,22 +719,54 @@ export class LiveDispatchService {
               .eq('id', offerId)
               .eq('status', 'pending');
 
-            if (assistantId && isUUID(assistantId)) {
-              query = query.eq('assistant_id', assistantId);
+            if (allAssistantIds.length > 0) {
+              query = query.in('assistant_id', allAssistantIds);
             }
-            const { error: rejectErr } = await query;
+            const { data, error: rejectErr } = await query.select('id');
             if (rejectErr) {
               console.warn('[LiveDispatch] Supabase offer rejection update error by offerId:', rejectErr);
+            } else if (data && data.length > 0) {
+              updated = true;
             }
-          } else if (orderId && isUUID(orderId) && assistantId) {
-            const { error: rejectErr } = await client
+          }
+
+          // Attempt 2: Update by order_id / task_id if not yet updated
+          const validOrderId = orderId ? (isUUID(orderId) ? orderId : toUUID(orderId)) : null;
+          if (!updated && validOrderId && allAssistantIds.length > 0) {
+            const { data, error: rejectErr } = await client
               .from('dispatch_offers')
               .update(filteredUpdate)
-              .or(`order_id.eq.${orderId},task_id.eq.${orderId}`)
-              .eq('assistant_id', assistantId)
-              .eq('status', 'pending');
+              .or(`order_id.eq.${validOrderId},task_id.eq.${validOrderId}`)
+              .in('assistant_id', allAssistantIds)
+              .eq('status', 'pending')
+              .select('id');
+
             if (rejectErr) {
               console.warn('[LiveDispatch] Supabase offer rejection update error by orderId:', rejectErr);
+            } else if (data && data.length > 0) {
+              updated = true;
+            }
+          }
+
+          // Attempt 3: If no existing offer was found to update, record a new rejected offer for this assistant
+          if (!updated && validOrderId && validAssistantId) {
+            const newOfferId = typeof crypto !== 'undefined' && crypto.randomUUID
+              ? crypto.randomUUID()
+              : toUUID('off_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+
+            const rawOffer: Record<string, any> = {
+              id: newOfferId,
+              assistant_id: validAssistantId,
+              status: 'rejected',
+              offered_at: nowIso,
+              responded_at: nowIso,
+              order_id: validOrderId,
+              task_id: validOrderId
+            };
+            const insertOfferPayload = filterPayloadByValidColumns(rawOffer, targetCols);
+            const { error: insErr } = await client.from('dispatch_offers').insert(insertOfferPayload);
+            if (insErr) {
+              console.warn('[LiveDispatch] Fallback rejected offer insert warning:', insErr);
             }
           }
         } catch (dbErr) {
@@ -737,22 +777,11 @@ export class LiveDispatchService {
       // Update Local Storage offers (only for this specific assistant)
       const storedOffers = getStored<DispatchOfferData>('ugra_dispatch_offers');
       storedOffers.forEach(o => {
-        if ((o.id === offerId || (orderId && (o.order_id === orderId || o.task_id === orderId))) && (!assistantId || o.assistant_id === assistantId)) {
+        if ((o.id === offerId || (orderId && (o.order_id === orderId || o.task_id === orderId))) && (!assistantId || allAssistantIds.includes(o.assistant_id))) {
           o.status = 'rejected';
         }
       });
       setStored('ugra_dispatch_offers', storedOffers);
-
-      // Emit event to remove offer card from current assistant
-      eventBus.publish(
-        createDomainEvent('TASK_CANCELLED', orderId || offerId, {
-          taskId: orderId || offerId,
-          orderId: orderId || offerId,
-          offerId,
-          assistantId,
-          status: 'rejected'
-        })
-      );
 
       return {
         success: true,

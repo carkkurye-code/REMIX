@@ -1058,12 +1058,13 @@ export function AsistanPage() {
     if (
       rejectedOrderIds.has(o.id) ||
       ((o as any).task_id && rejectedOrderIds.has((o as any).task_id)) ||
-      ((o as any).order_id && rejectedOrderIds.has((o as any).order_id))
+      ((o as any).order_id && rejectedOrderIds.has((o as any).order_id)) ||
+      ((o as any).offer_id && rejectedOrderIds.has((o as any).offer_id))
     ) {
       return false;
     }
     const isPendingStatus = ['pending', 'created', 'bekliyor', 'beklemede', 'hazirlaniyor', 'hazir'].includes(o.status);
-    const hasPendingOffer = Boolean((o as any).offer_id) || !isSupabaseConfigured;
+    const hasPendingOffer = Boolean((o as any).offer_id);
     const isNotExpired = !o.created_at || (Date.now() - new Date(o.created_at).getTime() < 30 * 60 * 1000);
     return isPendingStatus && !o.assistant_id && hasPendingOffer && isNotExpired;
   });
@@ -1406,18 +1407,40 @@ export function AsistanPage() {
             .eq('status', 'pending')
             .gt('expires_at', nowIso);
 
+          // 2. Fetch rejected offers for this assistant to strictly prevent reappearance on refresh
+          const { data: rejectedOffersRes } = await activeClient
+            .from('dispatch_offers')
+            .select('id, order_id, task_id')
+            .in('assistant_id', assistantUserIds)
+            .eq('status', 'rejected');
+
+          const rejectedSet = new Set<string>();
+          if (rejectedOffersRes) {
+            rejectedOffersRes.forEach((ro: any) => {
+              if (ro.id) rejectedSet.add(ro.id);
+              if (ro.order_id) rejectedSet.add(ro.order_id);
+              if (ro.task_id) rejectedSet.add(ro.task_id);
+            });
+          }
+
+          setRejectedOrderIds((prev) => {
+            const next = new Set(prev);
+            rejectedSet.forEach((id) => next.add(id));
+            return next;
+          });
+
           const offerMap = new Map<string, string>();
           const pendingOrderIds: string[] = [];
           const pendingTaskIds: string[] = [];
 
           if (pendingOffersRes) {
             pendingOffersRes.forEach((offer: any) => {
-              if (offer.id) {
-                if (offer.order_id && isUUID(offer.order_id)) {
+              if (offer.id && !rejectedSet.has(offer.id)) {
+                if (offer.order_id && isUUID(offer.order_id) && !rejectedSet.has(offer.order_id)) {
                   pendingOrderIds.push(offer.order_id);
                   offerMap.set(offer.order_id, offer.id);
                 }
-                if (offer.task_id && isUUID(offer.task_id)) {
+                if (offer.task_id && isUUID(offer.task_id) && !rejectedSet.has(offer.task_id)) {
                   pendingTaskIds.push(offer.task_id);
                   offerMap.set(offer.task_id, offer.id);
                 }
@@ -1425,7 +1448,7 @@ export function AsistanPage() {
             });
           }
 
-          // 2. Fetch assigned orders/tasks (for Active & Completed tabs) and pending orders/tasks (for Bekleyen Talepler)
+          // 3. Fetch assigned orders/tasks (for Active & Completed tabs) and pending orders/tasks (for Bekleyen Talepler)
           const [assignedOrdersRes, assignedTasksRes, pendingOrdersRes, pendingTasksRes] = await Promise.all([
             activeClient.from('orders').select('*').in('assistant_id', assistantUserIds).order('created_at', { ascending: false }),
             activeClient.from('tasks').select('*').in('assistant_id', assistantUserIds).order('created_at', { ascending: false }),
@@ -1870,6 +1893,7 @@ export function AsistanPage() {
 
     let ordersChannel: any = null;
     let tasksChannel: any = null;
+    let offersChannel: any = null;
     const client = supabaseAssistant || supabase;
     if (isSupabaseConfigured && client) {
       ordersChannel = client
@@ -1893,12 +1917,24 @@ export function AsistanPage() {
             console.log(`[AsistanPage] Realtime subscribed for assistant tasks`);
           }
         });
+
+      offersChannel = client
+        .channel(`assistant-offers-${currentAssistant.id}`)
+        .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'dispatch_offers' }, () => {
+          fetchOrdersRef.current();
+        })
+        .subscribe((status: string) => {
+          if (status === 'SUBSCRIBED') {
+            console.log(`[AsistanPage] Realtime subscribed for assistant dispatch_offers`);
+          }
+        });
     }
 
     return () => {
       if (client) {
         if (ordersChannel) client.removeChannel(ordersChannel);
         if (tasksChannel) client.removeChannel(tasksChannel);
+        if (offersChannel) client.removeChannel(offersChannel);
       }
     };
   }, [currentAssistant?.id]);
@@ -2509,20 +2545,24 @@ export function AsistanPage() {
     if (!currentAssistant) return;
     setActionLoading(orderId);
     try {
-      setRejectedOrderIds((prev) => {
-        const next = new Set(prev);
-        next.add(orderId);
-        return next;
-      });
-
       const targetItem = allOrders.find(o => o.id === orderId || (o as any).task_id === orderId);
       const targetOfferId = offerId || (targetItem as any)?.offer_id;
-      const assistantIdToUse = currentAssistant.user_id || currentAssistant.id;
+      const assistantUserIds = [currentAssistant.user_id, currentAssistant.id].filter(Boolean) as string[];
+      const assistantIdToUse = currentAssistant.user_id || currentAssistant.id || '';
+
+      setRejectedOrderIds((prev) => {
+        const next = new Set(prev);
+        if (orderId) next.add(orderId);
+        if (targetOfferId) next.add(targetOfferId);
+        if ((targetItem as any)?.task_id) next.add((targetItem as any).task_id);
+        if ((targetItem as any)?.order_id) next.add((targetItem as any).order_id);
+        return next;
+      });
 
       if (isSupabaseConfigured) {
         try {
           const activeClient = await getAuthenticatedClient();
-          await LiveDispatchService.rejectOffer(orderId, targetOfferId || '', assistantIdToUse, activeClient);
+          await LiveDispatchService.rejectOffer(orderId, targetOfferId || '', assistantIdToUse, activeClient, assistantUserIds);
         } catch (dbErr: any) {
           console.error('[AsistanPage] Reject offer exception:', dbErr);
         }
