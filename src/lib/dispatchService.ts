@@ -707,19 +707,10 @@ export class LiveDispatchService {
       });
 
       const allAssistantIds = Array.from(new Set([assistantId, ...(assistantIdsList || [])].filter(Boolean)));
-
       const client = customClient || supabase;
-      if (isSupabaseConfigured && client) {
-        const nowIso = new Date().toISOString();
-        const targetCols = await getExactTableColumns('dispatch_offers');
-        const updatePayload: Record<string, any> = {
-          status: 'rejected',
-          responded_at: nowIso,
-          updated_at: nowIso
-        };
-        const filteredUpdate = filterPayloadByValidColumns(updatePayload, targetCols);
 
-        // 1 & 2. Find candidate offer in dispatch_offers table
+      if (isSupabaseConfigured && client) {
+        // Find candidate offer ID in dispatch_offers table
         const candidateIds = Array.from(
           new Set([offerId, orderId, orderIdOrOfferId, offerIdOrAssistantId].filter(id => id && isUUID(id)))
         );
@@ -734,7 +725,6 @@ export class LiveDispatchService {
             .in('id', candidateIds);
 
           if (!errById && offersById && offersById.length > 0) {
-            // Match with assistant if multiple
             matchedOffer = (allAssistantIds.length > 0
               ? offersById.find((o: any) => allAssistantIds.includes(o.assistant_id))
               : null) || offersById[0];
@@ -759,120 +749,58 @@ export class LiveDispatchService {
           }
         }
 
-        // If still not found and we have assistant IDs, query all active offers for this assistant
-        if (!matchedOffer && allAssistantIds.length > 0) {
-          const { data: assistantOffers } = await client
-            .from('dispatch_offers')
-            .select('id, dispatch_session_id, task_id, assistant_id, status, offered_at, expires_at, responded_at, order_id')
-            .in('assistant_id', allAssistantIds);
+        const targetOfferUuid = matchedOffer?.id || (candidateIds.find(id => id === offerId) || candidateIds[0] || null);
 
-          if (assistantOffers && assistantOffers.length > 0) {
-            matchedOffer = assistantOffers.find((o: any) =>
-              candidateIds.includes(o.id) ||
-              candidateIds.includes(o.order_id) ||
-              candidateIds.includes(o.task_id)
-            ) || null;
-          }
-        }
-
-        // Log offer before
         console.log('[Reject] offer before', matchedOffer || {
-          notFoundInDb: true,
+          targetOfferUuid,
           candidateIds,
           allAssistantIds
         });
 
-        const targetOfferUuid = matchedOffer?.id || (candidateIds.find(id => id === offerId) || candidateIds[0] || null);
-        const targetAssistantId = matchedOffer?.assistant_id || (allAssistantIds[0] || null);
-
-        let updated = false;
-        let updateResultData: any = null;
-
-        if (targetOfferUuid) {
-          // 4. Update solely through real DB offer UUID
-          let updateQuery = client
-            .from('dispatch_offers')
-            .update(filteredUpdate)
-            .eq('id', targetOfferUuid)
-            .eq('status', 'pending');
-
-          if (targetAssistantId) {
-            updateQuery = updateQuery.eq('assistant_id', targetAssistantId);
-          }
-
-          const { data, error: updateErr } = await updateQuery.select('id, status, assistant_id, order_id, task_id, responded_at');
-
-          if (updateErr) {
-            console.error('[LiveDispatch] Supabase offer rejection update error:', updateErr);
-          }
-
-          if (data && data.length > 0) {
-            updated = true;
-            updateResultData = data[0];
-          } else {
-            // Fallback: If assistant_id in where clause was strict, try update by id only if matchedOffer belonged to this assistant
-            const { data: fallbackData, error: fallbackErr } = await client
-              .from('dispatch_offers')
-              .update(filteredUpdate)
-              .eq('id', targetOfferUuid)
-              .eq('status', 'pending')
-              .select('id, status, assistant_id, order_id, task_id, responded_at');
-
-            if (!fallbackErr && fallbackData && fallbackData.length > 0) {
-              updated = true;
-              updateResultData = fallbackData[0];
-            }
-          }
+        if (!targetOfferUuid || !isUUID(targetOfferUuid)) {
+          console.warn('[Reject] No valid targetOfferUuid found to reject');
+          return { success: true };
         }
 
-        // 5. Check and log update result
-        console.log('[Reject] update result', {
-          updated,
-          count: updateResultData ? 1 : 0,
-          data: updateResultData
+        // Execute SECURITY DEFINER reject_dispatch_offer RPC
+        const { data: rpcResult, error: rpcError } = await (client as any).rpc('reject_dispatch_offer', {
+          p_offer_id: targetOfferUuid
         });
 
-        // 6. Select again to verify DB state
-        let offerAfter: any = null;
-        if (targetOfferUuid) {
-          const { data: afterData } = await client
-            .from('dispatch_offers')
-            .select('id, status, assistant_id, order_id, task_id, expires_at, offered_at, responded_at')
-            .eq('id', targetOfferUuid)
-            .maybeSingle();
-          offerAfter = afterData;
+        console.log('[Reject RPC] result', rpcResult || { error: rpcError });
+
+        if (rpcError) {
+          console.error('[LiveDispatch] reject_dispatch_offer RPC error:', rpcError);
         }
-        console.log('[Reject] offer after', offerAfter);
 
-        if (!updated) {
-          console.error('[Reject] Update failed reasons:', {
-            offerIdInput: offerId,
-            orderIdInput: orderId,
-            targetOfferUuid,
-            dbMatchedOffer: matchedOffer,
-            dbAssistantId: matchedOffer?.assistant_id,
-            currentAssistantIds: allAssistantIds,
-            dbStatus: matchedOffer?.status
-          });
+        // Verify state after RPC
+        const { data: offerAfter } = await client
+          .from('dispatch_offers')
+          .select('id, status, assistant_id, order_id, task_id, expires_at, offered_at, responded_at')
+          .eq('id', targetOfferUuid)
+          .maybeSingle();
 
-          if (!matchedOffer || matchedOffer.status !== 'rejected') {
-            return {
-              success: false,
-              message: 'Teklif artık geçerli değil.'
-            };
-          }
+        console.log('[Reject RPC] after', offerAfter);
+
+        if (!rpcResult?.success && offerAfter?.status !== 'rejected') {
+          return {
+            success: false,
+            message: rpcResult?.error_message || rpcError?.message || 'Teklif reddedilemedi.'
+          };
         }
       }
 
-      // Update Local Storage offers (only for this specific assistant)
+      // Sync local storage state if present
       const storedOffers = getStored<DispatchOfferData>('ugra_dispatch_offers');
-      storedOffers.forEach(o => {
-        if ((o.id === offerId || (orderId && (o.order_id === orderId || o.task_id === orderId))) && (!assistantId || allAssistantIds.includes(o.assistant_id))) {
-          o.status = 'rejected';
-          o.responded_at = new Date().toISOString();
-        }
-      });
-      setStored('ugra_dispatch_offers', storedOffers);
+      if (storedOffers && storedOffers.length > 0) {
+        const updated = storedOffers.map((o: any) => {
+          if (o.id === offerId || o.order_id === orderId || o.task_id === orderId) {
+            return { ...o, status: 'rejected', responded_at: new Date().toISOString() };
+          }
+          return o;
+        });
+        setStored('ugra_dispatch_offers', updated);
+      }
 
       return {
         success: true,
@@ -882,7 +810,7 @@ export class LiveDispatchService {
       console.error('[LiveDispatch] rejectOffer error:', err);
       return {
         success: false,
-        message: err.message || 'Teklif reddedilemedi.'
+        message: err?.message || 'Teklif reddedilemedi.'
       };
     }
   }
