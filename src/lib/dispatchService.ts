@@ -709,7 +709,18 @@ export class LiveDispatchService {
         };
         const filteredUpdate = filterPayloadByValidColumns(updatePayload, targetCols);
 
+        // Fetch offer state before update
+        let queryBefore = client
+          .from('dispatch_offers')
+          .select('id, status, assistant_id, order_id, task_id, expires_at, offered_at');
+        if (allAssistantIds.length > 0) {
+          queryBefore = queryBefore.in('assistant_id', allAssistantIds);
+        }
+        const { data: offerBefore } = await queryBefore;
+        console.log('[Reject] offer before', offerBefore);
+
         let updated = false;
+        let updateResultData: any = null;
 
         // 1. Update existing offer by ID: WHERE id = offerId AND assistant_id IN (...) AND status = 'pending'
         if (offerId && isUUID(offerId)) {
@@ -722,13 +733,14 @@ export class LiveDispatchService {
           if (allAssistantIds.length > 0) {
             query = query.in('assistant_id', allAssistantIds);
           }
-          const { data, error: rejectErr } = await query.select('id');
+          const { data, error: rejectErr } = await query.select('id, status, assistant_id, order_id, task_id');
           if (rejectErr) {
             console.error('[LiveDispatch] Supabase offer rejection update error by offerId:', rejectErr);
             return { success: false, message: rejectErr.message || 'Teklif reddedilemedi.' };
           }
           if (data && data.length > 0) {
             updated = true;
+            updateResultData = data;
           }
         }
 
@@ -741,7 +753,7 @@ export class LiveDispatchService {
             .or(`order_id.eq.${validOrderId},task_id.eq.${validOrderId}`)
             .in('assistant_id', allAssistantIds)
             .eq('status', 'pending')
-            .select('id');
+            .select('id, status, assistant_id, order_id, task_id');
 
           if (rejectErr) {
             console.error('[LiveDispatch] Supabase offer rejection update error by orderId:', rejectErr);
@@ -749,10 +761,43 @@ export class LiveDispatchService {
           }
           if (data && data.length > 0) {
             updated = true;
+            updateResultData = data;
           }
         }
 
-        if (!updated) {
+        // 3. Fallback: match from offerBefore
+        if (!updated && offerBefore && offerBefore.length > 0 && allAssistantIds.length > 0) {
+          const matchingOffer = offerBefore.find((o: any) =>
+            (o.id === offerId || (validOrderId && (o.order_id === validOrderId || o.task_id === validOrderId))) &&
+            o.status === 'pending'
+          );
+          if (matchingOffer?.id) {
+            const { data, error: rejectErr } = await client
+              .from('dispatch_offers')
+              .update(filteredUpdate)
+              .eq('id', matchingOffer.id)
+              .select('id, status, assistant_id, order_id, task_id');
+
+            if (!rejectErr && data && data.length > 0) {
+              updated = true;
+              updateResultData = data;
+            }
+          }
+        }
+
+        console.log('[Reject] update result', updateResultData || { updated });
+
+        // Fetch offer state after update
+        let queryAfter = client
+          .from('dispatch_offers')
+          .select('id, status, assistant_id, order_id, task_id, expires_at, offered_at');
+        if (allAssistantIds.length > 0) {
+          queryAfter = queryAfter.in('assistant_id', allAssistantIds);
+        }
+        const { data: offerAfter } = await queryAfter;
+        console.log('[Reject] offer after', offerAfter);
+
+        if (!updated && (!offerBefore || !offerBefore.some((o: any) => o.status === 'rejected'))) {
           return {
             success: false,
             message: 'Teklif artık geçerli değil.'
