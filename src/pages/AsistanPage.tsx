@@ -11,7 +11,8 @@ import {
 import { Link, useLocation } from 'wouter';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { 
-  supabase, supabaseAssistant, isSupabaseConfigured, db, Assistant, Order, 
+  supabase, supabaseAssistant, supabaseAdmin, supabaseCustomer, supabasePartner, supabaseFranchise,
+  isSupabaseConfigured, db, Assistant, Order, 
   Partner, City, Franchise, resolveFranchiseForCity, isUUID, toUUID, 
   getExactTableColumns, filterPayloadByValidColumns, filterTaskPayload, 
   filterOrderPayload, TURKEY_PROVINCES, ASSISTANT_SUBSCRIPTION_PACKAGES,
@@ -1433,19 +1434,43 @@ export function AsistanPage() {
   // Get active authenticated Supabase client for assistant with session validation
   const getAuthenticatedClient = useCallback(async () => {
     if (isSupabaseConfigured) {
+      // 1. Check supabaseAssistant
       if (supabaseAssistant) {
         try {
           const { data } = await supabaseAssistant.auth.getSession();
-          if (data?.session) return supabaseAssistant;
+          if (data?.session?.user) return supabaseAssistant;
         } catch (_) {}
       }
+
+      // 2. Check candidate role clients for matching assistant auth session
+      const targetUserId = currentAssistant?.user_id || authUser?.id;
+      const targetEmail = currentAssistant?.email || authUser?.email;
+      const candidates = [supabaseAdmin, supabaseCustomer, supabasePartner, supabaseFranchise];
+      
+      for (const candidate of candidates) {
+        if (candidate) {
+          try {
+            const { data } = await candidate.auth.getSession();
+            if (data?.session?.user) {
+              if (targetUserId && data.session.user.id === targetUserId) {
+                return candidate;
+              }
+              if (targetEmail && data.session.user.email?.toLowerCase() === targetEmail.toLowerCase()) {
+                return candidate;
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      // 3. Fallback to getActiveSupabaseClient
       try {
         const active = await getActiveSupabaseClient();
         if (active) return active;
       } catch (_) {}
     }
     return supabaseAssistant || supabase;
-  }, []);
+  }, [currentAssistant?.user_id, currentAssistant?.email, authUser?.id, authUser?.email]);
 
   // Fetch tasks assigned to / available for this assistant from public.orders AND public.tasks
   const fetchAssistantOrders = useCallback(async () => {
@@ -2095,10 +2120,16 @@ export function AsistanPage() {
     let ordersChannel: any = null;
     let tasksChannel: any = null;
     let offersChannel: any = null;
-    const client = supabaseAssistant || supabase;
+    let activeSubClient: any = null;
+    let isCancelled = false;
     const assistantUserIds = Array.from(new Set([currentAssistant.user_id, currentAssistant.id, authUser?.id].filter(Boolean))) as string[];
 
-    if (isSupabaseConfigured && client) {
+    const setupRealtime = async () => {
+      if (!isSupabaseConfigured) return;
+      const client = await getAuthenticatedClient();
+      if (isCancelled || !client) return;
+      activeSubClient = client;
+
       ordersChannel = client
         .channel(`assistant-orders-${currentAssistant.id}`)
         .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'orders' }, () => {
@@ -2169,16 +2200,19 @@ export function AsistanPage() {
             console.log(`[AsistanPage] Realtime subscribed for assistant dispatch_offers`);
           }
         });
-    }
+    };
+
+    setupRealtime();
 
     return () => {
-      if (client) {
-        if (ordersChannel) client.removeChannel(ordersChannel);
-        if (tasksChannel) client.removeChannel(tasksChannel);
-        if (offersChannel) client.removeChannel(offersChannel);
+      isCancelled = true;
+      if (activeSubClient) {
+        if (ordersChannel) activeSubClient.removeChannel(ordersChannel);
+        if (tasksChannel) activeSubClient.removeChannel(tasksChannel);
+        if (offersChannel) activeSubClient.removeChannel(offersChannel);
       }
     };
-  }, [currentAssistant?.id, currentAssistant?.user_id, authUser?.id]);
+  }, [currentAssistant?.id, currentAssistant?.user_id, authUser?.id, getAuthenticatedClient]);
 
   // Rule 1 & 2: Asistan Giriş (Assistant Login)
   const handleAuthSubmit = async (e: React.FormEvent) => {
