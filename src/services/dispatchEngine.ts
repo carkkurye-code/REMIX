@@ -12,7 +12,7 @@ import { TaskService } from './taskService';
 import { NotificationService } from './notificationService';
 import { IntegrationService } from './integrationService';
 
-const DISPATCH_OFFER_TIMEOUT_MS = 15000; // 15 seconds offer acceptance window
+const DISPATCH_OFFER_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes offer acceptance window
 const WAVE_SIZE = 3;
 
 /**

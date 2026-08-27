@@ -1063,13 +1063,13 @@ export function AsistanPage() {
       return false;
     }
     const isPendingStatus = ['pending', 'created', 'bekliyor', 'beklemede', 'hazirlaniyor', 'hazir'].includes(o.status);
-    const isAssignedToMeOrOpen = !o.assistant_id || (currentAssistant && (o.assistant_id === currentAssistant.id || o.assistant_id === currentAssistant.user_id));
+    const hasPendingOffer = Boolean((o as any).offer_id) || !isSupabaseConfigured;
     const isNotExpired = !o.created_at || (Date.now() - new Date(o.created_at).getTime() < 30 * 60 * 1000);
-    return isPendingStatus && isAssignedToMeOrOpen && isNotExpired;
+    return isPendingStatus && !o.assistant_id && hasPendingOffer && isNotExpired;
   });
 
   const activeOrders = allOrders.filter((o) => {
-    const isActiveStatus = ['rezerve', 'accepted', 'reserved', 'dogrulandi', 'yolda', 'kuryede', 'teslimatta', 'in_progress', 'on_the_way'].includes(o.status);
+    const isActiveStatus = ['assigned', 'rezerve', 'accepted', 'reserved', 'dogrulandi', 'yolda', 'kuryede', 'teslimatta', 'in_progress', 'on_the_way'].includes(o.status);
     const isMine = currentAssistant && (o.assistant_id === currentAssistant.id || o.assistant_id === currentAssistant.user_id);
     return isActiveStatus && isMine;
   });
@@ -1396,36 +1396,60 @@ export function AsistanPage() {
         try {
           const activeClient = await getAuthenticatedClient();
           const assistantUserIds = [currentAssistant.user_id, currentAssistant.id].filter(Boolean) as string[];
-          const [ordersRes, tasksRes, dispatchOffersRes] = await Promise.all([
-            activeClient.from('orders').select('*').order('created_at', { ascending: false }),
-            activeClient.from('tasks').select('*').order('created_at', { ascending: false }),
-            activeClient.from('dispatch_offers').select('id, order_id, task_id, status').in('assistant_id', assistantUserIds)
-          ]);
+          const nowIso = new Date().toISOString();
+
+          // 1. Fetch only pending and non-expired dispatch offers specifically for this assistant
+          const { data: pendingOffersRes } = await activeClient
+            .from('dispatch_offers')
+            .select('id, order_id, task_id, status, expires_at, offered_at, customer_price, courier_net')
+            .in('assistant_id', assistantUserIds)
+            .eq('status', 'pending')
+            .gt('expires_at', nowIso);
 
           const offerMap = new Map<string, string>();
-          if (dispatchOffersRes?.data) {
-            const rejectedIds = dispatchOffersRes.data
-              .filter((item: any) => item.status === 'rejected')
-              .flatMap((item: any) => [item.order_id, item.task_id])
-              .filter(Boolean);
+          const pendingOrderIds: string[] = [];
+          const pendingTaskIds: string[] = [];
 
-            setRejectedOrderIds((prev) => {
-              const next = new Set(prev);
-              rejectedIds.forEach((id: string) => next.add(id));
-              return next;
-            });
-
-            dispatchOffersRes.data.forEach((offer: any) => {
+          if (pendingOffersRes) {
+            pendingOffersRes.forEach((offer: any) => {
               if (offer.id) {
-                if (offer.task_id) offerMap.set(offer.task_id, offer.id);
-                if (offer.order_id) offerMap.set(offer.order_id, offer.id);
+                if (offer.order_id && isUUID(offer.order_id)) {
+                  pendingOrderIds.push(offer.order_id);
+                  offerMap.set(offer.order_id, offer.id);
+                }
+                if (offer.task_id && isUUID(offer.task_id)) {
+                  pendingTaskIds.push(offer.task_id);
+                  offerMap.set(offer.task_id, offer.id);
+                }
               }
             });
           }
 
+          // 2. Fetch assigned orders/tasks (for Active & Completed tabs) and pending orders/tasks (for Bekleyen Talepler)
+          const [assignedOrdersRes, assignedTasksRes, pendingOrdersRes, pendingTasksRes] = await Promise.all([
+            activeClient.from('orders').select('*').in('assistant_id', assistantUserIds).order('created_at', { ascending: false }),
+            activeClient.from('tasks').select('*').in('assistant_id', assistantUserIds).order('created_at', { ascending: false }),
+            pendingOrderIds.length > 0
+              ? activeClient.from('orders').select('*').in('id', pendingOrderIds).order('created_at', { ascending: false })
+              : Promise.resolve({ data: [] }),
+            pendingTaskIds.length > 0
+              ? activeClient.from('tasks').select('*').in('id', pendingTaskIds).order('created_at', { ascending: false })
+              : Promise.resolve({ data: [] }),
+          ]);
+
+          const rawOrdersMap = new Map<string, any>();
+          (pendingOrdersRes?.data || []).forEach((o: any) => { if (o?.id) rawOrdersMap.set(o.id, o); });
+          (assignedOrdersRes?.data || []).forEach((o: any) => { if (o?.id) rawOrdersMap.set(o.id, o); });
+          const rawOrders = Array.from(rawOrdersMap.values());
+
+          const rawTasksMap = new Map<string, any>();
+          (pendingTasksRes?.data || []).forEach((t: any) => { if (t?.id) rawTasksMap.set(t.id, t); });
+          (assignedTasksRes?.data || []).forEach((t: any) => { if (t?.id) rawTasksMap.set(t.id, t); });
+          const rawTasks = Array.from(rawTasksMap.values());
+
           let mappedOrders: any[] = [];
-          if (ordersRes.data) {
-            mappedOrders = ordersRes.data.map((order: any) => {
+          if (rawOrders.length > 0) {
+            mappedOrders = rawOrders.map((order: any) => {
               let rawDesc = order.task_description || order.notes || '';
               let extractedName = '';
               const custMatch = rawDesc.match(/Müşteri:\s*([^\(\n\r]+)/i);
@@ -1536,8 +1560,8 @@ export function AsistanPage() {
           }
 
           let mappedTasks: any[] = [];
-          if (tasksRes.data) {
-            mappedTasks = tasksRes.data.map((task: any) => {
+          if (rawTasks.length > 0) {
+            mappedTasks = rawTasks.map((task: any) => {
               let rawDesc = task.task_description || task.description || task.title || task.notes || '';
               let extractedName = '';
               const custMatch = rawDesc.match(/Müşteri:\s*([^\(\n\r]+)/i);
@@ -2492,108 +2516,12 @@ export function AsistanPage() {
       });
 
       const targetItem = allOrders.find(o => o.id === orderId || (o as any).task_id === orderId);
-      const isTask = Boolean(
-        (targetItem as any)?.is_task ||
-        (targetItem as any)?.source === 'tasks' ||
-        (targetItem as any)?.service_type === 'asistan_siparis' ||
-        (targetItem as any)?.service_type === 'magaza'
-      );
+      const targetOfferId = offerId || (targetItem as any)?.offer_id;
+      const assistantIdToUse = currentAssistant.user_id || currentAssistant.id;
 
       if (isSupabaseConfigured) {
         try {
           const activeClient = await getAuthenticatedClient();
-          const targetOfferId = offerId || (targetItem as any)?.offer_id;
-          const validId = orderId ? (isUUID(orderId) ? orderId : toUUID(orderId)) : null;
-          const assistantUserIds = [currentAssistant.user_id, currentAssistant.id].filter(Boolean) as string[];
-          const assistantIdToUse = currentAssistant.user_id || currentAssistant.id;
-
-          let updated = false;
-          if (targetOfferId && isUUID(targetOfferId)) {
-            const { data, error } = await activeClient
-              .from('dispatch_offers')
-              .update({ status: 'rejected' })
-              .eq('id', targetOfferId)
-              .select();
-            if (error) {
-              console.error('[AsistanPage] Reject offer update by offer_id error:', {
-                status: error.code,
-                message: error.message,
-                details: error.details,
-                hint: error.hint
-              });
-            } else if (data && data.length > 0) {
-              updated = true;
-            }
-          }
-
-          if (!updated && validId) {
-            if (isTask) {
-              const { data, error } = await activeClient
-                .from('dispatch_offers')
-                .update({ status: 'rejected' })
-                .eq('task_id', validId)
-                .in('assistant_id', assistantUserIds)
-                .select();
-              if (error) {
-                console.error('[AsistanPage] Reject offer update by task_id error:', {
-                  status: error.code,
-                  message: error.message,
-                  details: error.details,
-                  hint: error.hint
-                });
-              } else if (data && data.length > 0) {
-                updated = true;
-              }
-            } else {
-              const { data, error } = await activeClient
-                .from('dispatch_offers')
-                .update({ status: 'rejected' })
-                .eq('order_id', validId)
-                .in('assistant_id', assistantUserIds)
-                .select();
-              if (error) {
-                console.error('[AsistanPage] Reject offer update by order_id error:', {
-                  status: error.code,
-                  message: error.message,
-                  details: error.details,
-                  hint: error.hint
-                });
-              } else if (data && data.length > 0) {
-                updated = true;
-              }
-            }
-          }
-
-          if (!updated && validId && assistantIdToUse) {
-            const newOfferId = typeof crypto !== 'undefined' && crypto.randomUUID
-              ? crypto.randomUUID()
-              : toUUID('off_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
-
-            const rawOffer: Record<string, any> = {
-              id: newOfferId,
-              assistant_id: assistantIdToUse,
-              status: 'rejected',
-              offered_at: new Date().toISOString()
-            };
-
-            if (isTask) {
-              rawOffer.task_id = validId;
-              // CRITICAL: DO NOT set order_id for store task!
-            } else {
-              rawOffer.order_id = validId;
-            }
-
-            const { error: insertErr } = await activeClient.from('dispatch_offers').insert(rawOffer);
-            if (insertErr) {
-              console.error('[AsistanPage] Fallback offer insert error:', {
-                status: insertErr.code,
-                message: insertErr.message,
-                details: insertErr.details,
-                hint: insertErr.hint
-              });
-            }
-          }
-
           await LiveDispatchService.rejectOffer(orderId, targetOfferId || '', assistantIdToUse, activeClient);
         } catch (dbErr: any) {
           console.error('[AsistanPage] Reject offer exception:', dbErr);

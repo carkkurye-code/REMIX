@@ -400,7 +400,7 @@ export class LiveDispatchService {
         status: 'pending',
         score: 98,
         offered_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 60000).toISOString(),
+        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
         courier_net: item.courier_net ?? 0,
         customer_price: item.customer_price ?? item.total_price ?? 0,
         estimated_minutes: item.estimated_minutes ?? 15,
@@ -501,7 +501,7 @@ export class LiveDispatchService {
             dispatch_session_id: activeSessionId,
             status: 'pending',
             offered_at: offerData.offered_at,
-            expires_at: offerData.expires_at || new Date(Date.now() + 60000).toISOString(),
+            expires_at: offerData.expires_at || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
             courier_net: offerData.courier_net,
             customer_price: offerData.customer_price,
             estimated_minutes: offerData.estimated_minutes,
@@ -671,87 +671,92 @@ export class LiveDispatchService {
 
   /**
    * 4. Handle Assistant Reject ("Reddet") Action
+   * Rejects ONLY the specified assistant's pending dispatch offer.
+   * Does NOT affect other assistants' pending offers.
    */
-  public static async rejectOffer(orderId: string, offerId: string, assistantId: string, customClient?: any): Promise<{ success: boolean; message?: string }> {
+  public static async rejectOffer(
+    orderIdOrOfferId: string,
+    offerIdOrAssistantId: string,
+    assistantIdParam?: string,
+    customClient?: any
+  ): Promise<{ success: boolean; message?: string }> {
     try {
-      // 1. Mark offer as rejected in Supabase
+      let orderId = orderIdOrOfferId;
+      let offerId = offerIdOrAssistantId;
+      let assistantId = assistantIdParam || '';
+
+      // Support rejectOffer(offerId, assistantId) invocation
+      if (!assistantIdParam && offerIdOrAssistantId) {
+        offerId = orderIdOrOfferId;
+        assistantId = offerIdOrAssistantId;
+        orderId = '';
+      }
+
       const client = customClient || supabase;
       if (isSupabaseConfigured && client) {
         try {
+          const nowIso = new Date().toISOString();
+          const targetCols = await getExactTableColumns('dispatch_offers');
+          const updatePayload: Record<string, any> = {
+            status: 'rejected',
+            responded_at: nowIso,
+            updated_at: nowIso
+          };
+          const filteredUpdate = filterPayloadByValidColumns(updatePayload, targetCols);
+
           if (offerId && isUUID(offerId)) {
-            await client
+            let query = client
               .from('dispatch_offers')
-              .update({ status: 'rejected' })
-              .eq('id', offerId);
-          } else if (orderId && isUUID(orderId)) {
-            await client
+              .update(filteredUpdate)
+              .eq('id', offerId)
+              .eq('status', 'pending');
+
+            if (assistantId && isUUID(assistantId)) {
+              query = query.eq('assistant_id', assistantId);
+            }
+            const { error: rejectErr } = await query;
+            if (rejectErr) {
+              console.warn('[LiveDispatch] Supabase offer rejection update error by offerId:', rejectErr);
+            }
+          } else if (orderId && isUUID(orderId) && assistantId) {
+            const { error: rejectErr } = await client
               .from('dispatch_offers')
-              .update({ status: 'rejected' })
+              .update(filteredUpdate)
               .or(`order_id.eq.${orderId},task_id.eq.${orderId}`)
-              .eq('assistant_id', assistantId);
+              .eq('assistant_id', assistantId)
+              .eq('status', 'pending');
+            if (rejectErr) {
+              console.warn('[LiveDispatch] Supabase offer rejection update error by orderId:', rejectErr);
+            }
           }
         } catch (dbErr) {
-          console.warn('[LiveDispatch] Supabase offer rejection update error:', dbErr);
+          console.warn('[LiveDispatch] Supabase offer rejection update exception:', dbErr);
         }
       }
 
-      // Update Local Storage offers
+      // Update Local Storage offers (only for this specific assistant)
       const storedOffers = getStored<DispatchOfferData>('ugra_dispatch_offers');
-      const excludedAssistantIds: string[] = [assistantId];
-
       storedOffers.forEach(o => {
-        if (o.order_id === orderId) {
-          if (o.id === offerId || o.assistant_id === assistantId) {
-            o.status = 'rejected';
-          }
-          if (o.assistant_id) {
-            excludedAssistantIds.push(o.assistant_id);
-          }
+        if ((o.id === offerId || (orderId && (o.order_id === orderId || o.task_id === orderId))) && (!assistantId || o.assistant_id === assistantId)) {
+          o.status = 'rejected';
         }
       });
       setStored('ugra_dispatch_offers', storedOffers);
 
       // Emit event to remove offer card from current assistant
       eventBus.publish(
-        createDomainEvent('TASK_CANCELLED', orderId, {
-          taskId: orderId,
-          orderId,
+        createDomainEvent('TASK_CANCELLED', orderId || offerId, {
+          taskId: orderId || offerId,
+          orderId: orderId || offerId,
           offerId,
           assistantId,
           status: 'rejected'
         })
       );
 
-      // 2. Fetch order and automatically dispatch to the NEXT available candidate
-      let targetOrder: Order | null = null;
-      const localOrders = getStored<Order>(LOCAL_STORAGE_KEYS.ORDERS);
-      targetOrder = localOrders.find(o => o.id === orderId) || null;
-
-      if (!targetOrder && isSupabaseConfigured && supabase && isUUID(orderId)) {
-        const { data: tMatch } = await supabase.from('tasks').select('*').eq('id', orderId).maybeSingle();
-        if (tMatch) {
-          if (tMatch.order_id && isUUID(tMatch.order_id)) {
-            console.log('[OrderFetch] orders.id being queried:', tMatch.order_id);
-            const { data: oMatch } = await supabase.from('orders').select('*').eq('id', tMatch.order_id).maybeSingle();
-            if (oMatch) targetOrder = { ...oMatch, ...tMatch } as any;
-            else targetOrder = tMatch as any;
-          } else {
-            targetOrder = tMatch as any;
-          }
-        } else {
-          console.log('[OrderFetch] orders.id being queried:', orderId);
-          const { data } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
-          if (data) targetOrder = data as Order;
-        }
-      }
-
-      if (targetOrder) {
-        await this.dispatchToNextCandidate(targetOrder, excludedAssistantIds);
-      }
-
       return {
         success: true,
-        message: 'Teklif reddedildi, sıradaki musait asistana yönlendiriliyor.'
+        message: 'Teklif reddedildi.'
       };
     } catch (err: any) {
       console.error('[LiveDispatch] rejectOffer error:', err);
