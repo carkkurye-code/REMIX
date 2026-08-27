@@ -685,8 +685,8 @@ export class LiveDispatchService {
     assistantIdsList?: string[]
   ): Promise<{ success: boolean; message?: string }> {
     try {
-      let orderId = orderIdOrOfferId;
-      let offerId = offerIdOrAssistantId;
+      let orderId = orderIdOrOfferId || '';
+      let offerId = offerIdOrAssistantId || '';
       let assistantId = assistantIdParam || '';
 
       // Support rejectOffer(offerId, assistantId) invocation
@@ -695,6 +695,16 @@ export class LiveDispatchService {
         assistantId = offerIdOrAssistantId;
         orderId = '';
       }
+
+      console.log('[Reject] rejectOffer inputs:', {
+        orderIdOrOfferId,
+        offerIdOrAssistantId,
+        assistantIdParam,
+        assistantIdsList,
+        resolvedOrderId: orderId,
+        resolvedOfferId: offerId,
+        resolvedAssistantId: assistantId
+      });
 
       const allAssistantIds = Array.from(new Set([assistantId, ...(assistantIdsList || [])].filter(Boolean)));
 
@@ -709,99 +719,148 @@ export class LiveDispatchService {
         };
         const filteredUpdate = filterPayloadByValidColumns(updatePayload, targetCols);
 
-        // Fetch offer state before update
-        let queryBefore = client
-          .from('dispatch_offers')
-          .select('id, status, assistant_id, order_id, task_id, expires_at, offered_at');
-        if (allAssistantIds.length > 0) {
-          queryBefore = queryBefore.in('assistant_id', allAssistantIds);
+        // 1 & 2. Find candidate offer in dispatch_offers table
+        const candidateIds = Array.from(
+          new Set([offerId, orderId, orderIdOrOfferId, offerIdOrAssistantId].filter(id => id && isUUID(id)))
+        );
+
+        let matchedOffer: any = null;
+
+        // Try searching by direct offer ID first
+        if (candidateIds.length > 0) {
+          const { data: offersById, error: errById } = await client
+            .from('dispatch_offers')
+            .select('id, dispatch_session_id, task_id, assistant_id, status, offered_at, expires_at, responded_at, order_id')
+            .in('id', candidateIds);
+
+          if (!errById && offersById && offersById.length > 0) {
+            // Match with assistant if multiple
+            matchedOffer = (allAssistantIds.length > 0
+              ? offersById.find((o: any) => allAssistantIds.includes(o.assistant_id))
+              : null) || offersById[0];
+          }
         }
-        const { data: offerBefore } = await queryBefore;
-        console.log('[Reject] offer before', offerBefore);
+
+        // If not found by offer ID, try searching by order_id or task_id
+        if (!matchedOffer && candidateIds.length > 0) {
+          const orFilter = candidateIds.map(id => `order_id.eq.${id},task_id.eq.${id}`).join(',');
+          let queryByOrder = client
+            .from('dispatch_offers')
+            .select('id, dispatch_session_id, task_id, assistant_id, status, offered_at, expires_at, responded_at, order_id')
+            .or(orFilter);
+
+          if (allAssistantIds.length > 0) {
+            queryByOrder = queryByOrder.in('assistant_id', allAssistantIds);
+          }
+
+          const { data: offersByOrder, error: errByOrder } = await queryByOrder;
+          if (!errByOrder && offersByOrder && offersByOrder.length > 0) {
+            matchedOffer = offersByOrder.find((o: any) => o.status === 'pending') || offersByOrder[0];
+          }
+        }
+
+        // If still not found and we have assistant IDs, query all active offers for this assistant
+        if (!matchedOffer && allAssistantIds.length > 0) {
+          const { data: assistantOffers } = await client
+            .from('dispatch_offers')
+            .select('id, dispatch_session_id, task_id, assistant_id, status, offered_at, expires_at, responded_at, order_id')
+            .in('assistant_id', allAssistantIds);
+
+          if (assistantOffers && assistantOffers.length > 0) {
+            matchedOffer = assistantOffers.find((o: any) =>
+              candidateIds.includes(o.id) ||
+              candidateIds.includes(o.order_id) ||
+              candidateIds.includes(o.task_id)
+            ) || null;
+          }
+        }
+
+        // Log offer before
+        console.log('[Reject] offer before', matchedOffer || {
+          notFoundInDb: true,
+          candidateIds,
+          allAssistantIds
+        });
+
+        const targetOfferUuid = matchedOffer?.id || (candidateIds.find(id => id === offerId) || candidateIds[0] || null);
+        const targetAssistantId = matchedOffer?.assistant_id || (allAssistantIds[0] || null);
 
         let updated = false;
         let updateResultData: any = null;
 
-        // 1. Update existing offer by ID: WHERE id = offerId AND assistant_id IN (...) AND status = 'pending'
-        if (offerId && isUUID(offerId)) {
-          let query = client
+        if (targetOfferUuid) {
+          // 4. Update solely through real DB offer UUID
+          let updateQuery = client
             .from('dispatch_offers')
             .update(filteredUpdate)
-            .eq('id', offerId)
+            .eq('id', targetOfferUuid)
             .eq('status', 'pending');
 
-          if (allAssistantIds.length > 0) {
-            query = query.in('assistant_id', allAssistantIds);
+          if (targetAssistantId) {
+            updateQuery = updateQuery.eq('assistant_id', targetAssistantId);
           }
-          const { data, error: rejectErr } = await query.select('id, status, assistant_id, order_id, task_id');
-          if (rejectErr) {
-            console.error('[LiveDispatch] Supabase offer rejection update error by offerId:', rejectErr);
-            return { success: false, message: rejectErr.message || 'Teklif reddedilemedi.' };
+
+          const { data, error: updateErr } = await updateQuery.select('id, status, assistant_id, order_id, task_id, responded_at');
+
+          if (updateErr) {
+            console.error('[LiveDispatch] Supabase offer rejection update error:', updateErr);
           }
+
           if (data && data.length > 0) {
             updated = true;
-            updateResultData = data;
-          }
-        }
-
-        // 2. Fallback update by order_id or task_id: WHERE (order_id = ... OR task_id = ...) AND assistant_id IN (...) AND status = 'pending'
-        const validOrderId = orderId ? (isUUID(orderId) ? orderId : toUUID(orderId)) : null;
-        if (!updated && validOrderId && allAssistantIds.length > 0) {
-          const { data, error: rejectErr } = await client
-            .from('dispatch_offers')
-            .update(filteredUpdate)
-            .or(`order_id.eq.${validOrderId},task_id.eq.${validOrderId}`)
-            .in('assistant_id', allAssistantIds)
-            .eq('status', 'pending')
-            .select('id, status, assistant_id, order_id, task_id');
-
-          if (rejectErr) {
-            console.error('[LiveDispatch] Supabase offer rejection update error by orderId:', rejectErr);
-            return { success: false, message: rejectErr.message || 'Teklif reddedilemedi.' };
-          }
-          if (data && data.length > 0) {
-            updated = true;
-            updateResultData = data;
-          }
-        }
-
-        // 3. Fallback: match from offerBefore
-        if (!updated && offerBefore && offerBefore.length > 0 && allAssistantIds.length > 0) {
-          const matchingOffer = offerBefore.find((o: any) =>
-            (o.id === offerId || (validOrderId && (o.order_id === validOrderId || o.task_id === validOrderId))) &&
-            o.status === 'pending'
-          );
-          if (matchingOffer?.id) {
-            const { data, error: rejectErr } = await client
+            updateResultData = data[0];
+          } else {
+            // Fallback: If assistant_id in where clause was strict, try update by id only if matchedOffer belonged to this assistant
+            const { data: fallbackData, error: fallbackErr } = await client
               .from('dispatch_offers')
               .update(filteredUpdate)
-              .eq('id', matchingOffer.id)
-              .select('id, status, assistant_id, order_id, task_id');
+              .eq('id', targetOfferUuid)
+              .eq('status', 'pending')
+              .select('id, status, assistant_id, order_id, task_id, responded_at');
 
-            if (!rejectErr && data && data.length > 0) {
+            if (!fallbackErr && fallbackData && fallbackData.length > 0) {
               updated = true;
-              updateResultData = data;
+              updateResultData = fallbackData[0];
             }
           }
         }
 
-        console.log('[Reject] update result', updateResultData || { updated });
+        // 5. Check and log update result
+        console.log('[Reject] update result', {
+          updated,
+          count: updateResultData ? 1 : 0,
+          data: updateResultData
+        });
 
-        // Fetch offer state after update
-        let queryAfter = client
-          .from('dispatch_offers')
-          .select('id, status, assistant_id, order_id, task_id, expires_at, offered_at');
-        if (allAssistantIds.length > 0) {
-          queryAfter = queryAfter.in('assistant_id', allAssistantIds);
+        // 6. Select again to verify DB state
+        let offerAfter: any = null;
+        if (targetOfferUuid) {
+          const { data: afterData } = await client
+            .from('dispatch_offers')
+            .select('id, status, assistant_id, order_id, task_id, expires_at, offered_at, responded_at')
+            .eq('id', targetOfferUuid)
+            .maybeSingle();
+          offerAfter = afterData;
         }
-        const { data: offerAfter } = await queryAfter;
         console.log('[Reject] offer after', offerAfter);
 
-        if (!updated && (!offerBefore || !offerBefore.some((o: any) => o.status === 'rejected'))) {
-          return {
-            success: false,
-            message: 'Teklif artık geçerli değil.'
-          };
+        if (!updated) {
+          console.error('[Reject] Update failed reasons:', {
+            offerIdInput: offerId,
+            orderIdInput: orderId,
+            targetOfferUuid,
+            dbMatchedOffer: matchedOffer,
+            dbAssistantId: matchedOffer?.assistant_id,
+            currentAssistantIds: allAssistantIds,
+            dbStatus: matchedOffer?.status
+          });
+
+          if (!matchedOffer || matchedOffer.status !== 'rejected') {
+            return {
+              success: false,
+              message: 'Teklif artık geçerli değil.'
+            };
+          }
         }
       }
 
