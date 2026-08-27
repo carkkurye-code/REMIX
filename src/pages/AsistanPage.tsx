@@ -1359,6 +1359,16 @@ export function AsistanPage() {
         };
         setCurrentAssistant(fallbackAsst);
       }
+
+      console.log('[Assistant Session Debug]', {
+        authUserId: user.id,
+        authEmail: user.email,
+        profileId: profile?.id,
+        profileRole: profile?.role,
+        assistantId: asstRecord?.id || assistantId,
+        assistantUserId: asstRecord?.user_id || user.id,
+        storageKey: 'ugra_auth_assistant'
+      });
     } catch (err: any) {
       console.error('Session init error:', err);
       setLoginError(err.message || 'Oturum açılırken bir hata oluştu.');
@@ -1400,18 +1410,12 @@ export function AsistanPage() {
     }
   }, [isApprovedAssistant, authLoading, activeTabMode]);
 
-  // Get active authenticated Supabase client for assistant
+  // Get active authenticated Supabase client for assistant (strictly isolated to supabaseAssistant)
   const getAuthenticatedClient = useCallback(async () => {
-    const clients = [supabaseAssistant, supabase].filter(Boolean);
-    for (const c of clients) {
-      try {
-        const { data } = await c.auth.getSession();
-        if (data?.session) {
-          return c;
-        }
-      } catch (_) {}
+    if (isSupabaseConfigured && supabaseAssistant) {
+      return supabaseAssistant;
     }
-    return supabaseAssistant || supabase;
+    return supabase;
   }, []);
 
   // Fetch tasks assigned to / available for this assistant from public.orders AND public.tasks
@@ -2180,6 +2184,12 @@ export function AsistanPage() {
             timestamp: Date.now()
           }));
         }
+
+        console.log('[Assistant Login Submit Debug]', {
+          authUser: authUser ? { id: authUser.id, email: authUser.email } : null,
+          dbAssistant: dbAssistant ? { id: dbAssistant.id, user_id: dbAssistant.user_id, email: dbAssistant.email } : null,
+          storageKey: 'ugra_auth_assistant'
+        });
 
         toast({
           title: 'Giriş Başarılı ✅',
