@@ -1056,7 +1056,7 @@ export function AsistanPage() {
 
   // Filter Orders for specific tabs
   const pendingOrders = useMemo(() => {
-    return allOrders.filter((o) => {
+    const filtered = allOrders.filter((o) => {
       const orderId = o.id;
       const linkedTaskId = (o as any).task_id;
       const linkedOrderId = (o as any).order_id;
@@ -1077,9 +1077,15 @@ export function AsistanPage() {
         return false;
       }
 
-      // 3. Status must be pending & unassigned
-      const isPendingStatus = ['pending', 'created', 'bekliyor', 'beklemede', 'hazirlaniyor', 'hazir'].includes(o.status);
-      if (!isPendingStatus || o.assistant_id) {
+      // 3. Status check: Exclude any orders that have already transitioned to active/completed/cancelled
+      const isAlreadyActiveOrFinished = [
+        'assigned', 'rezerve', 'accepted', 'reserved', 'dogrulandi',
+        'yolda', 'kuryede', 'teslimatta', 'in_progress', 'on_the_way',
+        'delivered', 'completed', 'tamamlandi', 'teslim_edildi',
+        'cancelled', 'iptal', 'iptal_edildi', 'rejected', 'reddedildi'
+      ].includes(o.status);
+
+      if (isAlreadyActiveOrFinished) {
         return false;
       }
 
@@ -1094,6 +1100,19 @@ export function AsistanPage() {
 
       return true;
     });
+
+    console.log('[Pending Orders]', {
+      beforeCount: allOrders.length,
+      afterCount: filtered.length,
+      offers: filtered.map((f: any) => ({
+        orderId: f.id,
+        offerId: f.offer_id,
+        status: f.status,
+        expires_at: f.expires_at
+      }))
+    });
+
+    return filtered;
   }, [allOrders, rejectedOrderIds]);
 
   const activeOrders = allOrders.filter((o) => {
@@ -1430,11 +1449,28 @@ export function AsistanPage() {
           const assistantUserIds = Array.from(new Set([currentAssistant.user_id, currentAssistant.id, authUser?.id].filter(Boolean))) as string[];
           const nowMs = Date.now();
 
+          console.log('[Dispatch Offers Debug]', {
+            authUserId: authUser?.id,
+            authEmail: authUser?.email,
+            profileId: currentAssistant.user_id || authUser?.id,
+            profileRole: (currentAssistant as any)?.role || 'assistant',
+            'assistants.id': currentAssistant.id,
+            'assistants.user_id': currentAssistant.user_id,
+            canonicalDispatchAssistantId: currentAssistant.user_id || authUser?.id
+          });
+
           // 1. Fetch ALL dispatch offers specifically for this assistant
-          const { data: allOffersRes } = await activeClient
+          const { data: allOffersRes, error: offersErr } = await activeClient
             .from('dispatch_offers')
             .select('id, order_id, task_id, status, expires_at, offered_at, customer_price, courier_net')
             .in('assistant_id', assistantUserIds);
+
+          console.log('[Dispatch Offers Query]', {
+            queriedAssistantId: assistantUserIds,
+            returnedOfferCount: allOffersRes?.length ?? 0,
+            returnedOffers: allOffersRes || [],
+            error: offersErr || null
+          });
 
           const offerMap = new Map<string, string>();
           const offerMetaMap = new Map<string, any>();
@@ -1514,7 +1550,6 @@ export function AsistanPage() {
           (assignedOrdersRes?.data || []).forEach((o: any) => {
             if (o?.id) rawOrdersMap.set(o.id, o);
           });
-          const rawOrders = Array.from(rawOrdersMap.values());
 
           const rawTasksMap = new Map<string, any>();
           (pendingTasksRes?.data || []).forEach((t: any) => {
@@ -1525,6 +1560,79 @@ export function AsistanPage() {
           (assignedTasksRes?.data || []).forEach((t: any) => {
             if (t?.id) rawTasksMap.set(t.id, t);
           });
+
+          // Check if any pending target is missing from rawOrdersMap and rawTasksMap
+          const missingTargetIds = targetPendingArray.filter(id => !rawOrdersMap.has(id) && !rawTasksMap.has(id));
+          if (missingTargetIds.length > 0) {
+            console.log('[Dispatch Offers] Pending targets not returned by activeClient orders query, checking fallback:', missingTargetIds);
+            try {
+              const { data: fbOrders } = await supabase.from('orders').select('*').in('id', missingTargetIds);
+              (fbOrders || []).forEach((o: any) => {
+                if (o?.id && !rejectedOrderIdsRef.current.has(o.id)) {
+                  rawOrdersMap.set(o.id, o);
+                }
+              });
+            } catch (_) {}
+
+            try {
+              if (typeof window !== 'undefined') {
+                const rawStored = localStorage.getItem('ugra_orders');
+                if (rawStored) {
+                  const storedOrders = JSON.parse(rawStored);
+                  (storedOrders || []).forEach((o: any) => {
+                    if (o?.id && missingTargetIds.includes(o.id) && !rawOrdersMap.has(o.id) && !rejectedOrderIdsRef.current.has(o.id)) {
+                      rawOrdersMap.set(o.id, o);
+                    }
+                  });
+                }
+              }
+            } catch (_) {}
+          }
+
+          // Ensure any pending offer with missing order row is synthesized directly from dispatch_offers so it is NEVER lost
+          if (allOffersRes && allOffersRes.length > 0) {
+            allOffersRes.forEach((offer: any) => {
+              const offerId = offer.id;
+              const targetId = offer.order_id || offer.task_id || offer.id;
+              const status = (offer.status || '').toLowerCase().trim();
+
+              if (status === 'pending' && !rejectedOrderIdsRef.current.has(offerId) && !rejectedOrderIdsRef.current.has(targetId)) {
+                if (!rawOrdersMap.has(targetId) && !rawTasksMap.has(targetId)) {
+                  console.log('[Dispatch Offers] Synthesizing order card directly from offer record:', {
+                    offerId,
+                    targetId,
+                    customer_price: offer.customer_price,
+                    courier_net: offer.courier_net
+                  });
+
+                  const synthOrder: any = {
+                    id: targetId,
+                    order_id: offer.order_id || targetId,
+                    offer_id: offerId,
+                    task_id: offer.task_id || targetId,
+                    customer_name: 'Müşteri Talebi',
+                    customer_phone: '',
+                    customer_address: 'Hizmet Adresi',
+                    delivery_address: 'Hizmet Adresi',
+                    pickup_address: 'Hizmet Noktası',
+                    payment_type: 'Kapıda Nakit',
+                    total_price: Number(offer.customer_price || 0),
+                    customer_price: Number(offer.customer_price || 0),
+                    courier_net: Number(offer.courier_net || 0),
+                    service_type: offer.service_type || 'hemen',
+                    status: 'pending',
+                    created_at: offer.offered_at || new Date().toISOString(),
+                    expires_at: offer.expires_at || null,
+                    task_description: `Yeni Görev Teklifi (${offer.service_type || 'Hızlı Teslimat'})`,
+                    requires_delivery_code: true
+                  };
+
+                  rawOrdersMap.set(targetId, synthOrder);
+                }
+              }
+            });
+          }
+          const rawOrders = Array.from(rawOrdersMap.values());
           const rawTasks = Array.from(rawTasksMap.values());
 
           let mappedOrders: any[] = [];
@@ -2004,6 +2112,16 @@ export function AsistanPage() {
         .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'dispatch_offers' }, (payload: any) => {
           const newRecord = payload?.new;
           const belongsToMe = newRecord && assistantUserIds.includes(newRecord.assistant_id);
+
+          console.log('[Dispatch Offers Realtime]', {
+            eventType: payload?.eventType,
+            offerId: newRecord?.id || payload?.old?.id,
+            offerAssistantId: newRecord?.assistant_id,
+            authUserId: authUser?.id,
+            canonicalDispatchAssistantId: currentAssistant?.user_id || authUser?.id,
+            belongsToMe: !!belongsToMe,
+            status: newRecord?.status
+          });
 
           if (belongsToMe) {
             const offerId = newRecord.id;
