@@ -14,7 +14,8 @@ import {
   supabase, supabaseAssistant, isSupabaseConfigured, db, Assistant, Order, 
   Partner, City, Franchise, resolveFranchiseForCity, isUUID, toUUID, 
   getExactTableColumns, filterPayloadByValidColumns, filterTaskPayload, 
-  filterOrderPayload, TURKEY_PROVINCES, ASSISTANT_SUBSCRIPTION_PACKAGES 
+  filterOrderPayload, TURKEY_PROVINCES, ASSISTANT_SUBSCRIPTION_PACKAGES,
+  getActiveSupabaseClient
 } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { playNotificationSound, showBrowserNotification } from '@/lib/soundUtils';
@@ -1429,12 +1430,21 @@ export function AsistanPage() {
     }
   }, [isApprovedAssistant, authLoading, activeTabMode]);
 
-  // Get active authenticated Supabase client for assistant (strictly isolated to supabaseAssistant)
+  // Get active authenticated Supabase client for assistant with session validation
   const getAuthenticatedClient = useCallback(async () => {
-    if (isSupabaseConfigured && supabaseAssistant) {
-      return supabaseAssistant;
+    if (isSupabaseConfigured) {
+      if (supabaseAssistant) {
+        try {
+          const { data } = await supabaseAssistant.auth.getSession();
+          if (data?.session) return supabaseAssistant;
+        } catch (_) {}
+      }
+      try {
+        const active = await getActiveSupabaseClient();
+        if (active) return active;
+      } catch (_) {}
     }
-    return supabase;
+    return supabaseAssistant || supabase;
   }, []);
 
   // Fetch tasks assigned to / available for this assistant from public.orders AND public.tasks
@@ -1446,6 +1456,7 @@ export function AsistanPage() {
       if (isSupabaseConfigured) {
         try {
           const activeClient = await getAuthenticatedClient();
+          const { data: sessionInfo } = await activeClient.auth.getSession();
           const assistantUserIds = Array.from(new Set([currentAssistant.user_id, currentAssistant.id, authUser?.id].filter(Boolean))) as string[];
           const nowMs = Date.now();
 
@@ -1456,7 +1467,10 @@ export function AsistanPage() {
             profileRole: (currentAssistant as any)?.role || 'assistant',
             'assistants.id': currentAssistant.id,
             'assistants.user_id': currentAssistant.user_id,
-            canonicalDispatchAssistantId: currentAssistant.user_id || authUser?.id
+            canonicalDispatchAssistantId: currentAssistant.user_id || authUser?.id,
+            hasJwtSession: !!sessionInfo?.session,
+            jwtAuthUid: sessionInfo?.session?.user?.id,
+            jwtEmail: sessionInfo?.session?.user?.email
           });
 
           // 1. Fetch ALL dispatch offers specifically for this assistant
