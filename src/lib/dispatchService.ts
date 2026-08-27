@@ -1,4 +1,4 @@
-import { supabase, getActiveSupabaseClient, isSupabaseConfigured, getStored, setStored, LOCAL_STORAGE_KEYS, Order, Assistant, db, isUUID, toUUID, getExactTableColumns, filterPayloadByValidColumns, filterTaskPayload, filterOrderPayload } from './supabase';
+import { supabase, supabaseAssistant, getActiveSupabaseClient, isSupabaseConfigured, getStored, setStored, LOCAL_STORAGE_KEYS, Order, Assistant, db, isUUID, toUUID, getExactTableColumns, filterPayloadByValidColumns, filterTaskPayload, filterOrderPayload } from './supabase';
 import { eventBus } from './eventBus';
 import { createDomainEvent } from './domainEvents';
 import { isDistrictSupported, extractZoneFromAddress } from '@/lib/locationUtils';
@@ -679,9 +679,27 @@ export class LiveDispatchService {
       });
 
       const allAssistantIds = Array.from(new Set([assistantId, ...(assistantIdsList || [])].filter(Boolean)));
-      const client = customClient || supabase;
+
+      // Ensure we use the authenticated client with an active session
+      let client = customClient;
+      if (!client) {
+        client = (await getActiveSupabaseClient()) || supabaseAssistant || supabase;
+      }
 
       if (isSupabaseConfigured && client) {
+        // Log authentication debug info as requested
+        try {
+          const { data: sessionData } = await client.auth.getSession();
+          const { data: userData } = await client.auth.getUser();
+          console.log('[Reject Auth Debug]', {
+            hasSession: !!sessionData?.session,
+            hasAccessToken: !!sessionData?.session?.access_token,
+            authUserId: userData?.user?.id ?? sessionData?.session?.user?.id ?? null,
+            offerId: offerId || orderIdOrOfferId,
+          });
+        } catch (authErr) {
+          console.warn('[Reject Auth Debug] Error retrieving auth debug info:', authErr);
+        }
         // Find candidate offer ID in dispatch_offers table
         const candidateIds = Array.from(
           new Set([offerId, orderId, orderIdOrOfferId, offerIdOrAssistantId].filter(id => id && isUUID(id)))
