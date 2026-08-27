@@ -2147,7 +2147,9 @@ export function AsistanPage() {
         }
       }
 
-      const targetOfferId = offerId || `off_${Date.now()}`;
+      const targetOfferId = (offerId && isUUID(offerId))
+        ? offerId
+        : (isUUID((targetItem as any)?.offer_id) ? (targetItem as any)?.offer_id : undefined);
       await LiveDispatchService.acceptOffer(orderId, targetOfferId, assistantId, assistantName);
 
       await fetchAssistantOrders();
@@ -2949,7 +2951,7 @@ export function AsistanPage() {
                             <button
                               type="button"
                               disabled={actionLoading === order.id || activeOrders.length > 0}
-                              onClick={() => handleAcceptOrder(order.id)}
+                              onClick={() => handleAcceptOrder(order.id, (order as any).offer_id)}
                               className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
                             >
                               {actionLoading === order.id ? (

@@ -317,22 +317,15 @@ export class LiveDispatchService {
         try {
           const { data, error } = await supabase
             .from('assistants')
-            .select('id, user_id, full_name, phone, vehicle_type, status, is_online, active, current_lat, current_lng, rating, total_deliveries, city_id')
-            .eq('is_online', true)
-            .eq('active', true)
+            .select('id, user_id, full_name, phone, vehicle_type, status, latitude, longitude, city_id, franchise_id')
+            .in('status', ['aktif', 'active', 'approved', 'görevde', 'musait', 'müsait'])
             .limit(50);
 
           if (!error && data && data.length > 0) {
             activeAssistants = (data as Assistant[]).filter(a => {
-              const st = (a.status || '').toLowerCase();
-              return Boolean(a.user_id || a.id) && 
-                     a.is_online !== false && 
-                     a.active !== false && 
-                     st !== 'passive' && 
-                     st !== 'pasif' && 
-                     st !== 'suspended' && 
-                     st !== 'pending' && 
-                     st !== 'deleted';
+              const st = (a.status || '').toLowerCase().trim();
+              const isStatusActive = st === 'aktif' || st === 'active' || st === 'approved' || st === 'görevde' || st === 'musait' || st === 'müsait';
+              return Boolean(a.user_id || a.id) && isStatusActive;
             });
           }
         } catch (err) {
@@ -357,7 +350,6 @@ export class LiveDispatchService {
                 phone: p.phone || '',
                 vehicle_type: 'motosiklet',
                 status: 'aktif',
-                is_online: true,
                 created_at: p.created_at || new Date().toISOString()
               }));
             }
@@ -605,38 +597,70 @@ export class LiveDispatchService {
    * 3. Handle Assistant Accept ("Kabul Et") Action via Atomic RPC
    */
   public static async acceptOffer(
-    offerId: string,
+    offerId: string | undefined | null,
     assistantId: string,
     orderId: string
   ): Promise<{ success: boolean; error?: string }>;
   public static async acceptOffer(
     orderId: string,
-    offerId: string,
+    offerId: string | undefined | null,
     assistantId: string,
     assistantName?: string
   ): Promise<{ success: boolean; error?: string }>;
   public static async acceptOffer(
     arg1: string,
-    arg2: string,
-    arg3: string,
+    arg2?: string | null,
+    arg3?: string | null,
     _arg4?: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      let orderId = arg3;
-      let assistantId = arg2;
+      let orderId = arg3 || '';
+      let assistantId = arg2 || '';
       let offerId = arg1;
 
       // Handle both (offerId, assistantId, orderId) and (orderId, offerId, assistantId) calls
-      if (_arg4 !== undefined || (arg1 && arg2 && (arg2.startsWith('off_') || (!arg1.startsWith('off_') && arg2.startsWith('off_'))))) {
+      if (_arg4 !== undefined || (arg1 && isUUID(arg1) && arg3 && isUUID(arg3))) {
         orderId = arg1;
-        offerId = arg2;
-        assistantId = arg3;
+        offerId = arg2 || '';
+        assistantId = arg3 || '';
+      } else if (arg1 && arg2 && !isUUID(arg1) && isUUID(arg2) && arg3 && isUUID(arg3)) {
+        offerId = arg1;
+        assistantId = arg2 || '';
+        orderId = arg3 || '';
+      }
+
+      // Check if offerId is a real Supabase DB UUID
+      let validDbOfferId: string | null = (offerId && isUUID(offerId)) ? offerId : null;
+
+      // If not a valid UUID (e.g. temporary ID or undefined), query the real dispatch_offers record from DB
+      if (!validDbOfferId && isSupabaseConfigured && supabase) {
+        try {
+          const validAssistantId = isUUID(assistantId) ? assistantId : toUUID(assistantId);
+          let q = supabase
+            .from('dispatch_offers')
+            .select('id')
+            .eq('status', 'pending');
+
+          if (isUUID(validAssistantId)) {
+            q = q.eq('assistant_id', validAssistantId);
+          }
+          if (isUUID(orderId)) {
+            q = q.or(`order_id.eq.${orderId},task_id.eq.${orderId}`);
+          }
+
+          const { data: dbOffer } = await q.order('created_at', { ascending: false }).limit(1).maybeSingle();
+          if (dbOffer && dbOffer.id && isUUID(dbOffer.id)) {
+            validDbOfferId = dbOffer.id;
+          }
+        } catch (dbErr) {
+          console.warn('[LiveDispatch] Could not resolve dispatch_offers DB UUID:', dbErr);
+        }
       }
 
       const { data, error } = await (supabase as any).rpc('accept_order_atomic', {
-        p_order_id: orderId,
-        p_assistant_id: assistantId,
-        p_offer_id: offerId
+        p_order_id: isUUID(orderId) ? orderId : null,
+        p_assistant_id: isUUID(assistantId) ? assistantId : (toUUID(assistantId) || null),
+        p_offer_id: validDbOfferId
       });
 
       if (error) {
