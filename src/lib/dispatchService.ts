@@ -361,28 +361,13 @@ export class LiveDispatchService {
       }
 
       // Filter out assistants who already rejected or are excluded
-      let candidates = activeAssistants.filter(a => {
+      const candidates = activeAssistants.filter(a => {
         const asstId = a.user_id || a.id;
         return !excludedAssistantIds.includes(asstId) && !excludedAssistantIds.includes(a.id);
       });
 
-      // Fallback: if no filtered candidates, use any active assistant
-      if (candidates.length === 0 && activeAssistants.length > 0) {
-        candidates = activeAssistants;
-      }
-
       if (candidates.length === 0) {
-        const targetId = isTaskRecord ? validTaskId : validOrderId;
-        console.log(`[LiveDispatch] No candidates available for ${dispatchKey}. Item remains in open pool.`);
-        eventBus.publish(
-          createDomainEvent('NOTIFICATION_CREATED', targetId || 'open_pool', {
-            notificationId: targetId || 'open_pool',
-            title: '⚡ Yeni Görev Havuzda!',
-            body: `Sipariş #${String(targetId).slice(0, 8)}: ${item.notes || item.task_description || 'Yeni hizmet talebi'}`,
-            type: 'task_created',
-            order: item
-          })
-        );
+        console.log(`[LiveDispatch] No available candidate for ${dispatchKey}. Item remains in open pool.`);
         return false;
       }
 
@@ -552,20 +537,7 @@ export class LiveDispatchService {
       storedOffers.unshift(offerData);
       setStored('ugra_dispatch_offers', storedOffers);
 
-      // Emit Domain Event via EventBus for live Instant UI update
-      eventBus.publish(
-        createDomainEvent('NOTIFICATION_CREATED', offerId, {
-          notificationId: offerId,
-          recipientProfileId: targetAssistantId,
-          title: '⚡ Yeni Görev Teklifi!',
-          body: `Sipariş #${String(validTaskId || validOrderId || '').slice(0, 8)}: ${item.notes || item.task_description || 'Yeni hizmet talebi'}`,
-          type: 'dispatch_offer',
-          offer: offerData,
-          order: item
-        })
-      );
-
-      console.log(`[LiveDispatch] Item ${dispatchKey} offered to assistant ${targetAssistant.id} (${targetAssistant.full_name})`);
+      console.log(`[LiveDispatch] Item ${dispatchKey} offered to assistant ${targetAssistant.id} (${targetAssistant.full_name || ''})`);
       return true;
     } catch (err) {
       console.error('[LiveDispatch] dispatchToNextCandidate exception:', err);
@@ -787,6 +759,46 @@ export class LiveDispatchService {
             success: false,
             message: rpcResult?.error_message || rpcError?.message || 'Teklif reddedilemedi.'
           };
+        }
+
+        // Redispatch to next available candidate excluding all who rejected
+        try {
+          const targetOrderId = offerAfter?.order_id || offerAfter?.task_id || matchedOffer?.order_id || matchedOffer?.task_id || (isUUID(orderId) ? orderId : null);
+          if (targetOrderId && isUUID(targetOrderId)) {
+            const { data: rejectedOffers } = await client
+              .from('dispatch_offers')
+              .select('assistant_id')
+              .or(`order_id.eq.${targetOrderId},task_id.eq.${targetOrderId}`)
+              .eq('status', 'rejected');
+
+            const allExcluded = Array.from(
+              new Set([
+                ...allAssistantIds,
+                ...(rejectedOffers || []).map((r: any) => r.assistant_id).filter(Boolean)
+              ])
+            );
+
+            // Fetch order details for redispatch
+            let itemToDispatch: any = null;
+            const { data: oData } = await client.from('orders').select('*').eq('id', targetOrderId).maybeSingle();
+            if (oData && ['pending', 'created', 'bekliyor', 'beklemede'].includes(oData.status) && !oData.assistant_id) {
+              itemToDispatch = oData;
+            } else {
+              const { data: tData } = await client.from('tasks').select('*').eq('id', targetOrderId).maybeSingle();
+              if (tData && ['pending', 'created', 'bekliyor', 'beklemede'].includes(tData.status) && !tData.assistant_id) {
+                itemToDispatch = tData;
+              }
+            }
+
+            if (itemToDispatch) {
+              console.log(`[LiveDispatch] Offer rejected. Re-dispatching item ${targetOrderId} to next candidate...`);
+              LiveDispatchService.dispatchToNextCandidate(itemToDispatch, allExcluded).catch((e) => {
+                console.warn('[LiveDispatch] Background redispatch notice:', e);
+              });
+            }
+          }
+        } catch (redispatchErr) {
+          console.warn('[LiveDispatch] Redispatch after reject notice:', redispatchErr);
         }
       }
 

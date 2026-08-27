@@ -72,17 +72,6 @@ export class IntegrationService {
           } catch (e) {}
         }
 
-        // a. Notification
-        if (customerId && isUUID(customerId)) {
-          await NotificationService.sendTaskNotification(
-            customerId,
-            taskId,
-            'task_assigned',
-            'Görev Oluşturuldu',
-            'Göreviniz başarıyla oluşturuldu ve sistemde yayınlandı.'
-          );
-        }
-
         // b. Audit Log
         if (customerId) {
           await recordAuditLog('TASK_CREATED', customerId, { ...evt.payload });
@@ -127,28 +116,6 @@ export class IntegrationService {
               }
             }
           } catch (e) {}
-        }
-
-        // a. Task Status Update Notification to Customer
-        if (customerId && isUUID(customerId)) {
-          await NotificationService.sendTaskNotification(
-            customerId,
-            taskId,
-            'task_updated',
-            'Görev Kabul Edildi',
-            'Asistanınız görevinizi kabul etti ve hazırlanıyor.'
-          );
-        }
-
-        // b. Notification to Assistant
-        if (assistantId && isUUID(assistantId)) {
-          await NotificationService.sendTaskNotification(
-            assistantId,
-            taskId,
-            'task_assigned',
-            'Görev Üstlenildi',
-            'Görevi başarıyla üstlendiniz. Lütfen zamanında çıkış yapın.'
-          );
         }
 
         // c. Audit Log
