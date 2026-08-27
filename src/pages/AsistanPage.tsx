@@ -1048,26 +1048,53 @@ export function AsistanPage() {
   
   // Orders & Tasks lists
   const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const rejectedOrderIdsRef = useRef<Set<string>>(new Set());
   const [rejectedOrderIds, setRejectedOrderIds] = useState<Set<string>>(new Set());
   const [ordersLoading, setOrdersLoading] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Filter Orders for specific tabs
-  const pendingOrders = allOrders.filter((o) => {
-    if (
-      rejectedOrderIds.has(o.id) ||
-      ((o as any).task_id && rejectedOrderIds.has((o as any).task_id)) ||
-      ((o as any).order_id && rejectedOrderIds.has((o as any).order_id)) ||
-      ((o as any).offer_id && rejectedOrderIds.has((o as any).offer_id))
-    ) {
-      return false;
-    }
-    const isPendingStatus = ['pending', 'created', 'bekliyor', 'beklemede', 'hazirlaniyor', 'hazir'].includes(o.status);
-    const hasPendingOffer = Boolean((o as any).offer_id);
-    const isNotExpired = !o.created_at || (Date.now() - new Date(o.created_at).getTime() < 30 * 60 * 1000);
-    return isPendingStatus && !o.assistant_id && hasPendingOffer && isNotExpired;
-  });
+  const pendingOrders = useMemo(() => {
+    return allOrders.filter((o) => {
+      const orderId = o.id;
+      const linkedTaskId = (o as any).task_id;
+      const linkedOrderId = (o as any).order_id;
+      const linkedOfferId = (o as any).offer_id;
+
+      // 1. Central Rejection Check: If offer or order was rejected by this assistant, NEVER show
+      if (
+        (orderId && (rejectedOrderIds.has(orderId) || rejectedOrderIdsRef.current.has(orderId))) ||
+        (linkedTaskId && (rejectedOrderIds.has(linkedTaskId) || rejectedOrderIdsRef.current.has(linkedTaskId))) ||
+        (linkedOrderId && (rejectedOrderIds.has(linkedOrderId) || rejectedOrderIdsRef.current.has(linkedOrderId))) ||
+        (linkedOfferId && (rejectedOrderIds.has(linkedOfferId) || rejectedOrderIdsRef.current.has(linkedOfferId)))
+      ) {
+        return false;
+      }
+
+      // 2. Primary Source of Truth: Must have an active dispatch offer specifically offered to this assistant
+      if (!linkedOfferId) {
+        return false;
+      }
+
+      // 3. Status must be pending & unassigned
+      const isPendingStatus = ['pending', 'created', 'bekliyor', 'beklemede', 'hazirlaniyor', 'hazir'].includes(o.status);
+      if (!isPendingStatus || o.assistant_id) {
+        return false;
+      }
+
+      // 4. 30-Minute / Expiration Check
+      if ((o as any).expires_at) {
+        const expiresTime = new Date((o as any).expires_at).getTime();
+        if (Date.now() >= expiresTime) return false;
+      } else if (o.created_at) {
+        const createdTime = new Date(o.created_at).getTime();
+        if (Date.now() - createdTime >= 30 * 60 * 1000) return false;
+      }
+
+      return true;
+    });
+  }, [allOrders, rejectedOrderIds]);
 
   const activeOrders = allOrders.filter((o) => {
     const isActiveStatus = ['assigned', 'rezerve', 'accepted', 'reserved', 'dogrulandi', 'yolda', 'kuryede', 'teslimatta', 'in_progress', 'on_the_way'].includes(o.status);
@@ -1396,83 +1423,118 @@ export function AsistanPage() {
       if (isSupabaseConfigured) {
         try {
           const activeClient = await getAuthenticatedClient();
-          const assistantUserIds = [currentAssistant.user_id, currentAssistant.id].filter(Boolean) as string[];
-          const nowIso = new Date().toISOString();
+          const assistantUserIds = Array.from(new Set([currentAssistant.user_id, currentAssistant.id, authUser?.id].filter(Boolean))) as string[];
+          const nowMs = Date.now();
 
-          // 1. Fetch only pending and non-expired dispatch offers specifically for this assistant
-          const { data: pendingOffersRes } = await activeClient
+          // 1. Fetch ALL dispatch offers specifically for this assistant
+          const { data: allOffersRes } = await activeClient
             .from('dispatch_offers')
             .select('id, order_id, task_id, status, expires_at, offered_at, customer_price, courier_net')
-            .in('assistant_id', assistantUserIds)
-            .eq('status', 'pending')
-            .gt('expires_at', nowIso);
-
-          // 2. Fetch rejected offers for this assistant to strictly prevent reappearance on refresh
-          const { data: rejectedOffersRes } = await activeClient
-            .from('dispatch_offers')
-            .select('id, order_id, task_id')
-            .in('assistant_id', assistantUserIds)
-            .eq('status', 'rejected');
-
-          const rejectedSet = new Set<string>();
-          if (rejectedOffersRes) {
-            rejectedOffersRes.forEach((ro: any) => {
-              if (ro.id) rejectedSet.add(ro.id);
-              if (ro.order_id) rejectedSet.add(ro.order_id);
-              if (ro.task_id) rejectedSet.add(ro.task_id);
-            });
-          }
-
-          setRejectedOrderIds((prev) => {
-            const next = new Set(prev);
-            rejectedSet.forEach((id) => next.add(id));
-            return next;
-          });
+            .in('assistant_id', assistantUserIds);
 
           const offerMap = new Map<string, string>();
-          const pendingOrderIds: string[] = [];
-          const pendingTaskIds: string[] = [];
+          const offerMetaMap = new Map<string, any>();
+          const pendingTargetIds = new Set<string>();
 
-          if (pendingOffersRes) {
-            pendingOffersRes.forEach((offer: any) => {
-              if (offer.id && !rejectedSet.has(offer.id)) {
-                if (offer.order_id && isUUID(offer.order_id) && !rejectedSet.has(offer.order_id)) {
-                  pendingOrderIds.push(offer.order_id);
-                  offerMap.set(offer.order_id, offer.id);
-                }
-                if (offer.task_id && isUUID(offer.task_id) && !rejectedSet.has(offer.task_id)) {
-                  pendingTaskIds.push(offer.task_id);
-                  offerMap.set(offer.task_id, offer.id);
+          if (allOffersRes && allOffersRes.length > 0) {
+            allOffersRes.forEach((offer: any) => {
+              const offerId = offer.id;
+              const orderId = offer.order_id;
+              const taskId = offer.task_id;
+              const status = (offer.status || '').toLowerCase().trim();
+
+              // If rejected, cancelled, declined or not pending -> add to rejected set strictly
+              if (status === 'rejected' || status === 'cancelled' || status === 'declined' || status === 'expired') {
+                if (offerId) rejectedOrderIdsRef.current.add(offerId);
+                if (orderId) rejectedOrderIdsRef.current.add(orderId);
+                if (taskId) rejectedOrderIdsRef.current.add(taskId);
+                return;
+              }
+
+              // Check expiration (30 minutes or expires_at)
+              const expiresTime = offer.expires_at ? new Date(offer.expires_at).getTime() : 0;
+              const offeredTime = offer.offered_at ? new Date(offer.offered_at).getTime() : 0;
+              const isExpired = (expiresTime > 0 && expiresTime <= nowMs) || (offeredTime > 0 && (nowMs - offeredTime >= 30 * 60 * 1000));
+
+              if (isExpired) {
+                if (offerId) rejectedOrderIdsRef.current.add(offerId);
+                return;
+              }
+
+              // If pending and not in rejected set
+              if (status === 'pending') {
+                const isRejected = (
+                  (offerId && rejectedOrderIdsRef.current.has(offerId)) ||
+                  (orderId && rejectedOrderIdsRef.current.has(orderId)) ||
+                  (taskId && rejectedOrderIdsRef.current.has(taskId))
+                );
+
+                if (!isRejected) {
+                  if (orderId && isUUID(orderId)) {
+                    pendingTargetIds.add(orderId);
+                    offerMap.set(orderId, offerId);
+                    offerMetaMap.set(orderId, offer);
+                  }
+                  if (taskId && isUUID(taskId)) {
+                    pendingTargetIds.add(taskId);
+                    offerMap.set(taskId, offerId);
+                    offerMetaMap.set(taskId, offer);
+                  }
                 }
               }
             });
           }
 
-          // 3. Fetch assigned orders/tasks (for Active & Completed tabs) and pending orders/tasks (for Bekleyen Talepler)
+          // Sync React state for rejected IDs
+          setRejectedOrderIds(new Set(rejectedOrderIdsRef.current));
+
+          // 2. Fetch assigned orders/tasks (for Active & Completed tabs) and pending orders/tasks (for Bekleyen Talepler)
+          const targetPendingArray = Array.from(pendingTargetIds);
           const [assignedOrdersRes, assignedTasksRes, pendingOrdersRes, pendingTasksRes] = await Promise.all([
             activeClient.from('orders').select('*').in('assistant_id', assistantUserIds).order('created_at', { ascending: false }),
             activeClient.from('tasks').select('*').in('assistant_id', assistantUserIds).order('created_at', { ascending: false }),
-            pendingOrderIds.length > 0
-              ? activeClient.from('orders').select('*').in('id', pendingOrderIds).order('created_at', { ascending: false })
+            targetPendingArray.length > 0
+              ? activeClient.from('orders').select('*').in('id', targetPendingArray).order('created_at', { ascending: false })
               : Promise.resolve({ data: [] }),
-            pendingTaskIds.length > 0
-              ? activeClient.from('tasks').select('*').in('id', pendingTaskIds).order('created_at', { ascending: false })
+            targetPendingArray.length > 0
+              ? activeClient.from('tasks').select('*').in('id', targetPendingArray).order('created_at', { ascending: false })
               : Promise.resolve({ data: [] }),
           ]);
 
           const rawOrdersMap = new Map<string, any>();
-          (pendingOrdersRes?.data || []).forEach((o: any) => { if (o?.id) rawOrdersMap.set(o.id, o); });
-          (assignedOrdersRes?.data || []).forEach((o: any) => { if (o?.id) rawOrdersMap.set(o.id, o); });
+          (pendingOrdersRes?.data || []).forEach((o: any) => {
+            if (o?.id && !rejectedOrderIdsRef.current.has(o.id)) {
+              rawOrdersMap.set(o.id, o);
+            }
+          });
+          (assignedOrdersRes?.data || []).forEach((o: any) => {
+            if (o?.id) rawOrdersMap.set(o.id, o);
+          });
           const rawOrders = Array.from(rawOrdersMap.values());
 
           const rawTasksMap = new Map<string, any>();
-          (pendingTasksRes?.data || []).forEach((t: any) => { if (t?.id) rawTasksMap.set(t.id, t); });
-          (assignedTasksRes?.data || []).forEach((t: any) => { if (t?.id) rawTasksMap.set(t.id, t); });
+          (pendingTasksRes?.data || []).forEach((t: any) => {
+            if (t?.id && !rejectedOrderIdsRef.current.has(t.id)) {
+              rawTasksMap.set(t.id, t);
+            }
+          });
+          (assignedTasksRes?.data || []).forEach((t: any) => {
+            if (t?.id) rawTasksMap.set(t.id, t);
+          });
           const rawTasks = Array.from(rawTasksMap.values());
 
           let mappedOrders: any[] = [];
           if (rawOrders.length > 0) {
-            mappedOrders = rawOrders.map((order: any) => {
+            mappedOrders = rawOrders
+              .filter((order: any) => {
+                const isAssignedToMe = order.assistant_id && assistantUserIds.includes(order.assistant_id);
+                if (isAssignedToMe) return true;
+                // For unassigned pending orders: must have active offer and must NOT be rejected
+                const hasOffer = offerMap.has(order.id);
+                const isRejected = rejectedOrderIdsRef.current.has(order.id);
+                return hasOffer && !isRejected;
+              })
+              .map((order: any) => {
               let rawDesc = order.task_description || order.notes || '';
               let extractedName = '';
               const custMatch = rawDesc.match(/Müşteri:\s*([^\(\n\r]+)/i);
@@ -1529,6 +1591,7 @@ export function AsistanPage() {
                 : (extractedName || 'Müşteri');
 
               const finalStore = order.store_name || order.partner_name || extractedStoreName || undefined;
+              const offerMeta = offerMetaMap.get(order.id);
 
               return {
                 id: order.id,
@@ -1544,7 +1607,7 @@ export function AsistanPage() {
                 payment_type: order.payment_type || 'Kapıda Nakit',
                 total_price: Number(order.total_price || order.customer_price || 0),
                 customer_price: Number(order.customer_price || order.total_price || 0),
-                courier_net: Number(order.courier_net || 0),
+                courier_net: Number(order.courier_net || (offerMeta?.courier_net) || 0),
                 items: order.items || [],
                 notes: noteStr || undefined,
                 raw_notes: order.notes || null,
@@ -1566,6 +1629,7 @@ export function AsistanPage() {
                 delivery_code: order.delivery_code ?? null,
                 delivery_code_verified: order.delivery_code_verified ?? false,
                 created_at: order.created_at,
+                expires_at: offerMeta?.expires_at || null,
 
                 assistant_id: order.assistant_id || null,
                 assistant_name: order.assistant_name || null,
@@ -1584,7 +1648,16 @@ export function AsistanPage() {
 
           let mappedTasks: any[] = [];
           if (rawTasks.length > 0) {
-            mappedTasks = rawTasks.map((task: any) => {
+            mappedTasks = rawTasks
+              .filter((task: any) => {
+                const isAssignedToMe = task.assistant_id && assistantUserIds.includes(task.assistant_id);
+                if (isAssignedToMe) return true;
+                // For unassigned pending tasks: must have active offer and must NOT be rejected
+                const hasOffer = offerMap.has(task.id);
+                const isRejected = rejectedOrderIdsRef.current.has(task.id);
+                return hasOffer && !isRejected;
+              })
+              .map((task: any) => {
               let rawDesc = task.task_description || task.description || task.title || task.notes || '';
               let extractedName = '';
               const custMatch = rawDesc.match(/Müşteri:\s*([^\(\n\r]+)/i);
@@ -1641,6 +1714,7 @@ export function AsistanPage() {
                 : (extractedName || 'Müşteri');
 
               const finalStore = task.store_name || task.partner_name || extractedStoreName || undefined;
+              const offerMeta = offerMetaMap.get(task.id);
 
               return {
                 id: task.id,
@@ -1658,7 +1732,7 @@ export function AsistanPage() {
                 payment_type: task.payment_type || 'Kapıda Kart',
                 total_price: Number(task.total_price || task.customer_price || 0),
                 customer_price: Number(task.customer_price || task.total_price || 0),
-                courier_net: Number(task.courier_net || 0),
+                courier_net: Number(task.courier_net || (offerMeta?.courier_net) || 0),
                 items: task.items || [],
                 notes: noteStr || undefined,
                 raw_notes: task.notes || null,
@@ -1669,6 +1743,7 @@ export function AsistanPage() {
                 delivery_lat: task.delivery_lat ?? task.latitude ?? null,
                 delivery_lng: task.delivery_lng ?? task.longitude ?? null,
                 created_at: task.created_at,
+                expires_at: offerMeta?.expires_at || null,
 
                 assistant_id: task.assistant_id || null,
                 assistant_name: task.assistant_name || null,
@@ -1698,7 +1773,7 @@ export function AsistanPage() {
     } finally {
       setOrdersLoading(false);
     }
-  }, [currentAssistant, getAuthenticatedClient]);
+  }, [currentAssistant, authUser?.id, getAuthenticatedClient]);
 
   // Fetch Assistant Subscription Details
   const fetchAssistantSubscription = useCallback(async () => {
@@ -1887,7 +1962,7 @@ export function AsistanPage() {
     fetchOrdersRef.current = fetchAssistantOrders;
   }, [fetchAssistantOrders]);
 
-  // Subscribe to Realtime orders and tasks table updates
+  // Subscribe to Realtime orders, tasks and dispatch_offers table updates
   useEffect(() => {
     if (!currentAssistant?.id) return;
 
@@ -1895,6 +1970,8 @@ export function AsistanPage() {
     let tasksChannel: any = null;
     let offersChannel: any = null;
     const client = supabaseAssistant || supabase;
+    const assistantUserIds = Array.from(new Set([currentAssistant.user_id, currentAssistant.id, authUser?.id].filter(Boolean))) as string[];
+
     if (isSupabaseConfigured && client) {
       ordersChannel = client
         .channel(`assistant-orders-${currentAssistant.id}`)
@@ -1920,7 +1997,35 @@ export function AsistanPage() {
 
       offersChannel = client
         .channel(`assistant-offers-${currentAssistant.id}`)
-        .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'dispatch_offers' }, () => {
+        .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'dispatch_offers' }, (payload: any) => {
+          const newRecord = payload?.new;
+          const belongsToMe = newRecord && assistantUserIds.includes(newRecord.assistant_id);
+
+          if (belongsToMe) {
+            const offerId = newRecord.id;
+            const targetId = newRecord.order_id || newRecord.task_id;
+            const status = (newRecord.status || '').toLowerCase().trim();
+
+            if (status === 'rejected' || status === 'cancelled' || status === 'declined' || status === 'expired') {
+              if (offerId) rejectedOrderIdsRef.current.add(offerId);
+              if (targetId) rejectedOrderIdsRef.current.add(targetId);
+              if (newRecord.order_id) rejectedOrderIdsRef.current.add(newRecord.order_id);
+              if (newRecord.task_id) rejectedOrderIdsRef.current.add(newRecord.task_id);
+              setRejectedOrderIds(new Set(rejectedOrderIdsRef.current));
+
+              setAllOrders((prev) =>
+                prev.filter((o) => {
+                  if (o.id === targetId || o.id === offerId) return false;
+                  if ((o as any).order_id === targetId || (o as any).order_id === newRecord.order_id) return false;
+                  if ((o as any).task_id === targetId || (o as any).task_id === newRecord.task_id) return false;
+                  if ((o as any).offer_id === offerId) return false;
+                  return true;
+                })
+              );
+              return;
+            }
+          }
+
           fetchOrdersRef.current();
         })
         .subscribe((status: string) => {
@@ -1937,7 +2042,7 @@ export function AsistanPage() {
         if (offersChannel) client.removeChannel(offersChannel);
       }
     };
-  }, [currentAssistant?.id]);
+  }, [currentAssistant?.id, currentAssistant?.user_id, authUser?.id]);
 
   // Rule 1 & 2: Asistan Giriş (Assistant Login)
   const handleAuthSubmit = async (e: React.FormEvent) => {
@@ -2547,17 +2652,27 @@ export function AsistanPage() {
     try {
       const targetItem = allOrders.find(o => o.id === orderId || (o as any).task_id === orderId);
       const targetOfferId = offerId || (targetItem as any)?.offer_id;
-      const assistantUserIds = [currentAssistant.user_id, currentAssistant.id].filter(Boolean) as string[];
+      const assistantUserIds = Array.from(new Set([currentAssistant.user_id, currentAssistant.id, authUser?.id].filter(Boolean))) as string[];
       const assistantIdToUse = currentAssistant.user_id || currentAssistant.id || '';
 
-      setRejectedOrderIds((prev) => {
-        const next = new Set(prev);
-        if (orderId) next.add(orderId);
-        if (targetOfferId) next.add(targetOfferId);
-        if ((targetItem as any)?.task_id) next.add((targetItem as any).task_id);
-        if ((targetItem as any)?.order_id) next.add((targetItem as any).order_id);
-        return next;
-      });
+      // Immediately add all identifiers to synchronous ref and React state
+      if (orderId) rejectedOrderIdsRef.current.add(orderId);
+      if (targetOfferId) rejectedOrderIdsRef.current.add(targetOfferId);
+      if ((targetItem as any)?.task_id) rejectedOrderIdsRef.current.add((targetItem as any).task_id);
+      if ((targetItem as any)?.order_id) rejectedOrderIdsRef.current.add((targetItem as any).order_id);
+      setRejectedOrderIds(new Set(rejectedOrderIdsRef.current));
+
+      // Optimistically remove from state immediately
+      setAllOrders((prev) =>
+        prev.filter(
+          (o) =>
+            o.id !== orderId &&
+            o.id !== targetOfferId &&
+            (o as any).order_id !== orderId &&
+            (o as any).task_id !== orderId &&
+            (o as any).offer_id !== targetOfferId
+        )
+      );
 
       if (isSupabaseConfigured) {
         try {
