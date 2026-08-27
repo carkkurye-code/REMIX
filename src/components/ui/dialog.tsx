@@ -35,7 +35,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed left-[50%] top-[50%] z-[10000] flex flex-col w-[92vw] sm:w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-[#121214] border border-white/10 p-0 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-2xl text-foreground font-sans my-auto',
+        'fixed left-[50%] top-[50%] z-[10000] flex flex-col w-[92vw] sm:w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] -translate-x-1/2 -translate-y-1/2 overflow-hidden bg-card border border-border p-0 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 rounded-2xl text-card-foreground font-sans my-auto',
         className,
       )}
       {...props}
@@ -45,7 +45,7 @@ const DialogContent = React.forwardRef<
         <DialogPrimitive.Close
           aria-label="Kapat"
           title="Kapat"
-          className="absolute right-3.5 top-3.5 sm:right-4 sm:top-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 z-20 outline-none focus:ring-2 focus:ring-white/20"
+          className="absolute right-3.5 top-3.5 sm:right-4 sm:top-4 w-8 h-8 rounded-full bg-muted/50 hover:bg-muted border border-border text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors cursor-pointer shrink-0 z-20 outline-none focus:ring-2 focus:ring-ring"
         >
           <X className="w-4 h-4" />
           <span className="sr-only">Kapat</span>

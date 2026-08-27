@@ -231,23 +231,23 @@ export function TaskDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4">
-        <Loader2 className="w-8 h-8 text-[#2563EB] animate-spin mb-2" />
-        <p className="text-xs font-semibold text-[#6B7280]">Görev detayları yükleniyor...</p>
+      <div className="min-h-screen bg-[#F2E9DE] flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+        <p className="text-xs font-semibold text-muted-foreground">Görev detayları yükleniyor...</p>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4 text-center">
-        <AlertCircle className="w-10 h-10 text-red-500 mb-2" />
-        <h2 className="text-base font-bold text-[#1F2937]">Görev Bulunamadı</h2>
-        <p className="text-xs text-[#6B7280] mt-1 mb-4">Bu göreve ait bilgi veritabanında yer almıyor.</p>
+      <div className="min-h-screen bg-[#F2E9DE] flex flex-col items-center justify-center p-4 text-center">
+        <AlertCircle className="w-10 h-10 text-destructive mb-2" />
+        <h2 className="text-base font-bold text-foreground">Görev Bulunamadı</h2>
+        <p className="text-xs text-muted-foreground mt-1 mb-4">Bu göreve ait bilgi veritabanında yer almıyor.</p>
         <button
           type="button"
           onClick={() => setLocation('/asistan')}
-          className="px-4 py-2 bg-[#2563EB] text-white font-bold rounded-xl text-xs cursor-pointer"
+          className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-xl text-xs cursor-pointer"
         >
           Asistan Paneline Dön
         </button>
@@ -260,21 +260,21 @@ export function TaskDetailPage() {
   const deliveryAddr = r.delivery_address || (order as any).address || '';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#1F2937] pb-32">
+    <div className="min-h-screen bg-[#F2E9DE] text-foreground pb-32">
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-[#E5E7EB] shadow-sm">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border/60 shadow-xs">
         <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
           <button
             type="button"
             onClick={() => setLocation('/asistan')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-[#E5E7EB] text-xs font-bold text-[#1F2937] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/60 hover:bg-muted border border-border text-xs font-bold text-foreground transition-all cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4 text-[#1F2937]" />
+            <ArrowLeft className="w-4 h-4 text-foreground" />
             <span>Geri</span>
           </button>
           <div className="text-center">
-            <h1 className="text-sm font-extrabold text-[#1F2937]">Görev Detayı</h1>
-            <span className="text-[10px] font-mono text-[#6B7280] font-bold">#{r.order_number}</span>
+            <h1 className="text-sm font-extrabold text-foreground">Görev Detayı</h1>
+            <span className="text-[10px] font-mono text-muted-foreground font-bold">#{r.order_number}</span>
           </div>
           <div className="w-12" />
         </div>
@@ -284,37 +284,37 @@ export function TaskDetailPage() {
       <main className="max-w-md mx-auto p-4 space-y-3">
 
         {/* 1. YAPILACAK İŞ */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-1.5">
-          <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
+        <div className="bg-card p-4 rounded-2xl border border-border/80 shadow-xs space-y-1.5">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
             1. YAPILACAK İŞ
           </span>
-          <p className="text-sm font-bold text-[#1F2937] leading-snug">
+          <p className="text-sm font-bold text-foreground leading-snug">
             {r.task_description || 'Teslimat görevi'}
           </p>
         </div>
 
         {/* 2. MÜŞTERİ TEKLİFİ */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+        <div className="bg-card p-4 rounded-2xl border border-border/80 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
               2. MÜŞTERİ TEKLİFİ
             </span>
-            <span className="text-xs text-[#6B7280] font-medium">Müşterinin Sunduğu Teklif Tutarı</span>
+            <span className="text-xs text-muted-foreground font-medium">Müşterinin Sunduğu Teklif Tutarı</span>
           </div>
-          <div className="text-2xl font-black text-[#10B981] font-mono">
+          <div className="text-2xl font-black text-emerald-600 font-mono">
             {r.customer_price || order.total_price || r.courier_net || 0} TL
           </div>
         </div>
 
         {/* 3. MÜŞTERİ BİLGİLERİ */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-1">
-          <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
+        <div className="bg-card p-4 rounded-2xl border border-border/80 shadow-xs space-y-1">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
             3. MÜŞTERİ BİLGİLERİ
           </span>
-          <div className="text-sm font-bold text-[#1F2937]">
+          <div className="text-sm font-bold text-foreground">
             {r.customer_name || 'Müşteri'}
           </div>
-          <div className="text-xs font-mono text-[#6B7280]">
+          <div className="text-xs font-mono text-muted-foreground">
             {r.customer_phone || 'Telefon Yok'}
           </div>
         </div>
@@ -323,55 +323,55 @@ export function TaskDetailPage() {
         {r.customer_phone && (
           <a
             href={`tel:${r.customer_phone.replace(/\s+/g, '')}`}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-[#2563EB] hover:bg-blue-600 text-white font-bold rounded-2xl text-xs uppercase tracking-wider shadow-sm transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-2xl text-xs uppercase tracking-wider shadow-xs transition-all cursor-pointer no-underline"
           >
-            <Phone className="w-4 h-4 text-white" />
+            <Phone className="w-4 h-4 text-black" />
             <span>4. MÜŞTERİYİ ARA</span>
           </a>
         )}
 
         {/* 5. MÜŞTERİ KONUMU */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-1.5">
+        <div className="bg-card p-4 rounded-2xl border border-border/80 shadow-xs space-y-1.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               5. MÜŞTERİ KONUMU
             </span>
             <a
               href={(r.delivery_lat != null && r.delivery_lng != null) ? `https://www.google.com/maps/search/?api=1&query=${r.delivery_lat},${r.delivery_lng}` : (r.latitude != null && r.longitude != null ? `https://www.google.com/maps/search/?api=1&query=${r.latitude},${r.longitude}` : (r.pickup_lat != null && r.pickup_lng != null ? `https://www.google.com/maps/search/?api=1&query=${r.pickup_lat},${r.pickup_lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.customer_address || deliveryAddr || pickupAddr || 'Adapazarı, Sakarya')}`))}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 hover:bg-gray-100 border border-[#E5E7EB] text-[#2563EB] font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-muted/60 hover:bg-muted border border-border text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs no-underline"
             >
-              <ExternalLink className="w-3.5 h-3.5 text-[#2563EB]" />
+              <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
               <span>Haritada Aç</span>
             </a>
           </div>
-          <p className="text-xs font-medium text-[#1F2937] leading-relaxed">
+          <p className="text-xs font-medium text-foreground leading-relaxed">
             {r.customer_address || deliveryAddr || pickupAddr || 'Adapazarı, Sakarya'}
           </p>
           {(r.delivery_address_detail || r.pickup_address_detail) && (
-            <p className="text-[#6B7280] text-[11px] pt-1 border-t border-[#E5E7EB]/60">
+            <p className="text-muted-foreground text-[11px] pt-1 border-t border-border/60">
               Adres Detayı: {r.delivery_address_detail || r.pickup_address_detail}
             </p>
           )}
         </div>
 
         {/* 6. TESLİM DOĞRULAMA */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-2.5">
-          <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
+        <div className="bg-card p-4 rounded-2xl border border-border/80 shadow-xs space-y-2.5">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
             6. TESLİM DOĞRULAMA
           </span>
 
           {requiresCode ? (
             isCodeVerified ? (
               <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl flex items-center gap-2 text-emerald-800 text-xs font-bold">
-                <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Teslimat Doğrulama Kodu Doğrulandı</span>
               </div>
             ) : (
               <div className="space-y-2">
-                <label className="block text-xs font-semibold text-[#1F2937]">
+                <label className="block text-xs font-semibold text-foreground">
                   6 Haneli Kodu Girin
                 </label>
                 <div className="flex items-center gap-2">
@@ -387,13 +387,13 @@ export function TaskDetailPage() {
                       setInputCode(val);
                       if (codeError) setCodeError('');
                     }}
-                    className="flex-1 bg-gray-50 border border-gray-200 focus:border-[#2563EB] rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-[#1F2937] outline-none text-center tracking-widest"
+                    className="flex-1 bg-background border border-input focus:border-amber-500 rounded-xl px-3 py-2.5 text-sm font-mono font-bold text-foreground outline-none text-center tracking-widest"
                   />
                   <button
                     type="button"
                     disabled={verifyingCode || inputCode.length !== 6}
                     onClick={handleVerifyCode}
-                    className="py-2.5 px-4 bg-[#2563EB] hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shrink-0"
+                    className="py-2.5 px-4 bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shrink-0"
                   >
                     {verifyingCode ? (
                       <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -403,42 +403,42 @@ export function TaskDetailPage() {
                   </button>
                 </div>
                 {codeError && (
-                  <p className="text-xs font-bold text-[#EF4444] mt-1">
+                  <p className="text-xs font-bold text-destructive mt-1">
                     {codeError}
                   </p>
                 )}
               </div>
             )
           ) : (
-            <p className="text-xs font-medium text-[#6B7280]">
+            <p className="text-xs font-medium text-muted-foreground">
               Teslim doğrulama kodu gerekmiyor.
             </p>
           )}
         </div>
 
         {/* 10. DİĞER BİLGİLER */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-2">
-          <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider block">
+        <div className="bg-card p-4 rounded-2xl border border-border/80 shadow-xs space-y-2">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
             10. DİĞER BİLGİLER
           </span>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-              <span className="text-[10px] text-[#6B7280] block font-semibold">Hizmet Türü</span>
-              <span className="font-bold text-[#1F2937] uppercase">
+            <div className="bg-muted/40 p-2.5 rounded-xl border border-border/40">
+              <span className="text-[10px] text-muted-foreground block font-semibold">Hizmet Türü</span>
+              <span className="font-bold text-foreground uppercase">
                 {r.service_type === 'gecerken' ? 'Geçerken UĞRA' : 'Hemen UĞRA'}
               </span>
             </div>
-            <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-              <span className="text-[10px] text-[#6B7280] block font-semibold">Ödeme Tipi</span>
-              <span className="font-bold text-[#1F2937]">
+            <div className="bg-muted/40 p-2.5 rounded-xl border border-border/40">
+              <span className="text-[10px] text-muted-foreground block font-semibold">Ödeme Tipi</span>
+              <span className="font-bold text-foreground">
                 {order.payment_type || 'Nakit / Havale'}
               </span>
             </div>
           </div>
 
           {(order.service_type === 'gecerken' || r.service_type === 'gecerken') && (
-            <div className="bg-blue-50/70 border border-blue-200/70 p-2.5 rounded-xl text-xs text-blue-900">
-              <span className="text-[10px] font-bold uppercase block text-blue-700">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
+            <div className="bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl text-xs text-foreground">
+              <span className="text-[10px] font-bold uppercase block text-amber-800">GEÇERKEN UĞRA — ZAMAN TERCİHİ</span>
               <p className="font-semibold mt-0.5">
                 {order.preferred_time || r.preferred_time || (order.notes?.match(/• Ne Zaman:\s*(.+)/)?.[1]?.trim()) || 'Gün içinde fark etmez'}
               </p>
@@ -446,8 +446,8 @@ export function TaskDetailPage() {
           )}
 
           {order.notes && (
-            <div className="bg-amber-50/60 border border-amber-200/60 p-2.5 rounded-xl text-xs text-amber-900">
-              <span className="text-[10px] font-bold uppercase block text-amber-800">Sipariş Notu</span>
+            <div className="bg-muted/60 border border-border/60 p-2.5 rounded-xl text-xs text-foreground">
+              <span className="text-[10px] font-bold uppercase block text-muted-foreground">Sipariş Notu</span>
               <p className="font-medium mt-0.5">{order.notes}</p>
             </div>
           )}
@@ -456,14 +456,14 @@ export function TaskDetailPage() {
       </main>
 
       {/* ALT SABİT ALAN: YALNIZCA DOĞRULANDI VE ULAŞILAMADI */}
-      <div className="fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-[#E5E7EB] z-50 shadow-2xl">
+      <div className="fixed bottom-0 left-0 right-0 p-3 bg-card/90 backdrop-blur-md border-t border-border/80 z-50 shadow-2xl">
         <div className="max-w-md mx-auto flex items-center gap-3">
           {/* ULAŞILAMADI BUTTON */}
           <button
             type="button"
             disabled={actionLoading || submittingCancel}
             onClick={() => setShowCancelModal(true)}
-            className="flex-1 py-3.5 px-3 bg-[#EF4444] hover:bg-red-600 active:scale-98 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-sm transition-all cursor-pointer flex items-center justify-center text-center"
+            className="flex-1 py-3.5 px-3 bg-destructive hover:bg-destructive/90 active:scale-98 disabled:opacity-50 text-destructive-foreground font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-xs transition-all cursor-pointer flex items-center justify-center text-center"
           >
             <span>ULAŞILAMADI</span>
           </button>
@@ -473,7 +473,7 @@ export function TaskDetailPage() {
             type="button"
             disabled={actionLoading || submittingCancel}
             onClick={handleCompleteOrder}
-            className="flex-1 py-3.5 px-3 bg-[#10B981] hover:bg-emerald-600 active:scale-98 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-sm transition-all cursor-pointer flex items-center justify-center text-center"
+            className="flex-1 py-3.5 px-3 bg-emerald-600 hover:bg-emerald-500 active:scale-98 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-xs transition-all cursor-pointer flex items-center justify-center text-center"
           >
             {actionLoading ? (
               <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -487,24 +487,24 @@ export function TaskDetailPage() {
       {/* ULAŞILAMADI CONFIRMATION MODAL */}
       {showCancelModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-gray-100">
-            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-              <h3 className="text-sm font-bold text-[#1F2937]">Müşteriye Ulaşılamadı</h3>
+          <div className="bg-card rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-border">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <h3 className="text-sm font-bold text-foreground">Müşteriye Ulaşılamadı</h3>
               <button
                 type="button"
                 onClick={() => setShowCancelModal(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center cursor-pointer"
+                className="w-7 h-7 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-[#6B7280]">
+            <p className="text-xs text-muted-foreground">
               Bu görevi &quot;Müşteriye Ulaşılamadı&quot; olarak işaretleyip iptal etmek istediğinize emin misiniz?
             </p>
 
             <div>
-              <label className="block text-[11px] font-bold text-[#6B7280] uppercase mb-1">
+              <label className="block text-[11px] font-bold text-muted-foreground uppercase mb-1">
                 İptal Sebebi
               </label>
               <input
@@ -512,7 +512,7 @@ export function TaskDetailPage() {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="İptal sebebi girin..."
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs text-[#1F2937] focus:border-[#2563EB] outline-none"
+                className="w-full bg-background border border-input rounded-xl p-2.5 text-xs text-foreground focus:border-amber-500 outline-none"
               />
             </div>
 
@@ -520,7 +520,7 @@ export function TaskDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowCancelModal(false)}
-                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1F2937] font-bold text-xs rounded-xl cursor-pointer"
+                className="flex-1 py-2.5 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl cursor-pointer"
               >
                 Vazgeç
               </button>
@@ -528,7 +528,7 @@ export function TaskDetailPage() {
                 type="button"
                 disabled={submittingCancel}
                 onClick={handleMarkUnreachable}
-                className="flex-1 py-2.5 bg-[#EF4444] hover:bg-red-600 text-white font-bold text-xs rounded-xl cursor-pointer flex items-center justify-center"
+                className="flex-1 py-2.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs rounded-xl cursor-pointer flex items-center justify-center"
               >
                 {submittingCancel ? (
                   <Loader2 className="w-4 h-4 animate-spin text-white" />

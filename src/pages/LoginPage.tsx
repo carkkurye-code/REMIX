@@ -85,23 +85,23 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-white flex flex-col justify-between selection:bg-amber-400 selection:text-black">
+    <div className="min-h-screen bg-[#F2E9DE] text-foreground flex flex-col justify-between selection:bg-amber-400 selection:text-black">
       {/* Top Header */}
-      <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-border/40 bg-card/60 backdrop-blur-md px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 no-underline cursor-pointer group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-black text-black text-lg shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-black text-black text-lg shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
             U
           </div>
           <div>
-            <div className="text-base font-black tracking-tight text-white flex items-center gap-2">
-              UĞRA <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20 font-bold uppercase tracking-wider">Portalı</span>
+            <div className="text-base font-black tracking-tight text-foreground flex items-center gap-2">
+              UĞRA <span className="text-xs px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-900 border border-amber-400/30 font-bold uppercase tracking-wider">Portalı</span>
             </div>
-            <p className="text-[11px] text-gray-400 font-medium">Güvenli Giriş ve Yetkilendirme</p>
+            <p className="text-[11px] text-muted-foreground font-medium">Güvenli Giriş ve Yetkilendirme</p>
           </div>
         </Link>
         <Link
           href="/"
-          className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 font-bold no-underline"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 font-bold no-underline"
         >
           <span>Ana Sayfaya Dön</span>
           <ChevronRight className="w-4 h-4" />
@@ -110,19 +110,19 @@ export function LoginPage() {
 
       {/* Center Login Box */}
       <div className="flex-1 flex items-center justify-center p-4 my-8">
-        <div className="w-full max-w-md bg-[#131826] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+        <div className="w-full max-w-md bg-card border border-border/80 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
           <div className="text-center space-y-2">
-            <div className="inline-flex p-3.5 rounded-2xl bg-amber-400/10 text-amber-400 border border-amber-400/20 mb-1 shadow-inner">
+            <div className="inline-flex p-3.5 rounded-2xl bg-amber-400/20 text-amber-800 border border-amber-400/30 mb-1 shadow-inner">
               <ShieldCheck className="w-6 h-6" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Yetkili Girişi</h1>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">Yetkili Girişi</h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Yönetici, Bayi veya Operasyon hesabınıza erişmek için oturum açınız.
             </p>
           </div>
 
           {error && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold flex items-start gap-2.5">
+            <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -130,40 +130,40 @@ export function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-gray-300">
+              <label className="block text-xs font-bold text-foreground">
                 E-posta Adresi
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ornek@ugra.app"
-                  className="w-full bg-[#1A2133] border border-white/10 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none rounded-xl pl-10 pr-3 py-3 text-xs sm:text-sm text-white placeholder:text-gray-600 transition-all font-medium"
+                  className="w-full bg-background border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none rounded-xl pl-10 pr-3 py-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground transition-all font-medium"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-gray-300">
+              <label className="block text-xs font-bold text-foreground">
                 Şifre
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-[#1A2133] border border-white/10 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none rounded-xl pl-10 pr-10 py-3 text-xs sm:text-sm text-white placeholder:text-gray-600 transition-all font-medium"
+                  className="w-full bg-background border border-input focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none rounded-xl pl-10 pr-10 py-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground transition-all font-medium"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors p-1 border-0 bg-transparent cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 border-0 bg-transparent cursor-pointer"
                   aria-label={showPassword ? 'Şifreyi gizle' : 'Şifreyi göster'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -174,7 +174,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-[0.99] text-black font-extrabold text-xs sm:text-sm transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 border-0 mt-2"
+              className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-[0.99] text-black font-extrabold text-xs sm:text-sm transition-all shadow-md shadow-amber-500/20 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 border-0 mt-2"
             >
               {loading ? (
                 <>
@@ -193,7 +193,7 @@ export function LoginPage() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 px-6 py-4 text-center text-xs text-gray-500">
+      <footer className="border-t border-border/40 px-6 py-4 text-center text-xs text-muted-foreground">
         UĞRA Platformu &copy; {new Date().getFullYear()} — Tüm Hakları Saklıdır
       </footer>
     </div>

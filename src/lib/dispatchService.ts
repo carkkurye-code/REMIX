@@ -312,12 +312,15 @@ export class LiveDispatchService {
 
       let activeAssistants: Assistant[] = [];
 
-      // Fetch active online assistants safely
+      // Fetch active online assistants safely with database-level filtering and limit
       if (isSupabaseConfigured && supabase) {
         try {
           const { data, error } = await supabase
             .from('assistants')
-            .select('*');
+            .select('id, user_id, full_name, phone, vehicle_type, status, is_online, active, current_lat, current_lng, rating, total_deliveries, city_id')
+            .eq('is_online', true)
+            .eq('active', true)
+            .limit(50);
 
           if (!error && data && data.length > 0) {
             activeAssistants = (data as Assistant[]).filter(a => {
@@ -341,8 +344,9 @@ export class LiveDispatchService {
           try {
             const { data: profilesData } = await supabase
               .from('profiles')
-              .select('*')
-              .eq('role', 'assistant');
+              .select('id, full_name, email, phone, role, is_active, created_at')
+              .eq('role', 'assistant')
+              .limit(50);
 
             if (profilesData && profilesData.length > 0) {
               activeAssistants = profilesData.map((p: any) => ({
@@ -598,200 +602,65 @@ export class LiveDispatchService {
   }
 
   /**
-   * 3. Handle Assistant Accept ("Kabul Et") Action
+   * 3. Handle Assistant Accept ("Kabul Et") Action via Atomic RPC
    */
-  public static async acceptOffer(orderId: string, offerId: string, assistantId: string, assistantName?: string): Promise<{ success: boolean; message?: string; error?: string }> {
+  public static async acceptOffer(
+    offerId: string,
+    assistantId: string,
+    orderId: string
+  ): Promise<{ success: boolean; error?: string }>;
+  public static async acceptOffer(
+    orderId: string,
+    offerId: string,
+    assistantId: string,
+    assistantName?: string
+  ): Promise<{ success: boolean; error?: string }>;
+  public static async acceptOffer(
+    arg1: string,
+    arg2: string,
+    arg3: string,
+    _arg4?: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Rule 7: Single assistant atomic lock check
-      if (isSupabaseConfigured && supabase) {
-        try {
-          if (isUUID(orderId)) {
-            // Check tasks table first
-            const { data: checkTask } = await supabase.from('tasks').select('*').eq('id', orderId).maybeSingle();
-            if (checkTask) {
-              if (checkTask.assistant_id && checkTask.assistant_id !== assistantId) {
-                return {
-                  success: false,
-                  error: 'Bu sipariş başka bir asistan tarafından kabul edildi.'
-                };
-              }
-              if (['accepted', 'on_the_way', 'delivered', 'completed'].includes(checkTask.status)) {
-                if (checkTask.assistant_id !== assistantId) {
-                  return {
-                    success: false,
-                    error: 'Bu sipariş başka bir asistan tarafından zaten üstlenildi.'
-                  };
-                }
-              }
-              if (checkTask.order_id && isUUID(checkTask.order_id)) {
-                console.log('[OrderFetch] orders.id being queried:', checkTask.order_id);
-                const { data: checkOrder } = await supabase.from('orders').select('*').eq('id', checkTask.order_id).maybeSingle();
-                if (checkOrder) {
-                  if (checkOrder.assistant_id && checkOrder.assistant_id !== assistantId) {
-                    return { success: false, error: 'Bu sipariş başka bir asistan tarafından kabul edildi.' };
-                  }
-                }
-              }
-            } else {
-              console.log('[OrderFetch] orders.id being queried:', orderId);
-              const { data: checkOrder, error: checkErr } = await supabase
-                .from('orders')
-                .select('*')
-                .eq('id', orderId)
-                .maybeSingle();
+      let orderId = arg3;
+      let assistantId = arg2;
+      let offerId = arg1;
 
-              if (!checkErr && checkOrder) {
-                if (checkOrder.assistant_id && checkOrder.assistant_id !== assistantId) {
-                  return {
-                    success: false,
-                    error: 'Bu sipariş başka bir asistan tarafından kabul edildi.'
-                  };
-                }
-                if (checkOrder.status === 'accepted' || checkOrder.status === 'on_the_way' || checkOrder.status === 'delivered' || checkOrder.status === 'completed') {
-                  if (checkOrder.assistant_id !== assistantId) {
-                    return {
-                      success: false,
-                      error: 'Bu sipariş başka bir asistan tarafından zaten üstlenildi.'
-                    };
-                  }
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.warn('[LiveDispatch] Atomic check error:', e);
-        }
+      // Handle both (offerId, assistantId, orderId) and (orderId, offerId, assistantId) calls
+      if (_arg4 !== undefined || (arg1 && arg2 && (arg2.startsWith('off_') || (!arg1.startsWith('off_') && arg2.startsWith('off_'))))) {
+        orderId = arg1;
+        offerId = arg2;
+        assistantId = arg3;
       }
 
-      // 1. Update order status and assistant_id in orders table
-      if (isSupabaseConfigured) {
-        try {
-          const client = await getActiveSupabaseClient();
-          if (isUUID(orderId)) {
-            const validAssistantId = isUUID(assistantId) ? assistantId : toUUID(assistantId);
-            const nowIso = new Date().toISOString();
-
-            // Update tasks/orders tables with exact column filtering
-            const { data: tMatch } = await client.from('tasks').select('id, order_id').eq('id', orderId).maybeSingle();
-            if (tMatch) {
-              const taskPayload = filterTaskPayload({
-                assistant_id: validAssistantId,
-                assistant_name: assistantName || undefined,
-                status: 'accepted',
-                accepted_at: nowIso,
-                updated_at: nowIso
-              });
-              await client.from('tasks').update(taskPayload).eq('id', orderId);
-              if (tMatch.order_id && isUUID(tMatch.order_id)) {
-                const orderPayload = filterOrderPayload({
-                  assistant_id: validAssistantId,
-                  status: 'accepted'
-                });
-                await client.from('orders').update(orderPayload).eq('id', tMatch.order_id);
-              }
-            } else {
-              const orderPayload = filterOrderPayload({
-                assistant_id: validAssistantId,
-                status: 'accepted'
-              });
-              if (Object.keys(orderPayload).length > 0) {
-                const { error: orderErr } = await client
-                  .from('orders')
-                  .update(orderPayload)
-                  .eq('id', orderId);
-
-                if (orderErr) {
-                  console.warn('[LiveDispatch] Supabase orders update notice:', orderErr);
-                }
-              }
-            }
-
-            if (isUUID(offerId)) {
-              await client
-                .from('dispatch_offers')
-                .update({ status: 'accepted' })
-                .eq('id', offerId);
-
-              const validOrderId = isUUID(orderId) ? orderId : toUUID(orderId);
-              await client
-                .from('dispatch_offers')
-                .update({ status: 'cancelled' })
-                .eq('order_id', validOrderId)
-                .neq('id', offerId);
-            }
-          }
-        } catch (dbErr) {
-          console.warn('[LiveDispatch] Supabase accept update error:', dbErr);
-        }
-      }
-
-      // 2. Update Local Storage Cache
-      const localOrders = getStored<Order>(LOCAL_STORAGE_KEYS.ORDERS);
-      const oIdx = localOrders.findIndex(o => o.id === orderId);
-      if (oIdx !== -1) {
-        localOrders[oIdx] = {
-          ...localOrders[oIdx],
-          assistant_id: assistantId,
-          assistant_name: assistantName || localOrders[oIdx].assistant_name,
-          status: 'accepted',
-          updated_at: new Date().toISOString()
-        };
-        setStored(LOCAL_STORAGE_KEYS.ORDERS, localOrders);
-      }
-
-      const storedOffers = getStored<DispatchOfferData>('ugra_dispatch_offers');
-      storedOffers.forEach(o => {
-        if (o.order_id === orderId) {
-          if (o.id === offerId || o.assistant_id === assistantId) {
-            o.status = 'completed';
-          } else {
-            o.status = 'cancelled';
-          }
-        }
+      const { data, error } = await (supabase as any).rpc('accept_order_atomic', {
+        p_order_id: orderId,
+        p_assistant_id: assistantId,
+        p_offer_id: offerId
       });
-      setStored('ugra_dispatch_offers', storedOffers);
 
-      // 3. Emit Domain Event to clear offer from other assistants live
-      let resolvedCustomerId: string | undefined = undefined;
-      if (isSupabaseConfigured && supabase && isUUID(orderId)) {
-        try {
-          const { data: tMatch } = await supabase.from('tasks').select('customer_id, order_id').eq('id', orderId).maybeSingle();
-          if (tMatch) {
-            resolvedCustomerId = tMatch.customer_id;
-            if (!resolvedCustomerId && tMatch.order_id && isUUID(tMatch.order_id)) {
-              console.log('[OrderFetch] orders.id being queried:', tMatch.order_id);
-              const { data: ord } = await supabase.from('orders').select('*').eq('id', tMatch.order_id).maybeSingle();
-              if (ord) resolvedCustomerId = ord.customer_id || ord.partner_id;
-            }
-          } else {
-            console.log('[OrderFetch] orders.id being queried:', orderId);
-            const { data: ord } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
-            if (ord) resolvedCustomerId = ord.customer_id || ord.partner_id;
-          }
-        } catch (e) {}
+      if (error) {
+        console.error('accept_order_atomic RPC error:', error);
+        return {
+          success: false,
+          error: error.message || 'Sipariş kabul edilemedi.'
+        };
       }
 
-      eventBus.publish(
-        createDomainEvent('TASK_ACCEPTED', orderId, {
-          taskId: orderId,
-          orderId,
-          offerId,
-          assistantId,
-          assistantName,
-          customerId: resolvedCustomerId,
-          status: 'accepted'
-        })
-      );
+      if (!data?.success) {
+        return {
+          success: false,
+          error: data?.error_message || 'Sipariş kabul edilemedi.'
+        };
+      }
 
-      return {
-        success: true,
-        message: 'Görev başarıyla kabul edildi ve hesabınıza atandı!'
-      };
+      return { success: true };
     } catch (err: any) {
-      console.error('[LiveDispatch] acceptOffer error:', err);
+      console.error('acceptOffer error:', err);
+
       return {
         success: false,
-        error: err?.message || 'Görev kabul edilirken bir hata oluştu.'
+        error: err?.message || 'Beklenmeyen bir hata oluştu.'
       };
     }
   }

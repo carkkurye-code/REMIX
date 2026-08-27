@@ -128,7 +128,7 @@ export function CustomerAccountModal({
             query = query.or(orParts.join(','));
           }
 
-          const { data, error } = await query.order('created_at', { ascending: false });
+          const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
 
           if (error) {
             console.warn('Supabase fetchCustomerOrders notice:', error.message || error);
@@ -316,7 +316,7 @@ export function CustomerAccountModal({
         query = query.eq('user_id', user.id);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await query.order('created_at', { ascending: false }).limit(50);
 
       if (!error && data) {
         setNotifications((prev) => {
@@ -571,10 +571,11 @@ export function CustomerAccountModal({
         } catch (e) {}
       }
 
+      // Fallback background sync (10 seconds) to conserve bandwidth while Realtime is listening
       const interval = setInterval(() => {
         fetchCustomerOrders(true);
         fetchCustomerNotifications();
-      }, 4000);
+      }, 10000);
 
       return () => {
         clearInterval(interval);
